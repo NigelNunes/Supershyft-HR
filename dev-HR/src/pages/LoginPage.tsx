@@ -27,19 +27,27 @@ export function LoginPage() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-card__brand">
-          <img src={BRANDING.companyLogo} alt="" className="login-card__logo-img" />
-          <h1>{BRANDING.companyName}</h1>
-          <p>Corporate wellness dashboard for HR teams</p>
+          <div className="login-card__platform-brand" aria-label={BRANDING.platformName}>
+            <img src={BRANDING.platformLogo} alt="" className="login-card__platform-logo" />
+            <span className="login-card__platform-name">{BRANDING.platformName}</span>
+          </div>
+          <p className="login-card__brand-tagline">HR health intelligence · sign in to continue</p>
         </div>
         <form onSubmit={handleSubmit} className="login-form">
           <label>
             Mobile number
             <input
               type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                setPhone(digits);
+              }}
               placeholder="10-digit mobile"
               autoComplete="tel"
+              maxLength={10}
               required
             />
           </label>
