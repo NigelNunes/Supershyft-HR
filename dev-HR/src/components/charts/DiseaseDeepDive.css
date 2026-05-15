@@ -1,0 +1,52 @@
+.disease-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.disease-tab {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-muted);
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.disease-tab:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.disease-tab--active {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.status-pill {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: capitalize;
+}
+
+.status-pill--healthy {
+  background: var(--positive-soft);
+  color: var(--positive);
+}
+
+.status-pill--increased {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.status-pill--high,
+.status-pill--very-high {
+  background: var(--danger-soft);
+  color: var(--danger);
+}

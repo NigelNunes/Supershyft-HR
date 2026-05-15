@@ -1,0 +1,60 @@
+.bmi-waist-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+@media (max-width: 600px) {
+  .bmi-waist-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bmi-waist-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bmi-waist-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.bmi-waist-stat strong {
+  margin-left: auto;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.bmi-waist-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.bmi-waist-highlight {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--warn-soft);
+  border-radius: var(--radius-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bmi-waist-highlight__label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.bmi-waist-highlight__val {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--warn);
+}

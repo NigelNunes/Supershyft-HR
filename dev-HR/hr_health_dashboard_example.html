@@ -1,0 +1,447 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+--c1:#0F6E56;--c1l:#E1F5EE;--c1m:#1D9E75;
+--c2:#185FA5;--c2l:#E6F1FB;--c2m:#378ADD;
+--c3:#993C1D;--c3l:#FAECE7;--c3m:#D85A30;
+--c4:#533489;--c4l:#EEEDFE;--c4m:#7F77DD;
+--c5:#3B6D11;--c5l:#EAF3DE;--c5m:#639922;
+--ca:#BA7517;--cal:#FAEEDA;--cam:#EF9F27;
+--font:'DM Sans',sans-serif;
+--mono:'DM Mono',monospace;
+}
+body{font-family:var(--font);background:#F8F9FA;color:#1a1a1a;min-height:100vh}
+.shell{max-width:1100px;margin:0 auto;padding:28px 24px}
+.topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:32px}
+.topbar-left h1{font-size:22px;font-weight:500;letter-spacing:-0.3px;color:#111}
+.topbar-left p{font-size:13px;color:#888;margin-top:3px}
+.badge-live{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;background:#E1F5EE;color:#0F6E56;padding:4px 10px;border-radius:20px;letter-spacing:0.3px}
+.dot{width:6px;height:6px;border-radius:50%;background:#1D9E75;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.kpi{background:#fff;border:0.5px solid #e8e8e8;border-radius:12px;padding:16px 18px;position:relative;overflow:hidden}
+.kpi::after{content:'';position:absolute;top:0;left:0;width:3px;height:100%;border-radius:12px 0 0 12px}
+.kpi.green::after{background:var(--c1m)}
+.kpi.blue::after{background:var(--c2m)}
+.kpi.red::after{background:var(--c3m)}
+.kpi.amber::after{background:var(--cam)}
+.kpi-label{font-size:11px;font-weight:500;color:#999;letter-spacing:0.4px;text-transform:uppercase;margin-bottom:8px}
+.kpi-val{font-size:28px;font-weight:300;letter-spacing:-1px;color:#111;line-height:1}
+.kpi-sub{font-size:12px;color:#888;margin-top:5px}
+.kpi-icon{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.kpi.green .kpi-icon{background:var(--c1l);color:var(--c1)}
+.kpi.blue .kpi-icon{background:var(--c2l);color:var(--c2)}
+.kpi.red .kpi-icon{background:var(--c3l);color:var(--c3)}
+.kpi.amber .kpi-icon{background:var(--cal);color:var(--ca)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.card{background:#fff;border:0.5px solid #e8e8e8;border-radius:12px;padding:20px}
+.card-title{font-size:13px;font-weight:500;color:#111;margin-bottom:4px;letter-spacing:-0.1px}
+.card-sub{font-size:11px;color:#aaa;margin-bottom:16px}
+.chart-wrap{position:relative}
+.risk-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid #f0f0f0}
+.risk-row:last-child{border-bottom:none}
+.risk-label{font-size:13px;color:#444;flex:1}
+.risk-bar-bg{flex:2;height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden}
+.risk-bar{height:100%;border-radius:3px;transition:width 0.6s ease}
+.risk-pct{font-size:12px;font-weight:500;color:#555;width:34px;text-align:right;font-family:var(--mono)}
+.seg-label{font-size:11px;color:#999;margin-bottom:3px}
+.seg-val{font-size:18px;font-weight:400;color:#111;letter-spacing:-0.5px}
+.seg-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px;margin-top:4px}
+.seg-item{}
+.donut-wrap{display:flex;align-items:center;gap:20px}
+.donut-legend{display:flex;flex-direction:column;gap:8px;flex:1}
+.leg-row{display:flex;align-items:center;gap:7px;font-size:12px;color:#555}
+.leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.leg-val{margin-left:auto;font-family:var(--mono);font-size:11px;font-weight:500;color:#333}
+.section-divider{font-size:11px;font-weight:500;letter-spacing:0.5px;text-transform:uppercase;color:#bbb;margin:24px 0 12px;display:flex;align-items:center;gap:10px}
+.section-divider::after{content:'';flex:1;height:0.5px;background:#e8e8e8}
+.alert-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;margin-bottom:8px;font-size:13px}
+.alert-row.warn{background:#FFF9F0;border:0.5px solid #FAD08A}
+.alert-row.danger{background:#FFF0EF;border:0.5px solid #F5B5B5}
+.alert-row.info{background:#F0F7FF;border:0.5px solid #AACEEE}
+.alert-icon{font-size:16px;width:20px;text-align:center}
+.alert-text{flex:1;color:#444}
+.alert-badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:10px}
+.alert-row.warn .alert-badge{background:#FAD08A;color:#7A4B00}
+.alert-row.danger .alert-badge{background:#F5B5B5;color:#7A1C1C}
+.alert-row.info .alert-badge{background:#AACEEE;color:#0C3E6B}
+.prog-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.prog-name{font-size:12px;color:#555;width:80px;flex-shrink:0}
+.prog-bar-bg{flex:1;height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden}
+.prog-bar{height:100%;border-radius:4px}
+.prog-pct{font-size:12px;font-weight:500;font-family:var(--mono);width:32px;text-align:right;color:#444}
+.two-col-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mini-stat{background:#F8F9FA;border-radius:8px;padding:10px 12px}
+.mini-stat-label{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:3px}
+.mini-stat-val{font-size:16px;font-weight:400;color:#222;letter-spacing:-0.5px}
+.mini-stat-tag{font-size:10px;margin-top:2px}
+.tag-red{color:var(--c3)}
+.tag-green{color:var(--c1m)}
+.tag-amber{color:var(--ca)}
+</style>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>HR health intelligence dashboard</h1>
+      <p>Workforce wellness analysis · 2024 annual report · Mumbai HQ</p>
+    </div>
+    <span class="badge-live"><span class="dot"></span>Live data</span>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi green">
+      <div class="kpi-label">Total employees</div>
+      <div class="kpi-val">1,240</div>
+      <div class="kpi-sub">Across all departments</div>
+      <div class="kpi-icon"><i class="ti ti-users" aria-hidden="true"></i></div>
+    </div>
+    <div class="kpi red">
+      <div class="kpi-label">High-risk group</div>
+      <div class="kpi-val">310</div>
+      <div class="kpi-sub">25% of workforce</div>
+      <div class="kpi-icon"><i class="ti ti-alert-triangle" aria-hidden="true"></i></div>
+    </div>
+    <div class="kpi blue">
+      <div class="kpi-label">Program enrolled</div>
+      <div class="kpi-val">372</div>
+      <div class="kpi-sub">30% participation rate</div>
+      <div class="kpi-icon"><i class="ti ti-activity" aria-hidden="true"></i></div>
+    </div>
+    <div class="kpi amber">
+      <div class="kpi-label">Data accuracy</div>
+      <div class="kpi-val">90%</div>
+      <div class="kpi-sub">10% records incomplete</div>
+      <div class="kpi-icon"><i class="ti ti-database" aria-hidden="true"></i></div>
+    </div>
+  </div>
+
+  <div class="section-divider">Health risk breakdown</div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Risk distribution by condition</div>
+      <div class="card-sub">Percentage of workforce affected</div>
+      <div class="risk-row">
+        <span class="risk-label">Pre-diabetic</span>
+        <div class="risk-bar-bg"><div class="risk-bar" style="width:25%;background:#E24B4A"></div></div>
+        <span class="risk-pct">25%</span>
+      </div>
+      <div class="risk-row">
+        <span class="risk-label">Overweight / obese</span>
+        <div class="risk-bar-bg"><div class="risk-bar" style="width:40%;background:#D85A30"></div></div>
+        <span class="risk-pct">40%</span>
+      </div>
+      <div class="risk-row">
+        <span class="risk-label">High blood pressure</span>
+        <div class="risk-bar-bg"><div class="risk-bar" style="width:15%;background:#BA7517"></div></div>
+        <span class="risk-pct">15%</span>
+      </div>
+      <div class="risk-row">
+        <span class="risk-label">High LDL cholesterol</span>
+        <div class="risk-bar-bg"><div class="risk-bar" style="width:32%;background:#7F77DD"></div></div>
+        <span class="risk-pct">32%</span>
+      </div>
+      <div class="risk-row">
+        <span class="risk-label">Thyroid issues</span>
+        <div class="risk-bar-bg"><div class="risk-bar" style="width:18%;background:#378ADD"></div></div>
+        <span class="risk-pct">18%</span>
+      </div>
+      <div class="risk-row">
+        <span class="risk-label">Cardiac risk indicators</span>
+        <div class="risk-bar-bg"><div class="risk-bar" style="width:22%;background:#993C1D"></div></div>
+        <span class="risk-pct">22%</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">BMI distribution</div>
+      <div class="card-sub">Body mass index across workforce</div>
+      <div class="donut-wrap">
+        <div style="width:140px;height:140px;flex-shrink:0">
+          <canvas id="bmiChart" role="img" aria-label="BMI distribution donut chart: 15% underweight, 45% normal, 28% overweight, 12% obese">BMI: 15% underweight, 45% normal, 28% overweight, 12% obese.</canvas>
+        </div>
+        <div class="donut-legend">
+          <div class="leg-row"><span class="leg-dot" style="background:#378ADD"></span>Normal weight<span class="leg-val">45%</span></div>
+          <div class="leg-row"><span class="leg-dot" style="background:#EF9F27"></span>Overweight<span class="leg-val">28%</span></div>
+          <div class="leg-row"><span class="leg-dot" style="background:#E24B4A"></span>Obese<span class="leg-val">12%</span></div>
+          <div class="leg-row"><span class="leg-dot" style="background:#5DCAA5"></span>Underweight<span class="leg-val">15%</span></div>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding-top:16px;border-top:0.5px solid #f0f0f0">
+        <div class="two-col-stats">
+          <div class="mini-stat">
+            <div class="mini-stat-label">Avg waist size</div>
+            <div class="mini-stat-val">36.2 in</div>
+            <div class="mini-stat-tag tag-red">High abdominal trend</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label">Sedentary roles</div>
+            <div class="mini-stat-val">58%</div>
+            <div class="mini-stat-tag tag-amber">Higher fat %</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider">Lifestyle & mental health</div>
+
+  <div class="grid3">
+    <div class="card">
+      <div class="card-title">Lifestyle indicators</div>
+      <div class="card-sub">Workforce habits overview</div>
+      <div class="seg-grid">
+        <div class="seg-item">
+          <div class="seg-label">Avg sleep</div>
+          <div class="seg-val" style="color:var(--c3)">5.8 hrs</div>
+        </div>
+        <div class="seg-item">
+          <div class="seg-label">Exercise freq.</div>
+          <div class="seg-val" style="color:var(--ca)">1.2×/wk</div>
+        </div>
+        <div class="seg-item">
+          <div class="seg-label">High-carb diet</div>
+          <div class="seg-val">70%</div>
+        </div>
+        <div class="seg-item">
+          <div class="seg-label">Alcohol use</div>
+          <div class="seg-val" style="color:var(--c3m)">Frequent</div>
+        </div>
+        <div class="seg-item">
+          <div class="seg-label">Screen time</div>
+          <div class="seg-val" style="color:var(--ca)">High</div>
+        </div>
+        <div class="seg-item">
+          <div class="seg-label">IT activity</div>
+          <div class="seg-val" style="color:var(--c3)">Low</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Mental health by department</div>
+      <div class="card-sub">Stress level index (0–100)</div>
+      <div style="height:160px;position:relative">
+        <canvas id="stressChart" role="img" aria-label="Bar chart of stress levels by department">Stress: Sales 82, IT 64, Operations 58, HR 45, Finance 52.</canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Wellness program performance</div>
+      <div class="card-sub">Enrollment · completion · outcome</div>
+      <div class="prog-row">
+        <span class="prog-name">Enrolled</span>
+        <div class="prog-bar-bg"><div class="prog-bar" style="width:30%;background:var(--c2m)"></div></div>
+        <span class="prog-pct">30%</span>
+      </div>
+      <div class="prog-row">
+        <span class="prog-name">Completed</span>
+        <div class="prog-bar-bg"><div class="prog-bar" style="width:70%;background:var(--c1m)"></div></div>
+        <span class="prog-pct">70%</span>
+      </div>
+      <div class="prog-row">
+        <span class="prog-name">Improvement</span>
+        <div class="prog-bar-bg"><div class="prog-bar" style="width:18%;background:var(--c4m)"></div></div>
+        <span class="prog-pct">18%</span>
+      </div>
+      <div style="margin-top:14px;padding-top:14px;border-top:0.5px solid #f0f0f0">
+        <div class="two-col-stats">
+          <div class="mini-stat">
+            <div class="mini-stat-label">Cost reduction</div>
+            <div class="mini-stat-val">20%</div>
+            <div class="mini-stat-tag tag-green">Potential savings</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label">Future high-risk</div>
+            <div class="mini-stat-val">15%</div>
+            <div class="mini-stat-tag tag-red">Predicted rise</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider">Blood health & lab tests</div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Blood marker trends</div>
+      <div class="card-sub">Key lab indicators across workforce</div>
+      <div style="height:200px;position:relative">
+        <canvas id="bloodChart" role="img" aria-label="Radar chart of blood health markers">Blood markers showing LDL high, SGPT elevated, Hb low in females, TSH abnormal.</canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Gender health comparison</div>
+      <div class="card-sub">Key differential health metrics</div>
+      <div style="height:200px;position:relative">
+        <canvas id="genderChart" role="img" aria-label="Grouped bar chart comparing male and female health metrics">Comparing male vs female: cholesterol, thyroid, PCOS, hemoglobin.</canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-divider">Priority alerts & actions</div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-title">Active alerts</div>
+      <div class="card-sub">Requires immediate attention</div>
+      <div class="alert-row danger">
+        <span class="alert-icon"><i class="ti ti-heart-rate-monitor" aria-hidden="true"></i></span>
+        <span class="alert-text">Top 50 employees flagged for cardiac risk</span>
+        <span class="alert-badge">Critical</span>
+      </div>
+      <div class="alert-row danger">
+        <span class="alert-icon"><i class="ti ti-activity" aria-hidden="true"></i></span>
+        <span class="alert-text">Sales team — highest stress index organisation-wide</span>
+        <span class="alert-badge">Urgent</span>
+      </div>
+      <div class="alert-row warn">
+        <span class="alert-icon"><i class="ti ti-droplet" aria-hidden="true"></i></span>
+        <span class="alert-text">Early liver stress detected — SGPT levels rising</span>
+        <span class="alert-badge">Watch</span>
+      </div>
+      <div class="alert-row warn">
+        <span class="alert-icon"><i class="ti ti-gender-female" aria-hidden="true"></i></span>
+        <span class="alert-text">PCOS early indicators in female workforce</span>
+        <span class="alert-badge">Watch</span>
+      </div>
+      <div class="alert-row info">
+        <span class="alert-icon"><i class="ti ti-trending-up" aria-hidden="true"></i></span>
+        <span class="alert-text">Diabetes risk increasing month-on-month</span>
+        <span class="alert-badge">Monitor</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Recommended interventions</div>
+      <div class="card-sub">High-priority action items</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:#F8F9FA;border-radius:8px">
+          <i class="ti ti-run" style="font-size:18px;color:var(--c1);margin-top:1px" aria-hidden="true"></i>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:#222">Launch fitness challenge</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">Target IT & operations teams — low activity groups</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:#F8F9FA;border-radius:8px">
+          <i class="ti ti-brain" style="font-size:18px;color:var(--c4m);margin-top:1px" aria-hidden="true"></i>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:#222">Mental health workshops</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">Sales team priority — fatigue and low emotional control</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:#F8F9FA;border-radius:8px">
+          <i class="ti ti-salad" style="font-size:18px;color:var(--c5m);margin-top:1px" aria-hidden="true"></i>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:#222">Nutrition programme</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">Reduce high-carb diet dependency across 70% workforce</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:#F8F9FA;border-radius:8px">
+          <i class="ti ti-stethoscope" style="font-size:18px;color:var(--c3m);margin-top:1px" aria-hidden="true"></i>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:#222">Cardiac screening drive</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">High cholesterol group — early intervention reduces cost</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const fnt = "'DM Sans', sans-serif";
+
+new Chart(document.getElementById('bmiChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Normal','Overweight','Obese','Underweight'],
+    datasets: [{
+      data: [45,28,12,15],
+      backgroundColor: ['#378ADD','#EF9F27','#E24B4A','#5DCAA5'],
+      borderWidth: 0,
+      hoverOffset: 4
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '72%',
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + ctx.parsed + '%' } } }
+  }
+});
+
+new Chart(document.getElementById('stressChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Sales','IT','Operations','Finance','HR'],
+    datasets: [{
+      label: 'Stress index',
+      data: [82,64,58,52,45],
+      backgroundColor: ['#E24B4A','#EF9F27','#EF9F27','#378ADD','#5DCAA5'],
+      borderRadius: 4, borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { family: fnt, size: 11 }, color: '#888' } },
+      y: { grid: { color: '#f0f0f0' }, ticks: { font: { family: fnt, size: 11 }, color: '#aaa' }, max: 100 }
+    }
+  }
+});
+
+new Chart(document.getElementById('bloodChart'), {
+  type: 'radar',
+  data: {
+    labels: ['LDL','Fasting sugar','SGPT','TSH','Hemoglobin','Creatinine'],
+    datasets: [{
+      label: 'Risk score',
+      data: [75, 60, 55, 50, 40, 30],
+      backgroundColor: 'rgba(226,75,74,0.12)',
+      borderColor: '#E24B4A',
+      pointBackgroundColor: '#E24B4A',
+      pointRadius: 4,
+      borderWidth: 1.5
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      r: {
+        min: 0, max: 100, ticks: { display: false },
+        grid: { color: '#f0f0f0' },
+        pointLabels: { font: { family: fnt, size: 11 }, color: '#666' }
+      }
+    }
+  }
+});
+
+new Chart(document.getElementById('genderChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Cholesterol','Thyroid','Hemoglobin','Stress'],
+    datasets: [
+      { label: 'Male', data: [68, 22, 78, 60], backgroundColor: '#378ADD', borderRadius: 3, borderSkipped: false },
+      { label: 'Female', data: [45, 38, 52, 48], backgroundColor: '#D4537E', borderRadius: 3, borderSkipped: false }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { family: fnt, size: 11 }, color: '#888' } },
+      y: { grid: { color: '#f0f0f0' }, ticks: { font: { family: fnt, size: 11 }, color: '#aaa' }, max: 100 }
+    }
+  }
+});
+</script>

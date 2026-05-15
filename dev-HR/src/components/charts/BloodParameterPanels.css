@@ -1,0 +1,53 @@
+.blood-panels {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 1200px) {
+  .blood-panels { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 700px) {
+  .blood-panels { grid-template-columns: 1fr 1fr; }
+}
+
+.blood-panel__ring {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 140px;
+}
+
+.blood-panel__svg {
+  width: 120px;
+  height: 120px;
+}
+
+.blood-panel__pct {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -58%);
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.blood-panel__label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 20%);
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.blood-panels .chart-card__body {
+  min-height: 140px;
+}

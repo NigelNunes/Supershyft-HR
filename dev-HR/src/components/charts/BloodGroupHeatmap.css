@@ -1,0 +1,70 @@
+:root {
+  --heatmap-high: #1d9e75;
+  --heatmap-mid: #5dcaa5;
+  --heatmap-low: #ef9f27;
+  --heatmap-critical: #e24b4a;
+}
+
+[data-theme='dark'] {
+  --heatmap-high: #2dd4a8;
+  --heatmap-mid: #1a6b52;
+  --heatmap-low: #b45309;
+  --heatmap-critical: #dc2626;
+}
+
+.heatmap-scroll {
+  overflow-x: auto;
+}
+
+.heatmap-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 4px;
+  font-size: 0.75rem;
+}
+
+.heatmap-table th {
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 6px 8px;
+  text-align: center;
+}
+
+.heatmap-table__dept {
+  text-align: left !important;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.heatmap-cell {
+  display: block;
+  min-width: 52px;
+  padding: 10px 6px;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 600;
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  cursor: default;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.06);
+  box-shadow: var(--shadow-lg);
+  z-index: 1;
+  position: relative;
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}

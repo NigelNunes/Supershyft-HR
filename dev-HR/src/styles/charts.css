@@ -1,0 +1,95 @@
+/* Recharts — force readable tooltips & legends in both themes */
+
+.recharts-tooltip-wrapper {
+  z-index: 30 !important;
+  pointer-events: none;
+}
+
+.recharts-default-tooltip {
+  background-color: var(--tooltip-bg) !important;
+  border: 1px solid var(--tooltip-border) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--shadow-lg) !important;
+  padding: 10px 12px !important;
+}
+
+.recharts-tooltip-label {
+  color: var(--tooltip-text) !important;
+  font-weight: 600 !important;
+  margin-bottom: 6px !important;
+}
+
+.recharts-tooltip-item {
+  color: var(--tooltip-muted) !important;
+  padding: 2px 0 !important;
+}
+
+.recharts-tooltip-item-name,
+.recharts-tooltip-item-value {
+  color: var(--tooltip-text) !important;
+}
+
+.recharts-legend-item-text {
+  color: var(--text-muted) !important;
+}
+
+.recharts-cartesian-axis-tick-value {
+  fill: var(--text-muted);
+}
+
+.recharts-label {
+  fill: var(--text-muted);
+}
+
+/* Insight cards — ensure body text readable on tinted backgrounds */
+.insight-card li {
+  color: var(--text);
+}
+
+[data-theme='dark'] .insight-card--blue h4,
+[data-theme='dark'] .insight-card--blue .insight-card__icon {
+  color: #93c5fd;
+}
+
+[data-theme='dark'] .insight-card--red h4,
+[data-theme='dark'] .insight-card--red .insight-card__icon {
+  color: #fca5a5;
+}
+
+[data-theme='dark'] .insight-card--orange h4,
+[data-theme='dark'] .insight-card--orange .insight-card__icon {
+  color: #fdba74;
+}
+
+[data-theme='dark'] .insight-card--green h4,
+[data-theme='dark'] .insight-card--green .insight-card__icon {
+  color: #6ee7b7;
+}
+
+[data-theme='dark'] .insight-card--purple h4,
+[data-theme='dark'] .insight-card--purple .insight-card__icon {
+  color: #c4b5fd;
+}
+
+[data-theme='dark'] .insight-card--pink h4,
+[data-theme='dark'] .insight-card--pink .insight-card__icon {
+  color: #f9a8d4;
+}
+
+[data-theme='dark'] .insight-card--yellow h4,
+[data-theme='dark'] .insight-card--yellow .insight-card__icon {
+  color: #fde047;
+}
+
+[data-theme='dark'] .positive-wins-col h4 {
+  color: var(--positive);
+}
+
+[data-theme='dark'] .positive-wins-col li {
+  color: var(--text);
+  background: rgba(52, 211, 153, 0.12);
+}
+
+[data-theme='dark'] .recommendation-tier__label {
+  color: inherit;
+}

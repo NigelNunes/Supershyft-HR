@@ -1,0 +1,57 @@
+.positive-wins-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .positive-wins-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.positive-wins-col h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--positive);
+  margin-bottom: 12px;
+}
+
+.positive-wins-col ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.positive-wins-col li {
+  font-size: 0.8125rem;
+  color: var(--text);
+  line-height: 1.4;
+  padding: 8px 10px;
+  background: var(--positive-soft);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.positive-wins__badge {
+  font-size: 0.625rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--positive);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.positive-wins__name {
+  flex: 1;
+}

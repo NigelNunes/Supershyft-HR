@@ -1,0 +1,70 @@
+.interventions-section .chart-card__body {
+  min-height: auto;
+}
+
+.interventions-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.intervention-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 16px 18px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  position: relative;
+}
+
+.intervention-card--high {
+  border-left: 3px solid var(--danger);
+}
+
+.intervention-card--medium {
+  border-left: 3px solid var(--warn);
+}
+
+.intervention-card__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.intervention-card h4 {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.intervention-card__desc {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.intervention-card__impact {
+  font-size: 0.75rem;
+  color: var(--text);
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+.intervention-card__badge {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--border-subtle);
+  color: var(--text-muted);
+}

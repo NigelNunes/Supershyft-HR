@@ -1,0 +1,669 @@
+{
+    "status": true,
+    "message": "success",
+    "data": [
+        {
+            "customer_name": "Nigel Nunes",
+            "customer_age": "21",
+            "customer_gender": "M",
+            "customer_height": "160",
+            "customer_weight": "60",
+            "waist_circumference": null,
+            "systolic_value": "",
+            "diastolic_value": "",
+            "digital_data": [
+                {
+                    "value": "5.4",
+                    "machine_value": "5.4",
+                    "unit": "%",
+                    "min_range": "4.2",
+                    "max_range": "5.7",
+                    "deal_id": "parameter_1018",
+                    "parameter_id": "1018",
+                    "test_name": "Hba1c (Glycosylated Hemoglobin)"
+                },
+                {
+                    "value": "108.28",
+                    "machine_value": "",
+                    "unit": "mg/dl",
+                    "min_range": "",
+                    "max_range": "",
+                    "deal_id": "parameter_2293",
+                    "parameter_id": "2293",
+                    "test_name": "Average Estimated Glucose - plasma"
+                },
+                {
+                    "value": "9",
+                    "machine_value": "9",
+                    "unit": "mm/1st hour",
+                    "min_range": "0",
+                    "max_range": "10",
+                    "deal_id": "parameter_864",
+                    "parameter_id": "864",
+                    "test_name": "ESR"
+                },
+                {
+                    "value": "5.33",
+                    "machine_value": "5.33",
+                    "unit": "10^6/µl",
+                    "min_range": "4.50",
+                    "max_range": "5.50",
+                    "deal_id": "parameter_5867",
+                    "parameter_id": "5867",
+                    "test_name": "Red Blood Cell Count (RBC)"
+                },
+                {
+                    "value": "82.5",
+                    "machine_value": "82.5",
+                    "unit": "fL",
+                    "min_range": "83.0",
+                    "max_range": "101.0",
+                    "deal_id": "parameter_1731",
+                    "parameter_id": "1731",
+                    "test_name": "Mean Corp Volume (MCV)"
+                },
+                {
+                    "value": "31.9",
+                    "machine_value": "31.9",
+                    "unit": "ug/dl",
+                    "min_range": "70",
+                    "max_range": "180",
+                    "deal_id": "parameter_1577",
+                    "parameter_id": "1577",
+                    "test_name": "Serum Iron"
+                },
+                {
+                    "value": "27.6",
+                    "machine_value": "27.6",
+                    "unit": "pg",
+                    "min_range": "27",
+                    "max_range": "32.0",
+                    "deal_id": "parameter_1729",
+                    "parameter_id": "1729",
+                    "test_name": "Mean Corp Hb (MCH)"
+                },
+                {
+                    "value": "322.3",
+                    "machine_value": "322.3",
+                    "unit": "ug/dl",
+                    "min_range": "155",
+                    "max_range": "355",
+                    "deal_id": "parameter_2203",
+                    "parameter_id": "2203",
+                    "test_name": "UIBC"
+                },
+                {
+                    "value": "33.5",
+                    "machine_value": "33.5",
+                    "unit": "g/dL",
+                    "min_range": "31.5",
+                    "max_range": "34.5",
+                    "deal_id": "parameter_1730",
+                    "parameter_id": "1730",
+                    "test_name": "Mean Corp Hb Conc (MCHC)"
+                },
+                {
+                    "value": "354.2",
+                    "machine_value": "",
+                    "unit": "µg/dl",
+                    "min_range": "250",
+                    "max_range": "400",
+                    "deal_id": "parameter_2127",
+                    "parameter_id": "2127",
+                    "test_name": "Serum Total Iron Binding Capicity (TIBC)"
+                },
+                {
+                    "value": "14",
+                    "machine_value": "14",
+                    "unit": "%",
+                    "min_range": "11.6",
+                    "max_range": "14.0",
+                    "deal_id": "parameter_2300",
+                    "parameter_id": "2300",
+                    "test_name": "RDW - CV"
+                },
+                {
+                    "value": "11.1",
+                    "machine_value": "11.1",
+                    "unit": "%",
+                    "min_range": "20",
+                    "max_range": "40",
+                    "deal_id": "parameter_2266",
+                    "parameter_id": "2266",
+                    "test_name": "Lymphocytes"
+                },
+                {
+                    "value": "9.01",
+                    "machine_value": "",
+                    "unit": "%",
+                    "min_range": "10",
+                    "max_range": "50",
+                    "deal_id": "parameter_2292",
+                    "parameter_id": "2292",
+                    "test_name": "Transferrin Saturation %"
+                },
+                {
+                    "value": "30.5",
+                    "machine_value": "30.5",
+                    "unit": "fL",
+                    "min_range": "39.0",
+                    "max_range": "46.0",
+                    "deal_id": "parameter_2263",
+                    "parameter_id": "2263",
+                    "test_name": "RDW - SD"
+                },
+                {
+                    "value": "8",
+                    "machine_value": "8",
+                    "unit": "%",
+                    "min_range": "02",
+                    "max_range": "10",
+                    "deal_id": "parameter_2267",
+                    "parameter_id": "2267",
+                    "test_name": "Monocytes"
+                },
+                {
+                    "value": "14.7",
+                    "machine_value": "14.7",
+                    "unit": "g/dL",
+                    "min_range": "13.0",
+                    "max_range": "17.0",
+                    "deal_id": "parameter_1041",
+                    "parameter_id": "1041",
+                    "test_name": "Haemoglobin (HB)"
+                },
+                {
+                    "value": "15.48",
+                    "machine_value": "",
+                    "unit": "Ratio",
+                    "min_range": "",
+                    "max_range": "",
+                    "deal_id": "parameter_2301",
+                    "parameter_id": "2301",
+                    "test_name": "Mentzer Index"
+                },
+                {
+                    "value": "1.6",
+                    "machine_value": "1.6",
+                    "unit": "%",
+                    "min_range": "01",
+                    "max_range": "06",
+                    "deal_id": "parameter_2265",
+                    "parameter_id": "2265",
+                    "test_name": "Eosinophils"
+                },
+                {
+                    "value": "8.6",
+                    "machine_value": "8.6",
+                    "unit": "fL",
+                    "min_range": "7",
+                    "max_range": "9",
+                    "deal_id": "parameter_1781",
+                    "parameter_id": "1781",
+                    "test_name": "MPV"
+                },
+                {
+                    "value": "16",
+                    "machine_value": "16",
+                    "unit": "10^3/uL",
+                    "min_range": "4.0",
+                    "max_range": "10.0",
+                    "deal_id": "parameter_2246",
+                    "parameter_id": "2246",
+                    "test_name": "Total Leucocyte Count (TLC)"
+                },
+                {
+                    "value": "216.7",
+                    "machine_value": "",
+                    "unit": "Ratio",
+                    "min_range": "",
+                    "max_range": "",
+                    "deal_id": "parameter_6657",
+                    "parameter_id": "6657",
+                    "test_name": "RDWI"
+                },
+                {
+                    "value": "0.4",
+                    "machine_value": "0.4",
+                    "unit": "%",
+                    "min_range": "00",
+                    "max_range": "02",
+                    "deal_id": "parameter_2268",
+                    "parameter_id": "2268",
+                    "test_name": "Basophils"
+                },
+                {
+                    "value": "223",
+                    "machine_value": "223",
+                    "unit": "pg/ml",
+                    "min_range": "222",
+                    "max_range": "1439",
+                    "deal_id": "parameter_2221",
+                    "parameter_id": "2221",
+                    "test_name": "VITAMIN B12"
+                },
+                {
+                    "value": "44.0",
+                    "machine_value": "44.0",
+                    "unit": "%",
+                    "min_range": "40.0",
+                    "max_range": "50.0",
+                    "deal_id": "parameter_1881",
+                    "parameter_id": "1881",
+                    "test_name": "Hematocrit (PCV)"
+                },
+                {
+                    "value": "65",
+                    "machine_value": "",
+                    "unit": "Ratio",
+                    "min_range": "",
+                    "max_range": "",
+                    "deal_id": "parameter_6658",
+                    "parameter_id": "6658",
+                    "test_name": "Green and king index"
+                },
+                {
+                    "value": "43.7",
+                    "machine_value": "43.7",
+                    "unit": "ng/ml",
+                    "min_range": "30",
+                    "max_range": "100",
+                    "deal_id": "parameter_2226",
+                    "parameter_id": "2226",
+                    "test_name": "VITAMIN D (25 - OH VITAMIN D)"
+                },
+                {
+                    "value": "12.59",
+                    "machine_value": "",
+                    "unit": "10^3/uL",
+                    "min_range": "2.0",
+                    "max_range": "7.0",
+                    "deal_id": "parameter_18",
+                    "parameter_id": "18",
+                    "test_name": "Absolute Neutrophil Count (ANC)"
+                },
+                {
+                    "value": "78.9",
+                    "machine_value": "78.9",
+                    "unit": "%",
+                    "min_range": "40",
+                    "max_range": "80",
+                    "deal_id": "parameter_2264",
+                    "parameter_id": "2264",
+                    "test_name": "Neutrophils"
+                },
+                {
+                    "value": "0.55",
+                    "machine_value": "",
+                    "unit": "Ratio",
+                    "min_range": "0",
+                    "max_range": "3",
+                    "deal_id": "parameter_9441",
+                    "parameter_id": "9441",
+                    "test_name": "HDL / LDL Cholesterol Ratio"
+                },
+                {
+                    "value": "157.1",
+                    "machine_value": "157.1",
+                    "unit": "mg/dL",
+                    "min_range": "0",
+                    "max_range": "200",
+                    "deal_id": "parameter_625",
+                    "parameter_id": "625",
+                    "test_name": "Total Cholesterol"
+                },
+                {
+                    "value": "1.77",
+                    "machine_value": "",
+                    "unit": "10^3/uL",
+                    "min_range": "1.4",
+                    "max_range": "3.5",
+                    "deal_id": "parameter_16",
+                    "parameter_id": "16",
+                    "test_name": "Absolute Lymphocyte Count (ALC)"
+                },
+                {
+                    "value": "108.7",
+                    "machine_value": "",
+                    "unit": "mg/dl",
+                    "min_range": "0",
+                    "max_range": "160.0",
+                    "deal_id": "parameter_2272",
+                    "parameter_id": "2272",
+                    "test_name": "Non-HDL Cholesterol"
+                },
+                {
+                    "value": "1.28",
+                    "machine_value": "",
+                    "unit": "10^3/uL",
+                    "min_range": "0.20",
+                    "max_range": "1.00",
+                    "deal_id": "parameter_17",
+                    "parameter_id": "17",
+                    "test_name": "Absolute Monocyte Count"
+                },
+                {
+                    "value": "104.1",
+                    "machine_value": "104.1",
+                    "unit": "mg/dl",
+                    "min_range": "0",
+                    "max_range": "150",
+                    "deal_id": "parameter_2165",
+                    "parameter_id": "2165",
+                    "test_name": "Serum Triglycerides"
+                },
+                {
+                    "value": "0.26",
+                    "machine_value": "",
+                    "unit": "10^3/uL",
+                    "min_range": "0.04",
+                    "max_range": "0.44",
+                    "deal_id": "parameter_14",
+                    "parameter_id": "14",
+                    "test_name": "Absolute Eosinophil Count (AEC)"
+                },
+                {
+                    "value": "0.86",
+                    "machine_value": "0.86",
+                    "unit": "mg/dl",
+                    "min_range": "0.2",
+                    "max_range": "1.2",
+                    "deal_id": "parameter_696",
+                    "parameter_id": "696",
+                    "test_name": "Serum Creatinine"
+                },
+                {
+                    "value": "48.4",
+                    "machine_value": "48.4",
+                    "unit": "mg/dl",
+                    "min_range": "40",
+                    "max_range": "60",
+                    "deal_id": "parameter_1033",
+                    "parameter_id": "1033",
+                    "test_name": "Serum HDL Cholesterol"
+                },
+                {
+                    "value": "0.06",
+                    "machine_value": "",
+                    "unit": "10^3/uL",
+                    "min_range": "0",
+                    "max_range": "0.10",
+                    "deal_id": "parameter_12",
+                    "parameter_id": "12",
+                    "test_name": "Absolute Basophil  Count"
+                },
+                {
+                    "value": "126.34",
+                    "machine_value": "",
+                    "unit": "mL/min/1.73m2",
+                    "min_range": "",
+                    "max_range": "",
+                    "deal_id": "parameter_2303",
+                    "parameter_id": "2303",
+                    "test_name": "GFR, ESTIMATED"
+                },
+                {
+                    "value": "87.88",
+                    "machine_value": "",
+                    "unit": "mg/dl",
+                    "min_range": "0",
+                    "max_range": "100",
+                    "deal_id": "parameter_9438",
+                    "parameter_id": "9438",
+                    "test_name": "LDL Cholesterol Calculated"
+                },
+                {
+                    "value": "1.17",
+                    "machine_value": "1.17",
+                    "unit": "ng/ml",
+                    "min_range": "0.87",
+                    "max_range": "1.78",
+                    "deal_id": "parameter_2097",
+                    "parameter_id": "2097",
+                    "test_name": "Tri-Iodothyronine (T3, Total)"
+                },
+                {
+                    "value": "263",
+                    "machine_value": "263",
+                    "unit": "10^3/µl",
+                    "min_range": "150",
+                    "max_range": "410",
+                    "deal_id": "parameter_1909",
+                    "parameter_id": "1909",
+                    "test_name": "Platelet Count(PLT)"
+                },
+                {
+                    "value": "6.3",
+                    "machine_value": "6.3",
+                    "unit": "mg/dl",
+                    "min_range": "3.5",
+                    "max_range": "7.2",
+                    "deal_id": "parameter_2208",
+                    "parameter_id": "2208",
+                    "test_name": "Serum Uric Acid"
+                },
+                {
+                    "value": "6.44",
+                    "machine_value": "6.44",
+                    "unit": "ug/dl",
+                    "min_range": "5.48",
+                    "max_range": "14.28",
+                    "deal_id": "parameter_2099",
+                    "parameter_id": "2099",
+                    "test_name": "Thyroxine (T4, Total)"
+                },
+                {
+                    "value": "20.82",
+                    "machine_value": "",
+                    "unit": "mg/dl",
+                    "min_range": "0",
+                    "max_range": "30",
+                    "deal_id": "parameter_9439",
+                    "parameter_id": "9439",
+                    "test_name": "VLDL Cholesterol Calculated"
+                },
+                {
+                    "value": "23.46",
+                    "machine_value": "23.46",
+                    "unit": "mg/dl",
+                    "min_range": "17",
+                    "max_range": "43",
+                    "deal_id": "parameter_2206",
+                    "parameter_id": "2206",
+                    "test_name": "Blood Urea"
+                },
+                {
+                    "value": "3.25",
+                    "machine_value": "",
+                    "unit": "Ratio",
+                    "min_range": "3.30",
+                    "max_range": "4.40",
+                    "deal_id": "parameter_2275",
+                    "parameter_id": "2275",
+                    "test_name": "Total CHOL / HDL Cholesterol Ratio"
+                },
+                {
+                    "value": "2.281",
+                    "machine_value": "2.281",
+                    "unit": "µIU/mL",
+                    "min_range": "0.38",
+                    "max_range": "5.33",
+                    "deal_id": "parameter_2192",
+                    "parameter_id": "2192",
+                    "test_name": "Thyroid Stimulating Hormone (TSH)-Ultrasensitive"
+                },
+                {
+                    "value": "11",
+                    "machine_value": "",
+                    "unit": "mg/dl",
+                    "min_range": "8",
+                    "max_range": "20",
+                    "deal_id": "parameter_531",
+                    "parameter_id": "531",
+                    "test_name": "Blood Urea Nitrogen (BUN)"
+                },
+                {
+                    "value": "1.2",
+                    "machine_value": "1.2",
+                    "unit": "mg/dl",
+                    "min_range": "0.3",
+                    "max_range": "1.2",
+                    "deal_id": "parameter_504",
+                    "parameter_id": "504",
+                    "test_name": "Serum Bilirubin, (Total)"
+                },
+                {
+                    "value": "1.82",
+                    "machine_value": "",
+                    "unit": "Ratio",
+                    "min_range": "0.5",
+                    "max_range": "3",
+                    "deal_id": "parameter_9440",
+                    "parameter_id": "9440",
+                    "test_name": "LDL / HDL Cholesterol Ratio"
+                },
+                {
+                    "value": "12.74",
+                    "machine_value": "",
+                    "unit": "Ratio",
+                    "min_range": "",
+                    "max_range": "",
+                    "deal_id": "parameter_2298",
+                    "parameter_id": "2298",
+                    "test_name": "Bun/Creatinine Ratio"
+                },
+                {
+                    "value": "0.26",
+                    "machine_value": "0.26",
+                    "unit": "mg/dl",
+                    "min_range": "0",
+                    "max_range": "0.2",
+                    "deal_id": "parameter_502",
+                    "parameter_id": "502",
+                    "test_name": "Serum Bilirubin, (Direct)"
+                },
+                {
+                    "value": "27.28",
+                    "machine_value": "27",
+                    "unit": "Ratio",
+                    "min_range": "",
+                    "max_range": "",
+                    "deal_id": "parameter_2299",
+                    "parameter_id": "2299",
+                    "test_name": "Urea/Creatinine Ratio"
+                },
+                {
+                    "value": "7.89",
+                    "machine_value": "7.89",
+                    "unit": "g/dl",
+                    "min_range": "6.6",
+                    "max_range": "8.3",
+                    "deal_id": "parameter_1947",
+                    "parameter_id": "1947",
+                    "test_name": "Serum Total Protein"
+                },
+                {
+                    "value": "0.94",
+                    "machine_value": "",
+                    "unit": "mg/dl",
+                    "min_range": "0.0",
+                    "max_range": "0.8",
+                    "deal_id": "parameter_2269",
+                    "parameter_id": "2269",
+                    "test_name": "Serum Bilirubin, (Indirect)"
+                },
+                {
+                    "value": "86.42",
+                    "machine_value": "86.42",
+                    "unit": "mg/dl",
+                    "min_range": "70",
+                    "max_range": "100",
+                    "deal_id": "parameter_977",
+                    "parameter_id": "977",
+                    "test_name": "Glucose, Fasting"
+                },
+                {
+                    "value": "5",
+                    "machine_value": "5",
+                    "unit": "g/dl",
+                    "min_range": "3.5",
+                    "max_range": "5.2",
+                    "deal_id": "parameter_135",
+                    "parameter_id": "135",
+                    "test_name": "Serum Albumin"
+                },
+                {
+                    "value": "16.6",
+                    "machine_value": "16.6",
+                    "unit": "U/L",
+                    "min_range": "3",
+                    "max_range": "50",
+                    "deal_id": "parameter_2024",
+                    "parameter_id": "2024",
+                    "test_name": "Aspartate Aminotransferase (AST/SGOT)"
+                },
+                {
+                    "value": "2.89",
+                    "machine_value": "",
+                    "unit": "gm/dl",
+                    "min_range": "3.0",
+                    "max_range": "4.2",
+                    "deal_id": "parameter_2270",
+                    "parameter_id": "2270",
+                    "test_name": "Serum Globulin"
+                },
+                {
+                    "value": "20.9",
+                    "machine_value": "20.9",
+                    "unit": "U/L",
+                    "min_range": "3",
+                    "max_range": "50",
+                    "deal_id": "parameter_2025",
+                    "parameter_id": "2025",
+                    "test_name": "Alanine Aminotransferase (ALT/SGPT)"
+                },
+                {
+                    "value": "1.73",
+                    "machine_value": "",
+                    "unit": "Ratio",
+                    "min_range": "1.2",
+                    "max_range": "2.5",
+                    "deal_id": "parameter_2271",
+                    "parameter_id": "2271",
+                    "test_name": "Albumin/Globulin Ratio"
+                },
+                {
+                    "value": "78.3",
+                    "machine_value": "78.3",
+                    "unit": "U/L",
+                    "min_range": "43",
+                    "max_range": "115",
+                    "deal_id": "parameter_150",
+                    "parameter_id": "150",
+                    "test_name": "Alkaline Phosphatase (ALP)"
+                },
+                {
+                    "value": "0.79",
+                    "machine_value": "",
+                    "unit": "Ratio",
+                    "min_range": "0.7",
+                    "max_range": "1.4",
+                    "deal_id": "parameter_2302",
+                    "parameter_id": "2302",
+                    "test_name": "SGOT/SGPT Ratio"
+                },
+                {
+                    "value": "16.8",
+                    "machine_value": "16.8",
+                    "unit": "U/L",
+                    "min_range": "5",
+                    "max_range": "55",
+                    "deal_id": "parameter_970",
+                    "parameter_id": "970",
+                    "test_name": "Gamma Glutamyl Transferase (GGT)"
+                }
+            ]
+        }
+    ],
+    "code": 200
+}

@@ -1,0 +1,118 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: linear-gradient(145deg, #f4f6f8 0%, #e8ecf0 50%, #e1f5ee 120%);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 36px 32px;
+  box-shadow: var(--shadow-lg);
+}
+
+.login-card__brand {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.login-card__logo-img {
+  display: block;
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  margin: 0 auto 14px;
+  border-radius: 12px;
+  background: #fff;
+  padding: 8px;
+  box-sizing: border-box;
+  box-shadow: var(--shadow);
+}
+
+.login-card__brand h1 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.login-card__brand p {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.login-form input {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.9375rem;
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.login-form button {
+  margin-top: 4px;
+  padding: 13px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.login-form button:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.login-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-form__error {
+  font-size: 0.8125rem;
+  color: var(--danger);
+}
+
+.login-demo {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.login-demo code {
+  font-family: var(--mono);
+  background: var(--bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+}

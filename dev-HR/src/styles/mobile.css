@@ -1,0 +1,281 @@
+/* Mobile & tablet — desktop layout unchanged at 1024px+ */
+
+@media (max-width: 1023px) {
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  .main-area,
+  .main-area.sidebar-collapsed {
+    margin-left: 0;
+    align-items: stretch;
+  }
+
+  [data-theme='dark'] .main-area::before,
+  [data-theme='dark'] .main-area::after,
+  [data-theme='dark'] .main-area.sidebar-collapsed::before,
+  [data-theme='dark'] .main-area.sidebar-collapsed::after {
+    left: 0;
+  }
+
+  .page-content {
+    padding: 16px 14px 36px;
+    max-width: 100%;
+  }
+
+  .top-bar__inner {
+    grid-template-columns: auto 1fr auto;
+    gap: 8px;
+    padding: 12px 14px;
+  }
+
+  .top-bar__platform-logo {
+    height: 22px;
+    max-width: 88px;
+  }
+
+  .top-bar__platform-name {
+    font-size: 0.875rem;
+  }
+
+  .top-bar__leading {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .top-bar__menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .top-bar__menu-btn:hover {
+    background: var(--border-subtle);
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .page-header h1 {
+    font-size: 1.25rem;
+    line-height: 1.3;
+  }
+
+  .page-header p {
+    font-size: 0.75rem;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .kpi-card {
+    padding: 14px 16px;
+  }
+
+  .kpi-card__value {
+    font-size: 1.5rem;
+  }
+
+  .section-title {
+    margin: 22px 0 12px;
+    font-size: 0.625rem;
+    gap: 8px;
+  }
+
+  .grid-2 {
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .stack-spacer {
+    margin-top: 12px !important;
+  }
+
+  .dashboard-toolbar {
+    display: flex !important;
+    justify-content: stretch !important;
+    margin-bottom: 12px !important;
+  }
+
+  .dashboard-toolbar .toggle-group {
+    width: 100%;
+    display: flex;
+  }
+
+  .dashboard-toolbar .toggle-group button {
+    flex: 1;
+    padding: 8px 10px;
+    font-size: 0.6875rem;
+  }
+
+  .chart-card {
+    padding: 14px;
+  }
+
+  .chart-card__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .chart-card__header .toggle-group,
+  .chart-card__header .status-pill {
+    align-self: flex-start;
+  }
+
+  .chart-card__body {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -2px;
+    padding: 0 2px;
+  }
+
+  .chart-card__body .recharts-responsive-container {
+    min-width: 300px;
+  }
+
+  .chart-card__insight {
+    font-size: 0.75rem;
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+
+  .disease-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 6px;
+    margin: 0 -2px 16px;
+    padding: 0 2px 6px;
+    scrollbar-width: thin;
+  }
+
+  .disease-tab {
+    flex-shrink: 0;
+    padding: 8px 12px;
+    font-size: 0.6875rem;
+  }
+
+  .blood-panels {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .blood-panel__svg {
+    width: 100px;
+    height: 100px;
+  }
+
+  .heatmap-scroll {
+    margin: 0 -14px;
+    padding: 0 14px;
+  }
+
+  .heatmap-legend {
+    flex-wrap: wrap;
+    gap: 6px 10px;
+  }
+
+  .dept-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dept-card__stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .history-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .employees-toolbar {
+    max-width: none;
+  }
+
+  .employees-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .employees-table {
+    min-width: 580px;
+  }
+
+  .employees-table th,
+  .employees-table td {
+    padding: 10px 12px;
+    font-size: 0.8125rem;
+  }
+
+  .insight-cards-grid {
+    gap: 10px;
+  }
+
+  .insight-card {
+    padding: 14px 16px;
+  }
+
+  .key-insights-section__header h2 {
+    font-size: 1.0625rem;
+    flex-wrap: wrap;
+  }
+
+  .recommendation-tier {
+    padding: 16px 18px;
+  }
+
+  .positive-wins-grid {
+    gap: 16px;
+  }
+
+  .bmi-waist-highlight {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .top-bar__btn--text {
+    padding: 0 10px;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dept-card__stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dept-card__stats > div:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .history-card__metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .history-card__metrics > div:last-child {
+    grid-column: 1 / -1;
+  }
+}
