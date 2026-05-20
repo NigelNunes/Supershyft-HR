@@ -20,11 +20,54 @@ export interface DiseaseDefinition {
 }
 
 export interface KpiSummary {
-  totalEmployees: number;
-  enrolledForTest: number;
+  employeesEnrolled: number;
+  totalBloodTest: number;
+  doctorConsultation: number;
   highRiskGroup: number;
-  enrolledForDoctorConsultation: number;
 }
+
+export interface ParticipationByAge {
+  ageGroup: string;
+  enrolled: number;
+  percent: number;
+}
+
+export interface ParticipationByGender {
+  gender: string;
+  enrolled: number;
+  percent: number;
+}
+
+export interface TopHighRiskDisease {
+  name: string;
+  highRiskPercent: number;
+}
+
+export interface CompanyAverageScores {
+  nutrition: number;
+  fitness: number;
+  lifestyle: number;
+}
+
+export type OverallRiskBand = 'Optimal' | 'Low risk' | 'Increased Risk' | 'High risk';
+
+export interface OverallRiskScoreBucket {
+  band: OverallRiskBand;
+  percent: number;
+  count: number;
+}
+
+export interface DistributionSlice {
+  label: string;
+  percent: number;
+}
+
+export interface GenderDistributionPair {
+  male: DistributionSlice[];
+  female: DistributionSlice[];
+}
+
+export type LifestyleGenderView = 'both' | 'male' | 'female';
 
 export interface RiskDistributionBucket {
   level: RiskLevel;
@@ -98,11 +141,17 @@ export interface DepartmentSummary {
   highRiskPercent: number;
 }
 
+export interface DepartmentLifestyleDistribution {
+  physical: DistributionSlice[];
+  sleep: DistributionSlice[];
+}
+
 export interface DepartmentDetail extends DepartmentSummary {
-  kpis: { label: string; value: string; sub?: string }[];
-  riskHighlights: { disease: string; percent: number }[];
-  lifestyleInsight: string;
+  avgRiskScore: number;
+  topHighRiskDiseases: TopHighRiskDisease[];
+  lifestyleDistribution: DepartmentLifestyleDistribution;
   oxidativeStress: OxidativeStressByDept;
+  companyScores: CompanyAverageScores;
 }
 
 export interface CampHistoryEntry {
@@ -220,6 +269,13 @@ export interface KeyInsightsData {
 
 export interface DashboardData {
   kpis: KpiSummary;
+  participationByAge: ParticipationByAge[];
+  participationByGender: ParticipationByGender[];
+  topHighRiskDiseases: TopHighRiskDisease[];
+  companyScores: CompanyAverageScores;
+  overallRiskScore: OverallRiskScoreBucket[];
+  physicalActivityByGender: GenderDistributionPair;
+  sleepQualityByGender: GenderDistributionPair;
   diseases: DiseaseRiskData[];
   lifestyle: LifestyleIndicator[];
   oxidativeStress: OxidativeStressByDept[];

@@ -1,9 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
-import { CHART_INFO } from '../content/chartInfo';
 import { mockDashboard } from '../data/mockDashboard';
-import { ChartCard } from '../components/ui/ChartCard';
-import { InsightFooter } from '../components/ui/InsightFooter';
 import './DepartmentsPage.css';
 
 export function DepartmentsPage() {
@@ -29,10 +26,6 @@ export function DepartmentsPage() {
                 <span className="dept-card__lbl">Employees</span>
               </div>
               <div>
-                <span className="dept-card__val">{dept.enrolledPercent}%</span>
-                <span className="dept-card__lbl">Enrolled</span>
-              </div>
-              <div>
                 <span className="dept-card__val dept-card__val--risk">{dept.highRiskPercent}%</span>
                 <span className="dept-card__lbl">High risk</span>
               </div>
@@ -40,21 +33,6 @@ export function DepartmentsPage() {
           </Link>
         ))}
       </div>
-
-      <ChartCard
-        title="Department overview"
-        info={CHART_INFO.departmentsOverview}
-        insight={
-          <InsightFooter
-            tone="concern"
-            text="Sales and Operations show the highest metabolic risk rates — consider targeted wellness programmes."
-          />
-        }
-      >
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-          Click any department card to view 4–5 detailed charts and insights for that team.
-        </p>
-      </ChartCard>
     </>
   );
 }

@@ -1,20 +1,21 @@
 import { useMemo, useState } from 'react';
-import { Activity, Stethoscope, Users, AlertTriangle } from 'lucide-react';
+import { Stethoscope, Users, AlertTriangle, Droplets } from 'lucide-react';
 import { getDashboardForToggle, mockDashboard } from '../data/mockDashboard';
 import { KpiCard } from '../components/ui/KpiCard';
 import { DimensionToggle } from '../components/ui/DimensionToggle';
 import { DiseaseDeepDive } from '../components/charts/DiseaseDeepDive';
-import { LifestyleCharts } from '../components/charts/LifestyleCharts';
 import { OxidativeStressChart } from '../components/charts/OxidativeStressChart';
 import { BloodParameterPanels } from '../components/charts/BloodParameterPanels';
 import { GenderComparisonChart } from '../components/charts/GenderComparisonChart';
 import { MetabolicAgeChart } from '../components/charts/MetabolicAgeChart';
-import { PositiveWinsPanel } from '../components/charts/PositiveWinsPanel';
-import { NutritionMacroChart } from '../components/charts/NutritionMacroChart';
-import { BmiWaistChart } from '../components/charts/BmiWaistChart';
 import { BloodGroupHeatmap } from '../components/charts/BloodGroupHeatmap';
-import { TopAbnormalMarkers } from '../components/charts/TopAbnormalMarkers';
 import { KeyInsightsSection } from '../components/charts/KeyInsightsSection';
+import { ParticipationCharts } from '../components/charts/ParticipationCharts';
+import { TopHighRiskDiseasesChart } from '../components/charts/TopHighRiskDiseasesChart';
+import { CompanyAverageScores } from '../components/charts/CompanyAverageScores';
+import { OverallRiskScoreChart } from '../components/charts/OverallRiskScoreChart';
+import { PhysicalSleepPieCharts } from '../components/charts/PhysicalSleepPieCharts';
+import { PositiveWinsPanel } from '../components/charts/PositiveWinsPanel';
 import type { ToggleDimension } from '../types';
 
 export function DashboardPage() {
@@ -24,7 +25,7 @@ export function DashboardPage() {
   const { kpis, org } = d;
 
   return (
-    <>
+    <div className="dashboard-page">
       <header className="page-header">
         <div>
           <h1>HR health intelligence dashboard</h1>
@@ -38,70 +39,71 @@ export function DashboardPage() {
 
       <div className="kpi-grid">
         <KpiCard
-          label="Total employees"
-          value={kpis.totalEmployees.toLocaleString()}
-          sub="Across all departments"
+          label="Employees Enrolled"
+          value={kpis.employeesEnrolled.toLocaleString()}
+          sub="Completed wellness camp enrollment"
           icon={Users}
           variant="green"
         />
         <KpiCard
-          label="Enrolled for test"
-          value={kpis.enrolledForTest.toLocaleString()}
-          sub={`${Math.round((kpis.enrolledForTest / kpis.totalEmployees) * 100)}% participation`}
-          icon={Activity}
+          label="Total Blood test"
+          value={kpis.totalBloodTest.toLocaleString()}
+          sub={`${Math.round((kpis.totalBloodTest / kpis.employeesEnrolled) * 100)}% of enrolled`}
+          icon={Droplets}
           variant="blue"
         />
         <KpiCard
-          label="High-risk group"
+          label="Doctor consultation"
+          value={kpis.doctorConsultation.toLocaleString()}
+          sub="Enrolled for consultation"
+          icon={Stethoscope}
+          variant="amber"
+        />
+        <KpiCard
+          label="High Risk Group"
           value={kpis.highRiskGroup.toLocaleString()}
           sub="Metabolic age ≥3 years above actual"
           icon={AlertTriangle}
           variant="red"
         />
-        <KpiCard
-          label="Doctor consultation"
-          value={kpis.enrolledForDoctorConsultation.toLocaleString()}
-          sub="Enrolled for consultation"
-          icon={Stethoscope}
-          variant="amber"
-        />
       </div>
 
-      <div className="section-title">Workforce health profile</div>
+      <ParticipationCharts byAge={d.participationByAge} byGender={d.participationByGender} />
+
       <div className="grid-2">
         <MetabolicAgeChart data={d.metabolicAge} />
-        <PositiveWinsPanel data={d.positiveWins} />
+        <TopHighRiskDiseasesChart diseases={d.topHighRiskDiseases} />
       </div>
-      <div className="grid-2 stack-spacer">
-        <NutritionMacroChart data={d.nutrition} />
-        <BmiWaistChart data={d.bmiWaist} />
-      </div>
+
+      <CompanyAverageScores scores={d.companyScores} />
+
+      <OverallRiskScoreChart buckets={d.overallRiskScore} />
+
+      <PhysicalSleepPieCharts
+        physical={d.physicalActivityByGender}
+        sleep={d.sleepQualityByGender}
+      />
 
       <div className="section-title">Risk & lifestyle</div>
       <div className="dashboard-toolbar">
         <DimensionToggle value={dimension} onChange={setDimension} />
       </div>
       <DiseaseDeepDive diseases={toggled.diseases} dimension={dimension} />
-      <div className="stack-spacer">
-        <LifestyleCharts indicators={toggled.lifestyle} dimension={dimension} />
-      </div>
 
       <div className="section-title">Oxidative stress</div>
       <OxidativeStressChart data={d.oxidativeStress} />
 
       <div className="section-title">Blood & lab intelligence</div>
       <BloodGroupHeatmap rows={d.bloodGroupHeatmap} groupNames={d.bloodGroupNames} />
-      <div className="stack-spacer">
-        <TopAbnormalMarkers markers={d.abnormalMarkers} />
-      </div>
-      <div className="stack-spacer">
-        <BloodParameterPanels panels={d.bloodPanels} />
-      </div>
+      <BloodParameterPanels panels={d.bloodPanels} />
 
       <div className="section-title">Gender comparison</div>
       <GenderComparisonChart data={d.genderComparison} />
 
+      <div className="section-title">Positive wins</div>
+      <PositiveWinsPanel data={d.positiveWins} />
+
       <KeyInsightsSection data={d.keyInsights} />
-    </>
+    </div>
   );
 }

@@ -1,0 +1,92 @@
+.physical-sleep-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.physical-sleep-section__toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.physical-sleep-dual-pies {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.physical-sleep-dual-pies--single {
+  grid-template-columns: 1fr;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.physical-sleep-pie-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.physical-sleep-pie-unit__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.physical-sleep-pie-unit__label--male {
+  color: var(--chart-male);
+}
+
+.physical-sleep-pie-unit__label--female {
+  color: var(--chart-female);
+}
+
+.physical-sleep-pie-unit__chart {
+  width: 100%;
+  height: 220px;
+}
+
+.physical-sleep-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.physical-sleep-shared-legend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px 20px;
+  margin: 4px 0 0;
+  padding: 0;
+}
+
+.physical-sleep-shared-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.physical-sleep-shared-legend__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .physical-sleep-dual-pies {
+    grid-template-columns: 1fr;
+  }
+
+  .physical-sleep-dual-pies--single {
+    max-width: none;
+  }
+}

@@ -50,6 +50,13 @@ export const RISK_COLORS: Record<string, string> = {
   'Very High': '#E24B4A',
 };
 
+export const OVERALL_RISK_COLORS: Record<string, string> = {
+  Optimal: '#1D9E75',
+  'Low risk': '#5DCAA5',
+  'Increased Risk': '#EF9F27',
+  'High risk': '#E24B4A',
+};
+
 /** Theme-aware Recharts tooltip + axis tokens (use inside chart components). */
 export function useChartTheme() {
   const { theme } = useTheme();

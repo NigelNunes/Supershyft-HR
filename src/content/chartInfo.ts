@@ -5,6 +5,33 @@ export function formatDimensionLabel(dimension: ToggleDimension): string {
 }
 
 export const CHART_INFO = {
+  participationByAge:
+    'Number and share of employees who completed the wellness camp, broken down by age group. Helps HR target outreach to under-represented cohorts.',
+
+  participationByGender:
+    'Camp participation by gender. Compare enrollment rates to workforce gender mix when planning inclusive wellness programmes.',
+
+  topHighRiskDiseases:
+    'The three disease areas with the highest average elevated-risk share (Increased, High, or Very High) across all tested employees.',
+
+  companyScores:
+    'Company-wide average scores from nutrition, fitness, and lifestyle assessments (health-span-index, scale 0–100). Higher is better.',
+
+  deptPhysicalPie:
+    'Share of employees by daily activity: less than 30 mins, 30–60 mins, more than 60 mins, or rarely/never.',
+
+  deptSleepPie:
+    'Share of employees by nightly sleep: less than 5 hrs, 5–7 hrs, 7–9 hrs, or more than 9 hrs.',
+
+  overallRiskScore:
+    'Composite workforce risk profile aggregated into four bands: Optimal, Low risk, Increased Risk, and High risk.',
+
+  physicalActivityPie:
+    'Physical activity distribution (less than 30 mins, 30–60 mins, more than 60 mins, rarely/never) from FitPrint lifestyle data, by gender.',
+
+  sleepQualityPie:
+    'Sleep duration (less than 5, 5–7, 7–9, more than 9 hours) from FitPrint lifestyle data, by gender.',
+
   metabolicAge:
     'Distribution of employees by how far their metabolic age exceeds their actual age. A gap of 3 years or more defines the high-risk group used in your dashboard KPI.',
 
@@ -38,6 +65,18 @@ export const CHART_INFO = {
   departmentsOverview:
     'Enrollment and high metabolic-risk rates for every department. Select a department card above for detailed charts and insights.',
 
+  deptTopDiseases:
+    'Top three disease areas with the highest elevated-risk share within this department, aligned with the main dashboard high-risk view.',
+
+  deptLifestyleAverages:
+    'Department-wide distribution of physical activity levels and sleep hours from FitPrint lifestyle data.',
+
+  deptOxidativePie:
+    'Distribution of oxidative stress severity bands within this department: Low, Moderate, High, and Very High.',
+
+  deptCompanyScores:
+    'Average nutrition, fitness, and lifestyle scores for employees in this department (scale 0–100).',
+
   deptTopRisks:
     'Share of employees in this department classified in elevated risk bands (Increased, High, or Very High) for each listed condition.',
 
@@ -56,9 +95,9 @@ export const CHART_INFO = {
 
 const LIFESTYLE_INFO: Record<string, string> = {
   'physical-activity':
-    'Percentage of employees in each activity tier (Low, Moderate, High) from the lifestyle questionnaire. Compare across {segment} to identify groups needing movement programmes.',
+    'Percentage in each activity band (less than 30 mins, 30–60 mins, more than 60 mins, rarely/never). Compare across {segment} to target movement programmes.',
   'sleep-quality':
-    'Percentage reporting Poor, Average, or Sufficient sleep from the lifestyle questionnaire. Compare across {segment} to target sleep-health support.',
+    'Percentage by sleep hours (less than 5, 5–7, 7–9, more than 9). Compare across {segment} to target sleep-health support.',
 };
 
 export function lifestyleInfo(itemId: string, itemTitle: string, dimension: ToggleDimension): string {

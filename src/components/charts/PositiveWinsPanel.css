@@ -4,6 +4,10 @@
   gap: 20px;
 }
 
+.positive-wins-grid > * {
+  min-width: 0;
+}
+
 @media (max-width: 900px) {
   .positive-wins-grid {
     grid-template-columns: 1fr;

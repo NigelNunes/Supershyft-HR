@@ -20,7 +20,7 @@ interface InterventionsSectionProps {
 export function InterventionsSection({ interventions }: InterventionsSectionProps) {
   return (
     <ChartCard
-      title="Recommended interventions & expected impact"
+      title="Recommended"
       subtitle="Prioritised actions for HR and wellness teams"
       info={CHART_INFO.interventions}
       insight={

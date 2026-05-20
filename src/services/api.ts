@@ -1,7 +1,7 @@
 /**
  * API client aligned with dev-api routes.
- * HR aggregate endpoints are not yet exposed; dashboard uses mock data
- * and will call these when backend HR routes ship.
+ * HR aggregate endpoints are not exposed yet; the dashboard aggregates
+ * per-employee overview + health-span-index shapes (see data/aggregateHrDashboard.ts).
  */
 
 const BASE = import.meta.env.VITE_API_BASE_URL || '/api';
@@ -29,27 +29,48 @@ export const authApi = {
     ),
 };
 
-/** Individual report shape from dev-api IndividualHealthReport.reports JSON */
-export interface IndividualReportPayload {
-  metabolic_age?: number;
-  diseases?: Array<{
-    code: string;
-    name: string;
-    risk_status: string;
-    risk_score_scaled: number;
-    healthy_percentile?: number;
-  }>;
-}
+export type {
+  ApiDiseaseOverview,
+  ApiHealthSpanIndex,
+  ApiOverviewReport,
+  ApiPositiveWins,
+  ApiRiskAnalysisItem,
+  ApiRiskAnalysisList,
+  ApiRiskStatus,
+} from './apiTypes';
 
+/** GET /reports/{assessment_id}/overview */
 export const reportsApi = {
   overview: (assessmentId: number, token: string) =>
-    request<{ metabolic_age: number; risk_analysis: unknown[] }>(`/reports/${assessmentId}/overview`, {
+    request<import('./apiTypes').ApiOverviewReport>(`/reports/${assessmentId}/overview`, {
       headers: { Authorization: `Bearer ${token}` },
     }),
+
+  /** GET /reports/{assessment_id}/risk-analysis */
   riskAnalysis: (assessmentId: number, token: string, disease?: string) => {
     const q = disease ? `?disease=${encodeURIComponent(disease)}` : '';
-    return request<unknown>(`/reports/${assessmentId}/risk-analysis${q}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    return request<import('./apiTypes').ApiRiskAnalysisList | import('./apiTypes').ApiDiseaseOverview>(
+      `/reports/${assessmentId}/risk-analysis${q}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
   },
+
+  /** POST /reports/{assessment_instance_id}/health-span-index */
+  healthSpanIndex: (
+    assessmentInstanceId: number,
+    token: string,
+    sourceAssessmentInstanceIds: number[],
+    includeDetails = false,
+  ) =>
+    request<import('./apiTypes').ApiHealthSpanIndex>(
+      `/reports/${assessmentInstanceId}/health-span-index`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          source_assessment_instance_ids: sourceAssessmentInstanceIds,
+          include_details: includeDetails,
+        }),
+      },
+    ),
 };
