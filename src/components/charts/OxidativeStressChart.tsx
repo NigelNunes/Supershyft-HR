@@ -1,67 +1,75 @@
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { useMemo } from 'react';
 import { CHART_INFO } from '../../content/chartInfo';
-import type { OxidativeStressByDept } from '../../types';
+import type { DepartmentSummary, OxidativeStressByDept } from '../../types';
 import { ChartCard } from '../ui/ChartCard';
 import { InsightFooter } from '../ui/InsightFooter';
-import { useChartTheme } from './chartTheme';
-import { pctTooltip } from './tooltipFormat';
+import { OxidativeStressPanelBody } from './OxidativeStressPanelBody';
+import { oxidativeElevatedPercent } from './oxidativeStressBands';
+import './OxidativeStressChart.css';
 
 interface OxidativeStressChartProps {
   data: OxidativeStressByDept[];
+  departments?: DepartmentSummary[];
 }
 
-const STACK_COLORS = {
-  low: '#1D9E75',
-  moderate: '#EF9F27',
-  high: '#D85A30',
-  veryHigh: '#E24B4A',
-};
+function weightedCompanyRollup(
+  rows: OxidativeStressByDept[],
+  headcounts: Map<string, number>,
+): OxidativeStressByDept {
+  let weightSum = 0;
+  let low = 0;
+  let moderate = 0;
+  let high = 0;
+  let veryHigh = 0;
 
-export function OxidativeStressChart({ data }: OxidativeStressChartProps) {
-  const chart = useChartTheme();
-  const chartData = data.map((d) => ({
-    department: d.department,
-    Low: d.low,
-    Moderate: d.moderate,
-    High: d.high,
-    'Very High': d.veryHigh,
-  }));
+  for (const row of rows) {
+    const w = headcounts.get(row.department) ?? 1;
+    weightSum += w;
+    low += row.low * w;
+    moderate += row.moderate * w;
+    high += row.high * w;
+    veryHigh += row.veryHigh * w;
+  }
 
-  const worst = [...data].sort((a, b) => b.high + b.veryHigh - (a.high + a.veryHigh))[0];
-  const insight = worst
-    ? `${worst.department} shows the highest combined High/Very High oxidative stress burden (${worst.high + worst.veryHigh}%). Prioritise antioxidant-rich nutrition and recovery programmes for this department.`
-    : 'Review department-level oxidative stress distribution to target interventions.';
+  if (weightSum === 0) weightSum = 1;
+
+  return {
+    department: 'Company-wide',
+    low: Math.round((low / weightSum) * 10) / 10,
+    moderate: Math.round((moderate / weightSum) * 10) / 10,
+    high: Math.round((high / weightSum) * 10) / 10,
+    veryHigh: Math.round((veryHigh / weightSum) * 10) / 10,
+  };
+}
+
+export function OxidativeStressChart({ data, departments = [] }: OxidativeStressChartProps) {
+  const headcounts = useMemo(
+    () => new Map(departments.map((d) => [d.name, d.headcount])),
+    [departments],
+  );
+
+  const company = useMemo(() => weightedCompanyRollup(data, headcounts), [data, headcounts]);
+  const companyElevated = oxidativeElevatedPercent(company);
+
+  const totalEmployees = useMemo(() => {
+    const fromDepts = departments.reduce((sum, d) => sum + d.headcount, 0);
+    return fromDepts > 0 ? fromDepts : 0;
+  }, [departments]);
 
   return (
     <ChartCard
-      title="Oxidative stress — department view"
-      subtitle="Critical metabolic stress indicator"
+      title="Oxidative stress"
+      subtitle="Company-wide severity distribution"
       info={CHART_INFO.oxidativeStress}
-      insight={<InsightFooter tone="concern" text={insight} />}
-      className="oxidative-chart"
+      insight={
+        <InsightFooter
+          tone={companyElevated > 20 ? 'concern' : 'neutral'}
+          text={`${companyElevated}% of employees are in elevated oxidative stress bands (High + Very High) — use for wellness programme prioritisation.`}
+        />
+      }
+      className="oxidative-stress-card"
     >
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={chartData} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={chart.gridStroke} horizontal={false} />
-          <XAxis type="number" domain={[0, 100]} tick={chart.tick(11)} />
-          <YAxis type="category" dataKey="department" width={90} tick={chart.tick(11)} />
-          <Tooltip {...chart.tooltipProps} formatter={pctTooltip} />
-          <Legend wrapperStyle={chart.legendStyle} />
-          <Bar dataKey="Low" stackId="a" fill={STACK_COLORS.low} />
-          <Bar dataKey="Moderate" stackId="a" fill={STACK_COLORS.moderate} />
-          <Bar dataKey="High" stackId="a" fill={STACK_COLORS.high} />
-          <Bar dataKey="Very High" stackId="a" fill={STACK_COLORS.veryHigh} radius={[0, 4, 4, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
+      <OxidativeStressPanelBody data={company} headcount={totalEmployees} />
     </ChartCard>
   );
 }

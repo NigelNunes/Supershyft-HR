@@ -3,10 +3,13 @@ import { ArrowLeft, Users, AlertTriangle, Gauge } from 'lucide-react';
 import { getDepartmentDetail } from '../data/mockDashboard';
 import { CHART_INFO } from '../content/chartInfo';
 import { KpiCard } from '../components/ui/KpiCard';
-import { TopHighRiskDiseasesChart } from '../components/charts/TopHighRiskDiseasesChart';
 import { DeptLifestylePieCharts } from '../components/charts/DeptLifestylePieCharts';
 import { OxidativeStressPieChart } from '../components/charts/OxidativeStressPieChart';
 import { CompanyAverageScores } from '../components/charts/CompanyAverageScores';
+
+function formatDeptGender(male: number, female: number): string {
+  return `M: ${male.toLocaleString()} · F: ${female.toLocaleString()}`;
+}
 
 export function DepartmentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +23,8 @@ export function DepartmentDetailPage() {
       </div>
     );
   }
+
+  const { genderBreakdown } = detail;
 
   return (
     <div className="dashboard-page">
@@ -37,7 +42,7 @@ export function DepartmentDetailPage() {
         <KpiCard
           label="Employees"
           value={detail.headcount.toLocaleString()}
-          sub="In this department"
+          sub={formatDeptGender(genderBreakdown.male, genderBreakdown.female)}
           icon={Users}
           variant="green"
         />
@@ -57,24 +62,16 @@ export function DepartmentDetailPage() {
         />
       </div>
 
-      <TopHighRiskDiseasesChart
-        diseases={detail.topHighRiskDiseases}
-        title="High-risk distribution"
-        subtitle={`Top 3 diseases · ${detail.name}`}
-        info={CHART_INFO.deptTopDiseases}
-        insightPrefix="this department"
-      />
-
-      <DeptLifestylePieCharts data={detail.lifestyleDistribution} departmentName={detail.name} />
-
-      <OxidativeStressPieChart data={detail.oxidativeStress} />
-
       <CompanyAverageScores
         scores={detail.companyScores}
         title="Department average scores"
         subtitle="Nutrition · fitness · lifestyle (scale 0–100)"
         info={CHART_INFO.deptCompanyScores}
       />
+
+      <DeptLifestylePieCharts data={detail.lifestyleDistribution} departmentName={detail.name} />
+
+      <OxidativeStressPieChart data={detail.oxidativeStress} headcount={detail.headcount} />
     </div>
   );
 }

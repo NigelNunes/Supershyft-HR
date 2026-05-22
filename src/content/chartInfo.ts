@@ -8,9 +8,6 @@ export const CHART_INFO = {
   participationByAge:
     'Number and share of employees who completed the wellness camp, broken down by age group. Helps HR target outreach to under-represented cohorts.',
 
-  participationByGender:
-    'Camp participation by gender. Compare enrollment rates to workforce gender mix when planning inclusive wellness programmes.',
-
   topHighRiskDiseases:
     'The three disease areas with the highest average elevated-risk share (Increased, High, or Very High) across all tested employees.',
 
@@ -48,7 +45,7 @@ export const CHART_INFO = {
     'Select a condition to see what share of employees fall in each risk band: Healthy, Increased, High, or Very High. Use the Gender / Department toggle to compare groups.',
 
   oxidativeStress:
-    'Oxidative stress measures cellular damage from free radicals. This chart shows severity bands by department so you can target wellness support where metabolic stress is highest.',
+    'Oxidative stress measures cellular damage from free radicals. This chart shows company-wide severity bands (Low, Moderate, High, Very High) so you can gauge overall workforce metabolic stress.',
 
   bloodHeatmap:
     'Each cell shows the percentage of lab tests in that panel that fell within the clinical reference range for that department. Greener cells mean better results; paler or warmer tones need follow-up.',

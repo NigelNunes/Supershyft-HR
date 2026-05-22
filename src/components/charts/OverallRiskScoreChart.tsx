@@ -1,18 +1,10 @@
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { CHART_INFO } from '../../content/chartInfo';
 import type { OverallRiskScoreBucket } from '../../types';
 import { ChartCard } from '../ui/ChartCard';
 import { InsightFooter } from '../ui/InsightFooter';
 import { OVERALL_RISK_COLORS, useChartTheme } from './chartTheme';
+import './OverallRiskScoreChart.css';
 
 interface OverallRiskScoreChartProps {
   buckets: OverallRiskScoreBucket[];
@@ -21,16 +13,18 @@ interface OverallRiskScoreChartProps {
 export function OverallRiskScoreChart({ buckets }: OverallRiskScoreChartProps) {
   const chart = useChartTheme();
   const chartData = buckets.map((b) => ({
-    band: b.band,
-    percent: b.percent,
+    name: b.band,
+    value: b.percent,
     count: b.count,
   }));
   const elevated = buckets
     .filter((b) => b.band === 'Increased Risk' || b.band === 'High risk')
     .reduce((sum, b) => sum + b.percent, 0);
+  const totalCount = buckets.reduce((sum, b) => sum + b.count, 0);
 
   return (
     <ChartCard
+      className="overall-risk-pie-card"
       title="Overall risk score"
       subtitle="Workforce distribution by risk band"
       info={CHART_INFO.overallRiskScore}
@@ -41,37 +35,61 @@ export function OverallRiskScoreChart({ buckets }: OverallRiskScoreChartProps) {
         />
       }
     >
-      <ResponsiveContainer width="100%" height={240}>
-        <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 48 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={chart.gridStroke} vertical={false} />
-          <XAxis
-            dataKey="band"
-            tick={chart.tick(10)}
-            interval={0}
-            angle={-10}
-            textAnchor="end"
-            height={56}
-          />
-          <YAxis
-            domain={[0, 100]}
-            tick={chart.tick(11)}
-            label={{ value: '% of workforce', angle: -90, position: 'insideLeft', ...chart.axisLabel(11) }}
-          />
-          <Tooltip
-            {...chart.tooltipProps}
-            formatter={(value, _name, item) => {
-              const count = (item?.payload as { count?: number })?.count ?? 0;
-              const v = typeof value === 'number' ? value : Number(value);
-              return [`${v}% (${count} employees)`, 'Share'];
-            }}
-          />
-          <Bar dataKey="percent" name="Share" radius={[4, 4, 0, 0]} maxBarSize={72}>
-            {chartData.map((entry) => (
-              <Cell key={entry.band} fill={OVERALL_RISK_COLORS[entry.band] ?? chart.colors.accent} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+      <div className="overall-risk-pie">
+        <div className="overall-risk-pie__chart">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={chartData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                innerRadius={58}
+                outerRadius={92}
+                paddingAngle={3}
+                stroke="none"
+              >
+                {chartData.map((entry) => (
+                  <Cell
+                    key={entry.name}
+                    fill={OVERALL_RISK_COLORS[entry.name] ?? chart.colors.accent}
+                  />
+                ))}
+              </Pie>
+              <Tooltip
+                {...chart.tooltipProps}
+                formatter={(value, _name, item) => {
+                  const count = (item?.payload as { count?: number })?.count ?? 0;
+                  const v = typeof value === 'number' ? value : Number(value);
+                  return [`${v}% (${count.toLocaleString()} employees)`, 'Share'];
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="overall-risk-pie__center" aria-hidden>
+            <span className="overall-risk-pie__center-value">{elevated}%</span>
+            <span className="overall-risk-pie__center-label">elevated</span>
+          </div>
+        </div>
+        <ul className="overall-risk-pie__bands">
+          {buckets.map((b) => (
+            <li key={b.band}>
+              <span
+                className="overall-risk-pie__dot"
+                style={{ backgroundColor: OVERALL_RISK_COLORS[b.band] }}
+              />
+              <span className="overall-risk-pie__band-name">{b.band}</span>
+              <span className="overall-risk-pie__band-stat">
+                {b.percent}% · {b.count.toLocaleString()}
+              </span>
+            </li>
+          ))}
+          <li className="overall-risk-pie__total">
+            <span>{totalCount.toLocaleString()} employees assessed</span>
+          </li>
+        </ul>
+      </div>
     </ChartCard>
   );
 }

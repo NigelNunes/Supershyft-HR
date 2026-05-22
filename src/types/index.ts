@@ -146,9 +146,15 @@ export interface DepartmentLifestyleDistribution {
   sleep: DistributionSlice[];
 }
 
+export interface DepartmentGenderBreakdown {
+  male: number;
+  female: number;
+}
+
 export interface DepartmentDetail extends DepartmentSummary {
   avgRiskScore: number;
   topHighRiskDiseases: TopHighRiskDisease[];
+  genderBreakdown: DepartmentGenderBreakdown;
   lifestyleDistribution: DepartmentLifestyleDistribution;
   oxidativeStress: OxidativeStressByDept;
   companyScores: CompanyAverageScores;

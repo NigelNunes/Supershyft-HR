@@ -1,0 +1,108 @@
+.participation-age-pie {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.participation-age-pie__chart {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  flex-shrink: 0;
+}
+
+.distribution-pair-row .participation-age-pie__chart {
+  height: 188px;
+}
+
+.participation-age-pie__center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  text-align: center;
+}
+
+.participation-age-pie__center-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.participation-age-pie__center-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.participation-age-pie__breakdown {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.participation-age-pie__row {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.8125rem;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.participation-age-pie__row--lead {
+  background: color-mix(in srgb, var(--chart-accent, #0f6e56) 12%, transparent);
+}
+
+.participation-age-pie__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.participation-age-pie__label {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.participation-age-pie__stat {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.participation-age-pie__total {
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  grid-column: 1 / -1;
+}
+
+.distribution-pair-row .participation-age-pie__breakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+}
+
+.distribution-pair-row .participation-age-pie__row {
+  grid-template-columns: 10px 1fr auto;
+}
+
+.distribution-pair-row .participation-age-pie__total {
+  grid-column: 1 / -1;
+}

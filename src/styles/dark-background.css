@@ -67,9 +67,10 @@
 [data-theme='dark'] .chart-card,
 [data-theme='dark'] .kpi-card,
 [data-theme='dark'] .dept-card,
+[data-theme='dark'] .dept-leaders-card,
 [data-theme='dark'] .history-card,
 [data-theme='dark'] .employees-table-wrap,
-[data-theme='dark'] .employees-toolbar input,
+[data-theme='dark'] .employees-search,
 [data-theme='dark'] .recommendation-tier {
   background: var(--bg-glass);
   backdrop-filter: blur(14px);

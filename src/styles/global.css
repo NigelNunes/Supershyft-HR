@@ -136,6 +136,12 @@ input {
   letter-spacing: -0.02em;
 }
 
+.page-header__title-with-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .page-header p {
   font-size: 0.8125rem;
   color: var(--text-muted);
@@ -246,6 +252,23 @@ input {
   grid-template-columns: 1fr 1fr;
   gap: 20px;
   margin-bottom: 16px;
+}
+
+.grid-2--stretch > * {
+  display: flex;
+  flex-direction: column;
+}
+
+.grid-2--stretch .chart-card {
+  flex: 1;
+}
+
+.distribution-pair-row > * {
+  min-width: 0;
+}
+
+.distribution-pair-row .chart-card {
+  height: 100%;
 }
 
 .grid-2 > *,

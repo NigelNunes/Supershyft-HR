@@ -25,6 +25,8 @@ const CARD_ICONS: Record<string, typeof TrendingUp> = {
 
 interface KeyInsightsSectionProps {
   data: KeyInsightsData;
+  /** When true, omit the section title (e.g. standalone page provides its own header). */
+  hideHeader?: boolean;
 }
 
 function InsightCard({ card }: { card: DataInsightCard }) {
@@ -44,20 +46,24 @@ function InsightCard({ card }: { card: DataInsightCard }) {
   );
 }
 
-export function KeyInsightsSection({ data }: KeyInsightsSectionProps) {
+export function KeyInsightsSection({ data, hideHeader = false }: KeyInsightsSectionProps) {
   return (
     <section className="key-insights-section">
-      <header className="key-insights-section__header">
-        <div>
-          <h2>
-            Key insights & recommendations
-            <InfoTooltip text={CHART_INFO.keyInsights} />
-          </h2>
-          <p>Evidence from {new Date().getFullYear()} workforce health camp</p>
-        </div>
-      </header>
+      {!hideHeader && (
+        <header className="key-insights-section__header">
+          <div>
+            <h2>
+              Key insights & recommendations
+              <InfoTooltip text={CHART_INFO.keyInsights} />
+            </h2>
+            <p>Evidence from {new Date().getFullYear()} workforce health camp</p>
+          </div>
+        </header>
+      )}
 
-      <h3 className="key-insights-subheading">Data-backed insights</h3>
+      <h3 className={`key-insights-subheading${hideHeader ? ' key-insights-subheading--first' : ''}`}>
+        Data-backed insights
+      </h3>
       <div className="insight-cards-grid">
         {data.insightCards.map((card) => (
           <InsightCard key={card.id} card={card} />

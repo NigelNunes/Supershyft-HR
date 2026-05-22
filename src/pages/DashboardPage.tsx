@@ -6,17 +6,22 @@ import { DimensionToggle } from '../components/ui/DimensionToggle';
 import { DiseaseDeepDive } from '../components/charts/DiseaseDeepDive';
 import { OxidativeStressChart } from '../components/charts/OxidativeStressChart';
 import { BloodParameterPanels } from '../components/charts/BloodParameterPanels';
-import { GenderComparisonChart } from '../components/charts/GenderComparisonChart';
-import { MetabolicAgeChart } from '../components/charts/MetabolicAgeChart';
-import { BloodGroupHeatmap } from '../components/charts/BloodGroupHeatmap';
-import { KeyInsightsSection } from '../components/charts/KeyInsightsSection';
 import { ParticipationCharts } from '../components/charts/ParticipationCharts';
-import { TopHighRiskDiseasesChart } from '../components/charts/TopHighRiskDiseasesChart';
+import { TopHighRiskDiseasesList } from '../components/charts/TopHighRiskDiseasesList';
 import { CompanyAverageScores } from '../components/charts/CompanyAverageScores';
 import { OverallRiskScoreChart } from '../components/charts/OverallRiskScoreChart';
 import { PhysicalSleepPieCharts } from '../components/charts/PhysicalSleepPieCharts';
 import { PositiveWinsPanel } from '../components/charts/PositiveWinsPanel';
 import type { ToggleDimension } from '../types';
+
+function formatGenderBreakdown(
+  byGender: { gender: string; enrolled: number }[],
+): string {
+  const male = byGender.find((g) => g.gender === 'Male')?.enrolled;
+  const female = byGender.find((g) => g.gender === 'Female')?.enrolled;
+  if (male == null || female == null) return 'Completed wellness camp enrollment';
+  return `M: ${male.toLocaleString()} · F: ${female.toLocaleString()}`;
+}
 
 export function DashboardPage() {
   const [dimension, setDimension] = useState<ToggleDimension>('gender');
@@ -41,7 +46,7 @@ export function DashboardPage() {
         <KpiCard
           label="Employees Enrolled"
           value={kpis.employeesEnrolled.toLocaleString()}
-          sub="Completed wellness camp enrollment"
+          sub={formatGenderBreakdown(d.participationByGender)}
           icon={Users}
           variant="green"
         />
@@ -68,16 +73,12 @@ export function DashboardPage() {
         />
       </div>
 
-      <ParticipationCharts byAge={d.participationByAge} byGender={d.participationByGender} />
-
-      <div className="grid-2">
-        <MetabolicAgeChart data={d.metabolicAge} />
-        <TopHighRiskDiseasesChart diseases={d.topHighRiskDiseases} />
+      <div className="grid-2 distribution-pair-row">
+        <ParticipationCharts byAge={d.participationByAge} />
+        <OverallRiskScoreChart buckets={d.overallRiskScore} />
       </div>
 
       <CompanyAverageScores scores={d.companyScores} />
-
-      <OverallRiskScoreChart buckets={d.overallRiskScore} />
 
       <PhysicalSleepPieCharts
         physical={d.physicalActivityByGender}
@@ -88,22 +89,19 @@ export function DashboardPage() {
       <div className="dashboard-toolbar">
         <DimensionToggle value={dimension} onChange={setDimension} />
       </div>
-      <DiseaseDeepDive diseases={toggled.diseases} dimension={dimension} />
+      <div className="grid-2 grid-2--stretch">
+        <TopHighRiskDiseasesList diseases={d.topHighRiskDiseases} />
+        <DiseaseDeepDive diseases={toggled.diseases} dimension={dimension} />
+      </div>
 
       <div className="section-title">Oxidative stress</div>
-      <OxidativeStressChart data={d.oxidativeStress} />
+      <OxidativeStressChart data={d.oxidativeStress} departments={d.departments} />
 
       <div className="section-title">Blood & lab intelligence</div>
-      <BloodGroupHeatmap rows={d.bloodGroupHeatmap} groupNames={d.bloodGroupNames} />
       <BloodParameterPanels panels={d.bloodPanels} />
-
-      <div className="section-title">Gender comparison</div>
-      <GenderComparisonChart data={d.genderComparison} />
 
       <div className="section-title">Positive wins</div>
       <PositiveWinsPanel data={d.positiveWins} />
-
-      <KeyInsightsSection data={d.keyInsights} />
     </div>
   );
 }

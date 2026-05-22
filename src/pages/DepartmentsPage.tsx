@@ -13,6 +13,13 @@ export function DepartmentsPage() {
         </div>
       </header>
 
+      <button type="button" className="dept-leaders-card" onClick={() => {}}>
+        <div className="dept-leaders-card__header">
+          <h2>Leaders</h2>
+          <ChevronRight size={20} aria-hidden />
+        </div>
+      </button>
+
       <div className="dept-grid">
         {mockDashboard.departments.map((dept) => (
           <Link key={dept.id} to={`/departments/${dept.id}`} className="dept-card">

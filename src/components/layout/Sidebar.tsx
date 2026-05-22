@@ -1,14 +1,12 @@
 import { NavLink } from 'react-router-dom';
 import {
   Building2,
-  History,
   LayoutDashboard,
-  Lock,
+  Lightbulb,
   Users,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { BRANDING } from '../../content/branding';
-import { mockDashboard } from '../../data/mockDashboard';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -23,12 +21,7 @@ const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/departments', label: 'Department', icon: Building2 },
   { to: '/employees', label: 'All Employees', icon: Users },
-  {
-    to: '/history',
-    label: 'History',
-    icon: History,
-    locked: !mockDashboard.org.hasHistory,
-  },
+  { to: '/insights', label: 'Key insights', icon: Lightbulb },
 ];
 
 export function Sidebar({
@@ -65,32 +58,20 @@ export function Sidebar({
       </button>
 
       <nav className="sidebar__nav">
-        {navItems.map(({ to, label, icon: Icon, end, locked }) =>
-          locked ? (
-            <span key={to} className="sidebar__link sidebar__link--locked" title="Available after multiple camps">
-              <Icon size={20} />
-              {showLabels && (
-                <>
-                  <span>{label}</span>
-                  <Lock size={14} className="sidebar__lock" />
-                </>
-              )}
-            </span>
-          ) : (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              onClick={onNavigate}
-              className={({ isActive }) =>
-                `sidebar__link${isActive ? ' sidebar__link--active' : ''}`
-              }
-            >
-              <Icon size={20} />
-              {showLabels && <span>{label}</span>}
-            </NavLink>
-          ),
-        )}
+        {navItems.map(({ to, label, icon: Icon, end }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            onClick={onNavigate}
+            className={({ isActive }) =>
+              `sidebar__link${isActive ? ' sidebar__link--active' : ''}`
+            }
+          >
+            <Icon size={20} />
+            {showLabels && <span>{label}</span>}
+          </NavLink>
+        ))}
       </nav>
 
       <div className="sidebar__profile">

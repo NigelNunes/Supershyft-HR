@@ -800,10 +800,18 @@ export function buildDepartmentDetail(
       ),
     }));
 
+  const rawMale = inDept.filter((p) => p.gender === 'Male').length;
+  const rawFemale = inDept.filter((p) => p.gender === 'Female').length;
+  const genderScale = deptSummary.headcount / (inDept.length || 1);
+
   return {
     ...deptSummary,
     avgRiskScore: Math.round(avg(inDept.map(spanScores100)) * 10) / 10,
     topHighRiskDiseases: buildTopHighRiskDiseases(inDept),
+    genderBreakdown: {
+      male: Math.round(rawMale * genderScale),
+      female: Math.round(rawFemale * genderScale),
+    },
     lifestyleDistribution: {
       physical: buildDist([...PHYSICAL_ACTIVITY_BUCKETS], (p) =>
         physicalActivityFromApi(p.healthSpan.lifestyle?.physical_activity),
