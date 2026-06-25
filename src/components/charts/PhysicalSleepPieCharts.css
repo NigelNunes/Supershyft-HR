@@ -4,6 +4,10 @@
   gap: 20px;
 }
 
+.physical-sleep-section--loading {
+  opacity: 0.72;
+}
+
 .physical-sleep-section__toolbar {
   display: flex;
   justify-content: flex-end;

@@ -1,14 +1,14 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { LoginLayout } from '../components/auth/LoginLayout';
 import { useAuth } from '../contexts/AuthContext';
-import { BRANDING } from '../content/branding';
-import { DEMO_OTP, DEMO_PHONE } from '../data/mockDashboard';
+import { authApi } from '../services/api';
 import './LoginPage.css';
 
 export function LoginPage() {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -16,62 +16,49 @@ export function LoginPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    const normalized = phone.replace(/\D/g, '');
+    if (normalized.length !== 10) {
+      setError('Enter a valid 10-digit mobile number.');
+      return;
+    }
     setLoading(true);
     setError('');
-    const result = await login(phone.replace(/\D/g, ''), otp);
-    setLoading(false);
-    if (!result.ok) setError(result.error ?? 'Login failed');
+    try {
+      await authApi.sendOtp(normalized);
+      navigate('/login/verify', { state: { phone: normalized } });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send OTP');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <div className="login-card__brand">
-          <div className="login-card__platform-brand" aria-label={BRANDING.platformName}>
-            <img src={BRANDING.platformLogo} alt="" className="login-card__platform-logo" />
-            <span className="login-card__platform-name">{BRANDING.platformName}</span>
-          </div>
-          <p className="login-card__brand-tagline">HR health intelligence · sign in to continue</p>
-        </div>
-        <form onSubmit={handleSubmit} className="login-form">
-          <label>
-            Mobile number
-            <input
-              type="tel"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={phone}
-              onChange={(e) => {
-                const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
-                setPhone(digits);
-              }}
-              placeholder="10-digit mobile"
-              autoComplete="tel"
-              maxLength={10}
-              required
-            />
-          </label>
-          <label>
-            OTP
-            <input
-              type="text"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              placeholder="6-digit OTP"
-              maxLength={6}
-              autoComplete="one-time-code"
-              required
-            />
-          </label>
-          {error && <p className="login-form__error" role="alert">{error}</p>}
-          <button type="submit" disabled={loading}>
-            {loading ? 'Verifying…' : 'Sign in'}
-          </button>
-        </form>
-        <p className="login-demo">
-          Demo: <code>{DEMO_PHONE}</code> · OTP <code>{DEMO_OTP}</code>
-        </p>
-      </div>
-    </div>
+    <LoginLayout>
+      <form onSubmit={handleSubmit} className="login-form">
+        <label>
+          Mobile number
+          <input
+            type="tel"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={phone}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+              setPhone(digits);
+              setError('');
+            }}
+            placeholder="10-digit mobile"
+            autoComplete="tel"
+            maxLength={10}
+            required
+          />
+        </label>
+        {error && <p className="login-form__error" role="alert">{error}</p>}
+        <button type="submit" disabled={loading}>
+          {loading ? 'Sending…' : 'Send OTP'}
+        </button>
+      </form>
+    </LoginLayout>
   );
 }

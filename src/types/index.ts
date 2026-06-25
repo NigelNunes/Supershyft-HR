@@ -21,7 +21,10 @@ export interface DiseaseDefinition {
 
 export interface KpiSummary {
   employeesEnrolled: number;
+  maleEnrolled?: number;
+  femaleEnrolled?: number;
   totalBloodTest: number;
+  bloodTestPercent?: number;
   doctorConsultation: number;
   highRiskGroup: number;
 }

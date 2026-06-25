@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
-import { mockDashboard } from '../data/mockDashboard';
+import { useCampParticipants } from '../hooks/useCampParticipants';
 import type { EmployeeRecord } from '../types';
 import './EmployeesPage.css';
 
@@ -25,7 +25,7 @@ function matchesEmployee(employee: EmployeeRecord, query: string): boolean {
 
 export function EmployeesPage() {
   const [query, setQuery] = useState('');
-  const employees = mockDashboard.employees;
+  const { employees, total, loading, error } = useCampParticipants();
 
   const filtered = useMemo(
     () => employees.filter((e) => matchesEmployee(e, query)),
@@ -33,6 +33,7 @@ export function EmployeesPage() {
   );
 
   const isSearching = query.trim().length > 0;
+  const participantCount = total || employees.length;
 
   return (
     <div className="employees-page">
@@ -40,12 +41,20 @@ export function EmployeesPage() {
         <div>
           <h1>All employees</h1>
           <p>
-            {isSearching
-              ? `${filtered.length} of ${employees.length} shown`
-              : `${employees.length} participants · contact & blood group`}
+            {loading
+              ? 'Loading participants…'
+              : isSearching
+                ? `${filtered.length} of ${participantCount} shown`
+                : `${participantCount.toLocaleString()} participants · contact & blood group`}
           </p>
         </div>
       </header>
+
+      {error && (
+        <p className="dashboard-api-error" role="alert">
+          {error}
+        </p>
+      )}
 
       <label className="employees-search">
         <Search size={18} className="employees-search__icon" aria-hidden />
@@ -57,6 +66,7 @@ export function EmployeesPage() {
           autoComplete="off"
           spellCheck={false}
           aria-label="Search employees"
+          disabled={loading}
         />
       </label>
 
@@ -72,20 +82,28 @@ export function EmployeesPage() {
             </tr>
           </thead>
           <tbody>
-            {filtered.map((emp) => (
-              <tr key={emp.id}>
-                <td>{emp.name}</td>
-                <td className="mono">{emp.phone}</td>
-                <td>{emp.gender}</td>
-                <td>
-                  <span className="blood-badge">{emp.bloodGroup}</span>
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="employees-loading">
+                  Loading employees…
                 </td>
-                <td>{emp.department}</td>
               </tr>
-            ))}
+            ) : (
+              filtered.map((emp) => (
+                <tr key={emp.id}>
+                  <td>{emp.name}</td>
+                  <td className="mono">{emp.phone}</td>
+                  <td>{emp.gender}</td>
+                  <td>
+                    <span className="blood-badge">{emp.bloodGroup}</span>
+                  </td>
+                  <td>{emp.department}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
-        {filtered.length === 0 && (
+        {!loading && filtered.length === 0 && (
           <p className="employees-empty">No employees match your search.</p>
         )}
       </div>

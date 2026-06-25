@@ -12,6 +12,7 @@ import './PhysicalSleepPieCharts.css';
 interface PhysicalSleepPieChartsProps {
   physical: GenderDistributionPair;
   sleep: GenderDistributionPair;
+  loading?: boolean;
 }
 
 const PHYSICAL_COLORS = ['#E24B4A', '#EF9F27', '#1D9E75', '#7F77DD'];
@@ -147,11 +148,15 @@ function LifestylePieCard({
   );
 }
 
-export function PhysicalSleepPieCharts({ physical, sleep }: PhysicalSleepPieChartsProps) {
+export function PhysicalSleepPieCharts({
+  physical,
+  sleep,
+  loading = false,
+}: PhysicalSleepPieChartsProps) {
   const [view, setView] = useState<LifestyleGenderView>('both');
 
   return (
-    <div className="physical-sleep-section">
+    <div className={`physical-sleep-section${loading ? ' physical-sleep-section--loading' : ''}`}>
       <div className="physical-sleep-section__toolbar">
         <GenderViewToggle value={view} onChange={setView} />
       </div>

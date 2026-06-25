@@ -105,6 +105,12 @@
   color: var(--text-muted);
 }
 
+.employees-loading {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 32px 16px !important;
+}
+
 .back-link {
   display: inline-flex;
   align-items: center;

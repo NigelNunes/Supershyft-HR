@@ -1,12 +1,8 @@
 import { NavLink } from 'react-router-dom';
-import {
-  Building2,
-  LayoutDashboard,
-  Lightbulb,
-  Users,
-} from 'lucide-react';
+import { LayoutDashboard, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { BRANDING } from '../../content/branding';
+import { formatUserDisplayName, formatUserPhone, userInitial } from '../../utils/userDisplay';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -19,9 +15,7 @@ interface SidebarProps {
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/departments', label: 'Department', icon: Building2 },
   { to: '/employees', label: 'All Employees', icon: Users },
-  { to: '/insights', label: 'Key insights', icon: Lightbulb },
 ];
 
 export function Sidebar({
@@ -31,8 +25,10 @@ export function Sidebar({
   mobileOpen = false,
   onNavigate,
 }: SidebarProps) {
-  const { hr } = useAuth();
+  const { user, userLoading } = useAuth();
   const showLabels = isMobile || !collapsed;
+  const displayName = user ? formatUserDisplayName(user) : userLoading ? 'Loading…' : '—';
+  const displayPhone = user ? formatUserPhone(user.phone) : '';
 
   return (
     <aside
@@ -75,11 +71,13 @@ export function Sidebar({
       </nav>
 
       <div className="sidebar__profile">
-        <div className="sidebar__avatar">{hr.name.charAt(0)}</div>
+        <div className="sidebar__avatar">{userInitial(user)}</div>
         {showLabels && (
           <div className="sidebar__profile-text">
-            <span className="sidebar__profile-name">{hr.name}</span>
-            <span className="sidebar__profile-phone">{hr.phone}</span>
+            <span className="sidebar__profile-name">{displayName}</span>
+            {displayPhone && (
+              <span className="sidebar__profile-phone">{displayPhone}</span>
+            )}
           </div>
         )}
       </div>

@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AppLayout } from './components/layout/AppLayout';
 import { LoginPage } from './pages/LoginPage';
+import { VerifyOtpPage } from './pages/VerifyOtpPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { DepartmentsPage } from './pages/DepartmentsPage';
 import { DepartmentDetailPage } from './pages/DepartmentDetailPage';
@@ -23,6 +24,7 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/login/verify" element={<VerifyOtpPage />} />
             <Route
               element={
                 <ProtectedRoute>

@@ -192,6 +192,15 @@ input {
   gap: 24px;
 }
 
+.dashboard-api-error {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-danger, #e24b4a) 12%, transparent);
+  color: var(--color-danger, #c43c3b);
+  font-size: 0.875rem;
+}
+
 .dashboard-page .section-title {
   margin: 4px 0 0;
 }

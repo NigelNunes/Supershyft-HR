@@ -134,3 +134,58 @@
   padding: 2px 6px;
   border-radius: 4px;
 }
+
+.login-verify-phone {
+  margin: -8px 0 20px;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.login-verify-phone span {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.login-resend {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.login-resend__countdown {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.login-resend__action {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--accent);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.login-resend__action:hover {
+  color: var(--accent-hover);
+}
+
+.login-back {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.login-back:hover {
+  color: var(--text);
+}

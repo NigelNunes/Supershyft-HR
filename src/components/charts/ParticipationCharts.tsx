@@ -10,9 +10,10 @@ const AGE_COLORS = ['#378ADD', '#5DCAA5', '#7F77DD', '#EF9F27', '#E24B4A'];
 
 interface ParticipationChartsProps {
   byAge: ParticipationByAge[];
+  loading?: boolean;
 }
 
-export function ParticipationCharts({ byAge }: ParticipationChartsProps) {
+export function ParticipationCharts({ byAge, loading = false }: ParticipationChartsProps) {
   const chart = useChartTheme();
   const chartData = byAge.map((row, i) => ({
     name: row.ageGroup,
@@ -21,9 +22,10 @@ export function ParticipationCharts({ byAge }: ParticipationChartsProps) {
     color: AGE_COLORS[i % AGE_COLORS.length],
   }));
   const totalEnrolled = byAge.reduce((sum, row) => sum + row.enrolled, 0);
-  const topCohort = byAge.reduce((best, row) =>
-    row.percent > best.percent ? row : best,
-  byAge[0]);
+  const topCohort =
+    byAge.length > 0
+      ? byAge.reduce((best, row) => (row.percent > best.percent ? row : best))
+      : null;
 
   return (
     <ChartCard
@@ -71,7 +73,7 @@ export function ParticipationCharts({ byAge }: ParticipationChartsProps) {
           </ResponsiveContainer>
           <div className="participation-age-pie__center" aria-hidden>
             <span className="participation-age-pie__center-value">
-              {totalEnrolled.toLocaleString()}
+              {loading ? '…' : byAge.length > 0 ? totalEnrolled.toLocaleString() : '—'}
             </span>
             <span className="participation-age-pie__center-label">enrolled</span>
           </div>
@@ -97,7 +99,13 @@ export function ParticipationCharts({ byAge }: ParticipationChartsProps) {
             </li>
           ))}
           <li className="participation-age-pie__total">
-            <span>{totalEnrolled.toLocaleString()} employees enrolled</span>
+            <span>
+              {loading
+                ? 'Loading…'
+                : byAge.length > 0
+                  ? `${totalEnrolled.toLocaleString()} employees enrolled`
+                  : 'No data available'}
+            </span>
           </li>
         </ul>
       </div>

@@ -8,9 +8,10 @@ import './OverallRiskScoreChart.css';
 
 interface OverallRiskScoreChartProps {
   buckets: OverallRiskScoreBucket[];
+  loading?: boolean;
 }
 
-export function OverallRiskScoreChart({ buckets }: OverallRiskScoreChartProps) {
+export function OverallRiskScoreChart({ buckets, loading = false }: OverallRiskScoreChartProps) {
   const chart = useChartTheme();
   const chartData = buckets.map((b) => ({
     name: b.band,
@@ -20,6 +21,7 @@ export function OverallRiskScoreChart({ buckets }: OverallRiskScoreChartProps) {
   const elevated = buckets
     .filter((b) => b.band === 'Increased Risk' || b.band === 'High risk')
     .reduce((sum, b) => sum + b.percent, 0);
+  const elevatedDisplay = Math.round(elevated * 10) / 10;
   const totalCount = buckets.reduce((sum, b) => sum + b.count, 0);
 
   return (
@@ -29,10 +31,12 @@ export function OverallRiskScoreChart({ buckets }: OverallRiskScoreChartProps) {
       subtitle="Workforce distribution by risk band"
       info={CHART_INFO.overallRiskScore}
       insight={
-        <InsightFooter
-          tone={elevated > 25 ? 'concern' : 'neutral'}
-          text={`${elevated}% of employees fall in Increased Risk or High risk bands — use for programme prioritisation and doctor consultation outreach.`}
-        />
+        buckets.length > 0 ? (
+          <InsightFooter
+            tone={elevated > 25 ? 'concern' : 'neutral'}
+            text={`${elevatedDisplay}% of employees fall in Increased Risk or High risk bands — use for programme prioritisation and doctor consultation outreach.`}
+          />
+        ) : undefined
       }
     >
       <div className="overall-risk-pie">
@@ -68,7 +72,9 @@ export function OverallRiskScoreChart({ buckets }: OverallRiskScoreChartProps) {
             </PieChart>
           </ResponsiveContainer>
           <div className="overall-risk-pie__center" aria-hidden>
-            <span className="overall-risk-pie__center-value">{elevated}%</span>
+            <span className="overall-risk-pie__center-value">
+              {loading ? '…' : buckets.length > 0 ? `${elevatedDisplay}%` : '—'}
+            </span>
             <span className="overall-risk-pie__center-label">elevated</span>
           </div>
         </div>
@@ -86,7 +92,13 @@ export function OverallRiskScoreChart({ buckets }: OverallRiskScoreChartProps) {
             </li>
           ))}
           <li className="overall-risk-pie__total">
-            <span>{totalCount.toLocaleString()} employees assessed</span>
+            <span>
+              {loading
+                ? 'Loading…'
+                : buckets.length > 0
+                  ? `${totalCount.toLocaleString()} employees assessed`
+                  : 'No data available'}
+            </span>
           </li>
         </ul>
       </div>
