@@ -8,7 +8,7 @@ import { TopHighRiskDiseasesList } from '../components/charts/TopHighRiskDisease
 import { CompanyAverageScores } from '../components/charts/CompanyAverageScores';
 import { PositiveWinsPanel } from '../components/charts/PositiveWinsPanel';
 
-/** Company average scores and all dashboard sections below it. */
+/** Dashboard sections below the main KPI / participation charts. */
 export function DashboardExtendedSections() {
   const d = mockDashboard;
   const {
@@ -32,7 +32,9 @@ export function DashboardExtendedSections() {
 
   return (
     <>
-      <CompanyAverageScores scores={d.companyScores} />
+      {SHOW_EXTENDED_DASHBOARD_SECTIONS && (
+        <CompanyAverageScores scores={d.companyScores} />
+      )}
 
       <div className="section-title">Risk & lifestyle</div>
       {riskLifestyleError && (
