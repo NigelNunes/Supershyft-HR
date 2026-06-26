@@ -663,7 +663,7 @@ export function buildDashboardData(participants: CampParticipant[] = CAMP_PARTIC
     hr: {
       name: 'Neha Patel',
       phone: '+91 98765 43210',
-      companyName: 'DeDecor',
+      companyName: 'Ddecor',
       companyLogo: undefined,
     },
     kpis: {

@@ -12,6 +12,11 @@ export const DISEASES: DiseaseDefinition[] = [
   { code: 'dyslipidemia', name: 'Dyslipidemia' },
 ];
 
+/** Diseases shown in the Risk & lifestyle deep-dive tabs (excludes Metabolic Syndrome). */
+export const DISEASE_DEEP_DIVE_DISEASES = DISEASES.filter(
+  (disease) => disease.code !== 'metabolic_syndrome',
+);
+
 export const OXIDATIVE_STRESS: DiseaseDefinition = {
   code: 'oxidative_stress',
   name: 'Oxidative Stress',

@@ -24,11 +24,11 @@ export function mapCampParticipantToEmployee(
   participant: ApiCampParticipant,
   index: number,
 ): EmployeeRecord {
-  const id =
+  const baseId =
     participant.user_id != null ? String(participant.user_id) : `participant-${index + 1}`;
 
   return {
-    id,
+    id: `${baseId}-${index}`,
     name: displayName(participant),
     phone: participant.phone?.trim() ?? '—',
     email: participant.email?.trim() ?? '',

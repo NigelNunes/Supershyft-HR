@@ -76,7 +76,10 @@ export const authApi = {
 export type {
   ApiCampDashboardKpis,
   ApiCampDashboardOverallRiskScore,
+  ApiCampDashboardOxidativeStress,
   ApiCampDashboardParticipationByAge,
+  ApiCampDashboardDiseaseGenderSection,
+  ApiCampDashboardDiseaseGenderItem,
   ApiCampDashboardSection,
   ApiCampParticipant,
   ApiCurrentUser,

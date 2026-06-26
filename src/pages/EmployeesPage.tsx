@@ -1,26 +1,23 @@
 import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { useCampParticipants } from '../hooks/useCampParticipants';
-import type { EmployeeRecord } from '../types';
 import './EmployeesPage.css';
 
-function matchesEmployee(employee: EmployeeRecord, query: string): boolean {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
+function normalizeNameSearch(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, ' ');
+}
 
-  const phoneDigits = employee.phone.replace(/\D/g, '');
-  const qDigits = q.replace(/\D/g, '');
+function matchesEmployeeName(name: string, query: string): boolean {
+  const normalizedQuery = normalizeNameSearch(query);
+  if (!normalizedQuery) return true;
 
-  return (
-    employee.name.toLowerCase().includes(q) ||
-    employee.gender.toLowerCase().includes(q) ||
-    employee.department.toLowerCase().includes(q) ||
-    employee.bloodGroup.toLowerCase().includes(q) ||
-    employee.email.toLowerCase().includes(q) ||
-    employee.id.toLowerCase().includes(q) ||
-    employee.phone.includes(q) ||
-    (qDigits.length > 0 && phoneDigits.includes(qDigits))
-  );
+  const normalizedName = normalizeNameSearch(name);
+  if (!normalizedName || normalizedName === '—') return false;
+
+  if (normalizedName.includes(normalizedQuery)) return true;
+
+  const tokens = normalizedQuery.split(' ').filter(Boolean);
+  return tokens.every((token) => normalizedName.includes(token));
 }
 
 export function EmployeesPage() {
@@ -28,7 +25,7 @@ export function EmployeesPage() {
   const { employees, total, loading, error } = useCampParticipants();
 
   const filtered = useMemo(
-    () => employees.filter((e) => matchesEmployee(e, query)),
+    () => employees.filter((employee) => matchesEmployeeName(employee.name, query)),
     [employees, query],
   );
 
@@ -60,12 +57,12 @@ export function EmployeesPage() {
         <Search size={18} className="employees-search__icon" aria-hidden />
         <input
           type="text"
-          placeholder="Search by name, department, phone, email, blood group…"
+          placeholder="Search by name"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           autoComplete="off"
           spellCheck={false}
-          aria-label="Search employees"
+          aria-label="Search employees by name"
           disabled={loading}
         />
       </label>
@@ -81,7 +78,7 @@ export function EmployeesPage() {
               <th>Department</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody key={query.trim().toLowerCase()}>
             {loading ? (
               <tr>
                 <td colSpan={5} className="employees-loading">
@@ -104,7 +101,7 @@ export function EmployeesPage() {
           </tbody>
         </table>
         {!loading && filtered.length === 0 && (
-          <p className="employees-empty">No employees match your search.</p>
+          <p className="employees-empty">No employees match that name.</p>
         )}
       </div>
     </div>

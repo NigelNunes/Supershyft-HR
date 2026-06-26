@@ -1,5 +1,5 @@
 /**
- * Extended dashboard sections (Company average scores and everything below).
- * Set to `true` to restore the full dashboard layout.
+ * Blood & lab intelligence section toggle.
+ * Set to `true` to show the panel row; `false` to hide it.
  */
 export const SHOW_EXTENDED_DASHBOARD_SECTIONS = false;

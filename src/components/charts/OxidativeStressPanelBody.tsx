@@ -12,9 +12,14 @@ import './OxidativeStressChart.css';
 interface OxidativeStressPanelBodyProps {
   data: OxidativeStressByDept;
   headcount?: number;
+  loading?: boolean;
 }
 
-export function OxidativeStressPanelBody({ data, headcount = 0 }: OxidativeStressPanelBodyProps) {
+export function OxidativeStressPanelBody({
+  data,
+  headcount = 0,
+  loading = false,
+}: OxidativeStressPanelBodyProps) {
   const chart = useChartTheme();
   const elevated = oxidativeElevatedPercent(data);
   const healthyPercent = Math.round((data.low + data.moderate) * 10) / 10;
@@ -79,7 +84,9 @@ export function OxidativeStressPanelBody({ data, headcount = 0 }: OxidativeStres
             </PieChart>
           </ResponsiveContainer>
           <div className="oxidative-stress-pie__center" aria-hidden>
-            <span className="oxidative-stress-pie__center-value">{elevated}%</span>
+            <span className="oxidative-stress-pie__center-value">
+              {loading ? '…' : `${elevated}%`}
+            </span>
             <span className="oxidative-stress-pie__center-label">elevated</span>
           </div>
         </div>

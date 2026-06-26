@@ -59,3 +59,17 @@
 .positive-wins__name {
   flex: 1;
 }
+
+.positive-wins-col__empty {
+  justify-content: center;
+  color: var(--text-muted);
+  background: transparent;
+  font-style: italic;
+}
+
+.positive-wins__loading {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  text-align: center;
+}

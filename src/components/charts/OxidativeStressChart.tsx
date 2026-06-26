@@ -10,6 +10,8 @@ import './OxidativeStressChart.css';
 interface OxidativeStressChartProps {
   data: OxidativeStressByDept[];
   departments?: DepartmentSummary[];
+  totalHeadcount?: number;
+  loading?: boolean;
 }
 
 function weightedCompanyRollup(
@@ -42,7 +44,12 @@ function weightedCompanyRollup(
   };
 }
 
-export function OxidativeStressChart({ data, departments = [] }: OxidativeStressChartProps) {
+export function OxidativeStressChart({
+  data,
+  departments = [],
+  totalHeadcount,
+  loading = false,
+}: OxidativeStressChartProps) {
   const headcounts = useMemo(
     () => new Map(departments.map((d) => [d.name, d.headcount])),
     [departments],
@@ -52,9 +59,10 @@ export function OxidativeStressChart({ data, departments = [] }: OxidativeStress
   const companyElevated = oxidativeElevatedPercent(company);
 
   const totalEmployees = useMemo(() => {
+    if (totalHeadcount != null && totalHeadcount > 0) return totalHeadcount;
     const fromDepts = departments.reduce((sum, d) => sum + d.headcount, 0);
     return fromDepts > 0 ? fromDepts : 0;
-  }, [departments]);
+  }, [departments, totalHeadcount]);
 
   return (
     <ChartCard
@@ -62,14 +70,16 @@ export function OxidativeStressChart({ data, departments = [] }: OxidativeStress
       subtitle="Company-wide severity distribution"
       info={CHART_INFO.oxidativeStress}
       insight={
-        <InsightFooter
-          tone={companyElevated > 20 ? 'concern' : 'neutral'}
-          text={`${companyElevated}% of employees are in elevated oxidative stress bands (High + Very High) — use for wellness programme prioritisation.`}
-        />
+        !loading && data.length > 0 ? (
+          <InsightFooter
+            tone={companyElevated > 20 ? 'concern' : 'neutral'}
+            text={`${companyElevated}% of employees are in elevated oxidative stress bands (High + Very High) — use for wellness programme prioritisation.`}
+          />
+        ) : undefined
       }
       className="oxidative-stress-card"
     >
-      <OxidativeStressPanelBody data={company} headcount={totalEmployees} />
+      <OxidativeStressPanelBody data={company} headcount={totalEmployees} loading={loading} />
     </ChartCard>
   );
 }

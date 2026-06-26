@@ -10,6 +10,7 @@ interface TopHighRiskDiseasesListProps {
   subtitle?: string;
   info?: string;
   insightPrefix?: string;
+  loading?: boolean;
 }
 
 const RANK_STYLES = ['top-disease-rank--gold', 'top-disease-rank--silver', 'top-disease-rank--bronze'];
@@ -20,6 +21,7 @@ export function TopHighRiskDiseasesList({
   subtitle = 'Highest elevated-risk share across the workforce',
   info = CHART_INFO.topHighRiskDiseases,
   insightPrefix = 'employees',
+  loading = false,
 }: TopHighRiskDiseasesListProps) {
   const top = diseases[0];
 
@@ -30,7 +32,7 @@ export function TopHighRiskDiseasesList({
       subtitle={subtitle}
       info={info}
       insight={
-        top ? (
+        !loading && top ? (
           <InsightFooter
             tone="concern"
             text={`${top.name} leads with ${top.highRiskPercent}% of ${insightPrefix} in elevated risk bands — prioritise screening and targeted interventions.`}
@@ -39,22 +41,26 @@ export function TopHighRiskDiseasesList({
       }
     >
       <ol className="top-disease-list">
-        {diseases.map((disease, index) => (
-          <li key={disease.name} className="top-disease-item">
-            <span className={`top-disease-rank ${RANK_STYLES[index] ?? ''}`}>{index + 1}</span>
-            <div className="top-disease-item__body">
-              <span className="top-disease-item__name">{disease.name}</span>
-              <span className="top-disease-item__meta">
-                <strong>{disease.highRiskPercent}%</strong> elevated risk
-              </span>
-            </div>
-            <div
-              className="top-disease-item__bar"
-              role="presentation"
-              style={{ width: `${Math.min(disease.highRiskPercent * 2, 100)}%` }}
-            />
-          </li>
-        ))}
+        {loading ? (
+          <li className="top-disease-item top-disease-item--loading">Loading…</li>
+        ) : (
+          diseases.map((disease, index) => (
+            <li key={disease.name} className="top-disease-item">
+              <span className={`top-disease-rank ${RANK_STYLES[index] ?? ''}`}>{index + 1}</span>
+              <div className="top-disease-item__body">
+                <span className="top-disease-item__name">{disease.name}</span>
+                <span className="top-disease-item__meta">
+                  <strong>{disease.highRiskPercent}%</strong> elevated risk
+                </span>
+              </div>
+              <div
+                className="top-disease-item__bar"
+                role="presentation"
+                style={{ width: `${Math.min(disease.highRiskPercent * 2, 100)}%` }}
+              />
+            </li>
+          ))
+        )}
       </ol>
     </ChartCard>
   );

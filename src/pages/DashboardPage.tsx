@@ -1,5 +1,4 @@
 import { Stethoscope, Users, AlertTriangle, Droplets } from 'lucide-react';
-import { SHOW_EXTENDED_DASHBOARD_SECTIONS } from '../config/dashboard';
 import {
   useCampKpis,
   useCampOverallRiskScore,
@@ -8,7 +7,6 @@ import {
   useCampSleep,
 } from '../hooks/useCampDashboard';
 import { KpiCard } from '../components/ui/KpiCard';
-import { ComingSoonPanel } from '../components/ui/ComingSoonPanel';
 import { ParticipationCharts } from '../components/charts/ParticipationCharts';
 import { OverallRiskScoreChart } from '../components/charts/OverallRiskScoreChart';
 import { PhysicalSleepPieCharts } from '../components/charts/PhysicalSleepPieCharts';
@@ -121,11 +119,7 @@ export function DashboardPage() {
         loading={physicalLoading || sleepLoading}
       />
 
-      {SHOW_EXTENDED_DASHBOARD_SECTIONS ? (
-        <DashboardExtendedSections />
-      ) : (
-        <ComingSoonPanel />
-      )}
+      <DashboardExtendedSections />
     </div>
   );
 }

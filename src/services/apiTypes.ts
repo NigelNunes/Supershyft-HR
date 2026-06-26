@@ -93,10 +93,18 @@ export interface ApiCampDashboardOverallRiskScore {
   avg_metabolic_score: number;
 }
 
+export interface ApiCampDashboardOxidativeStress {
+  group: string[];
+  count: number[];
+  percent: number[];
+  total_employees: number;
+}
+
 export interface ApiCampDashboardGenderDistribution {
   group: string[];
   count: number[];
   percent: number[];
+  elevated_percent?: number;
 }
 
 export interface ApiCampDashboardGenderDistributionPair {
@@ -104,12 +112,24 @@ export interface ApiCampDashboardGenderDistributionPair {
   female: ApiCampDashboardGenderDistribution;
 }
 
+export interface ApiCampDashboardDiseaseGenderItem extends ApiCampDashboardGenderDistributionPair {
+  code: string;
+}
+
+/** GET …/dashboard?section=distribution_by_gender_by_metabolic_syndrome */
+export interface ApiCampDashboardDiseaseGenderSection {
+  diseases: ApiCampDashboardDiseaseGenderItem[];
+}
+
 export type CampDashboardSection =
   | 'kpis'
   | 'participation_by_age'
   | 'overall_risk_score'
   | 'distribution_by_physical_activity_frequency'
-  | 'distribution_by_sleeping_hours';
+  | 'distribution_by_sleeping_hours'
+  | 'distribution_by_oxidative_stress'
+  | 'distribution_by_gender_by_metabolic_syndrome'
+  | 'positive_wins';
 
 /** GET /reports/camps/{camp_no}/participants */
 export interface ApiCampParticipant {

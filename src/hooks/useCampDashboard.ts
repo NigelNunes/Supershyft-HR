@@ -6,21 +6,32 @@ import type {
   ApiCampDashboardGenderDistributionPair,
   ApiCampDashboardKpis,
   ApiCampDashboardOverallRiskScore,
+  ApiCampDashboardOxidativeStress,
   ApiCampDashboardParticipationByAge,
+  ApiCampDashboardDiseaseGenderSection,
+  ApiPositiveWins,
   CampDashboardSection,
 } from '../services/apiTypes';
 import {
   mapCampKpis,
+  mapCampRiskLifestyleByGender,
+  mapCampPositiveWins,
   mapCampOverallRiskScore,
+  mapCampOxidativeStress,
   mapCampParticipationByAge,
   mapCampPhysicalActivity,
   mapCampSleep,
+} from '../services/campDashboardMappers';
+import type {
+  CampOxidativeStressView,
+  CampRiskLifestyleView,
 } from '../services/campDashboardMappers';
 import type {
   GenderDistributionPair,
   KpiSummary,
   OverallRiskScoreBucket,
   ParticipationByAge,
+  PositiveWins,
 } from '../types';
 
 interface FetchState<T> {
@@ -99,4 +110,23 @@ export function useCampSleep() {
     'distribution_by_sleeping_hours',
     mapCampSleep,
   );
+}
+
+export function useCampOxidativeStress() {
+  return useCampSection<ApiCampDashboardOxidativeStress, CampOxidativeStressView>(
+    'distribution_by_oxidative_stress',
+    mapCampOxidativeStress,
+  );
+}
+
+/** Risk & lifestyle: top 3 diseases + gender deep-dive distributions. */
+export function useCampRiskLifestyleByGender() {
+  return useCampSection<ApiCampDashboardDiseaseGenderSection, CampRiskLifestyleView>(
+    'distribution_by_gender_by_metabolic_syndrome',
+    mapCampRiskLifestyleByGender,
+  );
+}
+
+export function useCampPositiveWins() {
+  return useCampSection<ApiPositiveWins, PositiveWins>('positive_wins', mapCampPositiveWins);
 }
