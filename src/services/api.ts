@@ -81,8 +81,12 @@ export type {
   ApiCampDashboardDiseaseGenderSection,
   ApiCampDashboardDiseaseGenderItem,
   ApiCampDashboardSection,
+  ApiAssessment,
   ApiCampParticipant,
   ApiCurrentUser,
+  ApiMyOrganization,
+  ApiOrganizationCamp,
+  ApiOrganizationDepartment,
   ApiDiseaseOverview,
   ApiHealthSpanIndex,
   ApiOverviewReport,
@@ -162,6 +166,148 @@ export const campParticipantsApi = {
     }
 
     return { items, total };
+  },
+};
+
+/** GET /assessments/me */
+export const assessmentsApi = {
+  list: (token: string, page = 1, limit = 20) =>
+    requestPaginated<import('./apiTypes').ApiAssessment[]>(
+      `/assessments/me?page=${page}&limit=${limit}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    ),
+
+  async listAll(token: string) {
+    const limit = 20;
+    let page = 1;
+    const items: import('./apiTypes').ApiAssessment[] = [];
+    let total = 0;
+
+    while (true) {
+      const { data, meta } = await assessmentsApi.list(token, page, limit);
+      items.push(...data);
+      total = meta.total;
+      if (items.length >= total || data.length < limit) break;
+      page += 1;
+    }
+
+    return { items, total };
+  },
+};
+
+/** GET /organizations/camps, /organizations/we, /organizations/{id}/camps */
+export const organizationsApi = {
+  /** Camps visible to the authenticated user (permission-scoped). */
+  listVisibleCamps: (token: string, page = 1, limit = 20) =>
+    requestPaginated<import('./apiTypes').ApiOrganizationCamp[]>(
+      `/organizations/camps?page=${page}&limit=${limit}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    ),
+
+  listMyOrganizations: (token: string, page = 1, limit = 20) =>
+    requestPaginated<import('./apiTypes').ApiMyOrganization[]>(
+      `/organizations/we?page=${page}&limit=${limit}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    ),
+
+  get: (organizationId: number, token: string) =>
+    request<import('./apiTypes').ApiMyOrganization>(`/organizations/${organizationId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  async getFromMyOrganizations(organizationId: number, token: string) {
+    const { items } = await organizationsApi.listAllMyOrganizations(token);
+    return items.find((org) => org.organization_id === organizationId) ?? null;
+  },
+
+  /** Load org profile for the selected camp's organization_id. */
+  async getForSelectedCamp(organizationId: number, token: string) {
+    const fromWe = await organizationsApi.getFromMyOrganizations(organizationId, token);
+    if (fromWe) return fromWe;
+
+    try {
+      return await organizationsApi.get(organizationId, token);
+    } catch {
+      return null;
+    }
+  },
+
+  async listAllMyOrganizations(token: string) {
+    const limit = 20;
+    let page = 1;
+    const items: import('./apiTypes').ApiMyOrganization[] = [];
+    let total = 0;
+
+    while (true) {
+      const { data, meta } = await organizationsApi.listMyOrganizations(token, page, limit);
+      items.push(...data);
+      total = meta.total;
+      if (items.length >= total || data.length < limit) break;
+      page += 1;
+    }
+
+    return { items, total };
+  },
+
+  listCamps: (organizationId: number, token: string, page = 1, limit = 20) =>
+    requestPaginated<import('./apiTypes').ApiOrganizationCamp[]>(
+      `/organizations/${organizationId}/camps?page=${page}&limit=${limit}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    ),
+
+  async listAllVisibleCamps(token: string) {
+    const limit = 20;
+    let page = 1;
+    const items: import('./apiTypes').ApiOrganizationCamp[] = [];
+    let total = 0;
+
+    while (true) {
+      const { data, meta } = await organizationsApi.listVisibleCamps(token, page, limit);
+      items.push(...data);
+      total = meta.total;
+      if (items.length >= total || data.length < limit) break;
+      page += 1;
+    }
+
+    return { items, total };
+  },
+
+  async listAllCamps(organizationId: number, token: string) {
+    const limit = 20;
+    let page = 1;
+    const items: import('./apiTypes').ApiOrganizationCamp[] = [];
+    let total = 0;
+
+    while (true) {
+      const { data, meta } = await organizationsApi.listCamps(organizationId, token, page, limit);
+      items.push(...data);
+      total = meta.total;
+      if (items.length >= total || data.length < limit) break;
+      page += 1;
+    }
+
+    return { items, total };
+  },
+
+  /** Resolve camps via /organizations/we then /organizations/{id}/camps. */
+  async listCampsForMyOrganizations(token: string) {
+    const { items: organizations } = await organizationsApi.listAllMyOrganizations(token);
+    if (!organizations.length) return { items: [], total: 0 };
+
+    const organizationId = organizations[0].organization_id;
+    return organizationsApi.listAllCamps(organizationId, token);
+  },
+
+  /** Prefer permission-scoped camp list; fall back to org-specific list. */
+  async listCampsForUser(token: string) {
+    try {
+      const visible = await organizationsApi.listAllVisibleCamps(token);
+      if (visible.items.length > 0) return visible;
+    } catch {
+      // Fall through to organization-scoped lookup.
+    }
+
+    return organizationsApi.listCampsForMyOrganizations(token);
   },
 };
 

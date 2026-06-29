@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { BRANDING } from '../../content/branding';
+import { useOrganization } from '../../contexts/OrganizationContext';
 import { formatUserDisplayName, formatUserPhone, userInitial } from '../../utils/userDisplay';
 import './Sidebar.css';
 
@@ -26,9 +26,11 @@ export function Sidebar({
   onNavigate,
 }: SidebarProps) {
   const { user, userLoading } = useAuth();
+  const { organizationName, organizationLogo, loading: orgLoading } = useOrganization();
   const showLabels = isMobile || !collapsed;
   const displayName = user ? formatUserDisplayName(user) : userLoading ? 'Loading…' : '—';
   const displayPhone = user ? formatUserPhone(user.phone) : '';
+  const companyLabel = orgLoading ? 'Loading…' : organizationName;
 
   return (
     <aside
@@ -48,9 +50,15 @@ export function Sidebar({
         aria-label={isMobile ? (mobileOpen ? 'Close menu' : 'Open menu') : collapsed ? 'Expand menu' : 'Collapse menu'}
       >
         <span className="sidebar__logo">
-          <img src={BRANDING.companyLogo} alt="" className="sidebar__logo-img" />
+          {organizationLogo ? (
+            <img src={organizationLogo} alt="" className="sidebar__logo-img" />
+          ) : (
+            <span className="sidebar__logo-initial" aria-hidden>
+              {companyLabel.charAt(0).toUpperCase() || '?'}
+            </span>
+          )}
         </span>
-        {showLabels && <span className="sidebar__company">{BRANDING.companyName}</span>}
+        {showLabels && <span className="sidebar__company">{companyLabel}</span>}
       </button>
 
       <nav className="sidebar__nav">

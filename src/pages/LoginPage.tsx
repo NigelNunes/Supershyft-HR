@@ -2,17 +2,21 @@ import { useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { LoginLayout } from '../components/auth/LoginLayout';
 import { useAuth } from '../contexts/AuthContext';
+import { useCamp } from '../contexts/CampContext';
 import { authApi } from '../services/api';
 import './LoginPage.css';
 
 export function LoginPage() {
   const { isAuthenticated } = useAuth();
+  const { selectedCampNo } = useCamp();
   const navigate = useNavigate();
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  if (isAuthenticated) return <Navigate to="/" replace />;
+  if (isAuthenticated) {
+    return <Navigate to={selectedCampNo ? '/' : '/login/select-camp'} replace />;
+  }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

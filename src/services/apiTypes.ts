@@ -152,6 +152,58 @@ export interface ApiPaginatedMeta {
   total: number;
 }
 
+/** GET /assessments/me */
+export interface ApiAssessment {
+  assessment_instance_id: number;
+  package_id: number;
+  package_code?: string | null;
+  package_display_name?: string | null;
+  engagement_id: number;
+  status: string;
+  metsights_record_id?: string | null;
+  assigned_at?: string | null;
+  completed_at?: string | null;
+}
+
+/** GET /organizations/we */
+export interface ApiOrganizationDepartment {
+  department: string;
+  slug: string;
+}
+
+export interface ApiMyOrganization {
+  organization_id: number;
+  name: string;
+  organization_type?: string | null;
+  logo?: string | null;
+  website_url?: string | null;
+  address?: string | null;
+  pin_code?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  contact_person_user_id?: number | null;
+  bd_employee_id?: number | null;
+  departments?: ApiOrganizationDepartment[] | null;
+  status?: string | null;
+  created_at?: string | null;
+  created_employee_id?: number | null;
+  updated_at?: string | null;
+  updated_employee_id?: number | null;
+}
+
+/** GET /organizations/{organization_id}/camps */
+export interface ApiOrganizationCamp {
+  camp_no: number;
+  camp_name: string;
+  organization_id: number;
+  organization_name: string;
+  start_date: string;
+  engagement_count: number;
+  department_count: number;
+  report_count: number;
+}
+
 /** GET /users/me */
 export interface ApiCurrentUser {
   user_id: number;

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { LoginLayout } from '../components/auth/LoginLayout';
 import { useAuth } from '../contexts/AuthContext';
+import { useCamp } from '../contexts/CampContext';
 import { authApi } from '../services/api';
 import './LoginPage.css';
 
@@ -13,6 +14,7 @@ function formatCountdown(seconds: number) {
 
 export function VerifyOtpPage() {
   const { isAuthenticated, login } = useAuth();
+  const { selectedCampNo } = useCamp();
   const navigate = useNavigate();
   const location = useLocation();
   const phone = (location.state as { phone?: string } | null)?.phone ?? '';
@@ -48,7 +50,9 @@ export function VerifyOtpPage() {
     }
   }, [canResend, phone]);
 
-  if (isAuthenticated) return <Navigate to="/" replace />;
+  if (isAuthenticated) {
+    return <Navigate to={selectedCampNo ? '/' : '/login/select-camp'} replace />;
+  }
   if (!phone) return <Navigate to="/login" replace />;
 
   const handleSubmit = async (e: FormEvent) => {
@@ -57,7 +61,11 @@ export function VerifyOtpPage() {
     setError('');
     const result = await login(phone, otp);
     setLoading(false);
-    if (!result.ok) setError(result.error ?? 'Verification failed');
+    if (result.ok) {
+      navigate('/login/select-camp', { replace: true });
+      return;
+    }
+    setError(result.error ?? 'Verification failed');
   };
 
   return (

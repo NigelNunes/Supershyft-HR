@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { DEFAULT_CAMP_NO } from '../config/camp';
 import { useAuth } from '../contexts/AuthContext';
+import { useCamp } from '../contexts/CampContext';
 import { campDashboardApi } from '../services/api';
 import type {
   ApiCampDashboardGenderDistributionPair,
@@ -45,6 +45,7 @@ function useCampSection<TApi, TMapped>(
   map: (api: TApi) => TMapped,
 ): FetchState<TMapped> {
   const { accessToken } = useAuth();
+  const { selectedCampNo } = useCamp();
   const [state, setState] = useState<FetchState<TMapped>>({
     data: null,
     loading: false,
@@ -52,7 +53,7 @@ function useCampSection<TApi, TMapped>(
   });
 
   useEffect(() => {
-    if (!accessToken) {
+    if (!accessToken || !selectedCampNo) {
       setState({ data: null, loading: false, error: 'Not authenticated' });
       return;
     }
@@ -61,7 +62,7 @@ function useCampSection<TApi, TMapped>(
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
     campDashboardApi
-      .section<TApi>(DEFAULT_CAMP_NO, section, accessToken)
+      .section<TApi>(selectedCampNo, section, accessToken)
       .then((res) => {
         if (cancelled) return;
         setState({ data: map(res.data), loading: false, error: null });
@@ -75,7 +76,7 @@ function useCampSection<TApi, TMapped>(
     return () => {
       cancelled = true;
     };
-  }, [section, accessToken]);
+  }, [section, accessToken, selectedCampNo]);
 
   return state;
 }

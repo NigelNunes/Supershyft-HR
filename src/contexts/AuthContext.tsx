@@ -1,7 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { authApi, campDashboardApi, usersApi } from '../services/api';
-import { accessDeniedMessage, isAccessDeniedError } from '../services/apiErrors';
-import { DEFAULT_CAMP_NO } from '../config/camp';
+import { authApi, usersApi } from '../services/api';
 import type { ApiCurrentUser } from '../services/apiTypes';
 
 interface AuthContextValue {
@@ -100,19 +98,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (phone: string, otp: string) => {
     try {
       const { tokens } = await authApi.verifyOtp(phone.replace(/\D/g, ''), otp);
-
-      try {
-        await campDashboardApi.section(DEFAULT_CAMP_NO, 'kpis', tokens.access_token);
-      } catch (accessErr) {
-        void authApi.logout(tokens.refresh_token).catch(() => undefined);
-        if (isAccessDeniedError(accessErr)) {
-          return { ok: false, error: accessDeniedMessage(accessErr) };
-        }
-        return {
-          ok: false,
-          error: accessErr instanceof Error ? accessErr.message : 'Unable to verify dashboard access',
-        };
-      }
 
       sessionStorage.setItem(AUTH_KEY, '1');
       storeTokens(tokens.access_token, tokens.refresh_token);

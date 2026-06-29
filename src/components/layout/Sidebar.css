@@ -50,6 +50,13 @@
   display: block;
 }
 
+.sidebar__logo-initial {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f1419;
+  line-height: 1;
+}
+
 .sidebar--collapsed .sidebar__logo {
   width: 40px;
   height: 40px;

@@ -1,6 +1,8 @@
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Users, AlertTriangle, Gauge } from 'lucide-react';
 import { getDepartmentDetail } from '../data/mockDashboard';
+import { useOrganization } from '../contexts/OrganizationContext';
+import { ComingSoonPanel } from '../components/ui/ComingSoonPanel';
 import { CHART_INFO } from '../content/chartInfo';
 import { KpiCard } from '../components/ui/KpiCard';
 import { DeptLifestylePieCharts } from '../components/charts/DeptLifestylePieCharts';
@@ -13,13 +15,37 @@ function formatDeptGender(male: number, female: number): string {
 
 export function DepartmentDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { departments } = useOrganization();
+  const orgDepartment = departments.find((dept) => dept.slug === id);
   const detail = id ? getDepartmentDetail(id) : null;
 
-  if (!detail) {
+  if (!orgDepartment && !detail) {
     return (
       <div className="page-header">
         <h1>Department not found</h1>
         <Link to="/departments">← Back to departments</Link>
+      </div>
+    );
+  }
+
+  const departmentName = orgDepartment?.department ?? detail?.name ?? 'Department';
+
+  if (!detail) {
+    return (
+      <div className="dashboard-page">
+        <header className="page-header">
+          <div>
+            <Link to="/departments" className="back-link">
+              <ArrowLeft size={16} /> Departments
+            </Link>
+            <h1>{departmentName}</h1>
+            <p>Department health profile</p>
+          </div>
+        </header>
+        <ComingSoonPanel
+          title="Department insights coming soon"
+          description="Live health metrics for this department will appear here once camp reports are available."
+        />
       </div>
     );
   }
@@ -33,7 +59,7 @@ export function DepartmentDetailPage() {
           <Link to="/departments" className="back-link">
             <ArrowLeft size={16} /> Departments
           </Link>
-          <h1>{detail.name}</h1>
+          <h1>{departmentName}</h1>
           <p>Department health profile</p>
         </div>
       </header>

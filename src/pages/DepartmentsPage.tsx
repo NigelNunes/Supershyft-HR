@@ -1,15 +1,17 @@
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
-import { mockDashboard } from '../data/mockDashboard';
+import { useOrganization } from '../contexts/OrganizationContext';
 import './DepartmentsPage.css';
 
 export function DepartmentsPage() {
+  const { departments, loading, error, organizationName } = useOrganization();
+
   return (
     <>
       <header className="page-header">
         <div>
           <h1>Departments</h1>
-          <p>Select a department for detailed health insights</p>
+          <p>Select a department at {organizationName} for detailed health insights</p>
         </div>
       </header>
 
@@ -20,22 +22,24 @@ export function DepartmentsPage() {
         </div>
       </button>
 
+      {loading && <p className="dept-page-status">Loading departments…</p>}
+
+      {error && (
+        <p className="dept-page-error" role="alert">
+          {error}
+        </p>
+      )}
+
+      {!loading && !error && departments.length === 0 && (
+        <p className="dept-page-status">No departments configured for this organization.</p>
+      )}
+
       <div className="dept-grid">
-        {mockDashboard.departments.map((dept) => (
-          <Link key={dept.id} to={`/departments/${dept.id}`} className="dept-card">
+        {departments.map((dept) => (
+          <Link key={dept.slug} to={`/departments/${dept.slug}`} className="dept-card">
             <div className="dept-card__header">
-              <h3>{dept.name}</h3>
+              <h3>{dept.department}</h3>
               <ChevronRight size={18} />
-            </div>
-            <div className="dept-card__stats">
-              <div>
-                <span className="dept-card__val">{dept.headcount}</span>
-                <span className="dept-card__lbl">Employees</span>
-              </div>
-              <div>
-                <span className="dept-card__val dept-card__val--risk">{dept.highRiskPercent}%</span>
-                <span className="dept-card__lbl">High risk</span>
-              </div>
             </div>
           </Link>
         ))}
