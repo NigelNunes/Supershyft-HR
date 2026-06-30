@@ -1,8 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users } from 'lucide-react';
+import { Building2, LayoutDashboard, Users } from 'lucide-react';
+import { SHOW_DEPARTMENTS } from '../../config/dashboard';
 import { useAuth } from '../../contexts/AuthContext';
 import { useOrganization } from '../../contexts/OrganizationContext';
 import { formatUserDisplayName, formatUserPhone, userInitial } from '../../utils/userDisplay';
+import { SidebarCampsSection } from './SidebarCampsSection';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -15,6 +17,9 @@ interface SidebarProps {
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  ...(SHOW_DEPARTMENTS
+    ? [{ to: '/departments', label: 'Department', icon: Building2 } as const]
+    : []),
   { to: '/employees', label: 'All Employees', icon: Users },
 ];
 
@@ -28,6 +33,7 @@ export function Sidebar({
   const { user, userLoading } = useAuth();
   const { organizationName, organizationLogo, loading: orgLoading } = useOrganization();
   const showLabels = isMobile || !collapsed;
+  const sidebarCollapsed = !isMobile && collapsed;
   const displayName = user ? formatUserDisplayName(user) : userLoading ? 'Loading…' : '—';
   const displayPhone = user ? formatUserPhone(user.phone) : '';
   const companyLabel = orgLoading ? 'Loading…' : organizationName;
@@ -76,6 +82,11 @@ export function Sidebar({
             {showLabels && <span>{label}</span>}
           </NavLink>
         ))}
+        <SidebarCampsSection
+          showLabels={showLabels}
+          collapsed={sidebarCollapsed}
+          onNavigate={onNavigate}
+        />
       </nav>
 
       <div className="sidebar__profile">

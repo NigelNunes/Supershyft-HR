@@ -6,19 +6,10 @@ import { useCamp } from '../contexts/CampContext';
 import { organizationsApi } from '../services/api';
 import type { ApiOrganizationCamp } from '../services/apiTypes';
 import './CampSelectPage.css';
-
-function formatCampDate(isoDate: string) {
-  const date = new Date(`${isoDate}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return isoDate;
-  return date.toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
+import { formatCampDate } from '../utils/campDisplay';
 
 export function CampSelectPage() {
-  const { isAuthenticated, accessToken, logout } = useAuth();
+  const { isAuthenticated, accessToken, user, userLoading, logout } = useAuth();
   const { selectedCampNo, selectCamp } = useCamp();
   const navigate = useNavigate();
 
@@ -28,9 +19,10 @@ export function CampSelectPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!accessToken || !isAuthenticated || selectedCampNo) return;
+    if (!accessToken || !isAuthenticated || selectedCampNo || userLoading) return;
 
     const token = accessToken;
+    const role = user?.employee?.role ?? null;
     let cancelled = false;
 
     async function loadCamps() {
@@ -38,7 +30,7 @@ export function CampSelectPage() {
       setError('');
 
       try {
-        const { items: campList } = await organizationsApi.listCampsForUser(token);
+        const { items: campList } = await organizationsApi.listCampsForUser(token, { role });
         if (cancelled) return;
 
         if (campList.length === 0) {
@@ -77,7 +69,7 @@ export function CampSelectPage() {
     return () => {
       cancelled = true;
     };
-  }, [accessToken, isAuthenticated, selectedCampNo, navigate, selectCamp]);
+  }, [accessToken, isAuthenticated, selectedCampNo, user, userLoading, navigate, selectCamp]);
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (selectedCampNo) return <Navigate to="/" replace />;

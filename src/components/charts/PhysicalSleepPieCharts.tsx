@@ -2,9 +2,18 @@ import { useState } from 'react';
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { PHYSICAL_ACTIVITY_BUCKETS, SLEEP_BUCKETS } from '../../data/participantPool';
 import { CHART_INFO } from '../../content/chartInfo';
+import {
+  computePoorActivityPercent,
+  computePoorSleepPercent,
+  getPhysicalActivityConcernInsight,
+  getSleepConcernInsight,
+  toChartInsight,
+  type ChartInsight,
+} from '../../content/chartInsights';
 import type { DistributionSlice, GenderDistributionPair, LifestyleGenderView } from '../../types';
 import { ChartCard } from '../ui/ChartCard';
 import { GenderViewToggle } from '../ui/GenderViewToggle';
+import { InsightFooter } from '../ui/InsightFooter';
 import { useChartTheme } from './chartTheme';
 import { pctTooltip } from './tooltipFormat';
 import './PhysicalSleepPieCharts.css';
@@ -13,6 +22,8 @@ interface PhysicalSleepPieChartsProps {
   physical: GenderDistributionPair;
   sleep: GenderDistributionPair;
   loading?: boolean;
+  maleEnrolled?: number;
+  femaleEnrolled?: number;
 }
 
 const PHYSICAL_COLORS = ['#E24B4A', '#EF9F27', '#1D9E75', '#7F77DD'];
@@ -104,6 +115,7 @@ function LifestylePieCard({
   colors,
   labelOrder,
   view,
+  insight,
 }: {
   title: string;
   subtitle: string;
@@ -112,6 +124,7 @@ function LifestylePieCard({
   colors: string[];
   labelOrder: readonly string[];
   view: LifestyleGenderView;
+  insight?: ChartInsight;
 }) {
   const showMale = view === 'both' || view === 'male';
   const showFemale = view === 'both' || view === 'female';
@@ -120,7 +133,12 @@ function LifestylePieCard({
     isBoth ? 'physical-sleep-dual-pies' : 'physical-sleep-dual-pies physical-sleep-dual-pies--single';
 
   return (
-    <ChartCard title={title} subtitle={subtitle} info={info}>
+    <ChartCard
+      title={title}
+      subtitle={subtitle}
+      info={info}
+      insight={insight ? <InsightFooter tone={insight.tone} text={insight.text} /> : undefined}
+    >
       <div className={isBoth ? 'physical-sleep-card-body' : undefined}>
         <div className={gridClass}>
           {showMale && (
@@ -152,8 +170,28 @@ export function PhysicalSleepPieCharts({
   physical,
   sleep,
   loading = false,
+  maleEnrolled,
+  femaleEnrolled,
 }: PhysicalSleepPieChartsProps) {
   const [view, setView] = useState<LifestyleGenderView>('both');
+  const genderWeights =
+    maleEnrolled != null && femaleEnrolled != null
+      ? { male: maleEnrolled, female: femaleEnrolled }
+      : undefined;
+  const hasPhysicalData = physical.male.length > 0 || physical.female.length > 0;
+  const hasSleepData = sleep.male.length > 0 || sleep.female.length > 0;
+  const physicalInsight = hasPhysicalData
+    ? toChartInsight(
+        getPhysicalActivityConcernInsight(
+          computePoorActivityPercent(physical, view, genderWeights),
+        ),
+      )
+    : undefined;
+  const sleepInsight = hasSleepData
+    ? toChartInsight(
+        getSleepConcernInsight(computePoorSleepPercent(sleep, view, genderWeights)),
+      )
+    : undefined;
 
   return (
     <div className={`physical-sleep-section${loading ? ' physical-sleep-section--loading' : ''}`}>
@@ -173,6 +211,7 @@ export function PhysicalSleepPieCharts({
           colors={PHYSICAL_COLORS}
           labelOrder={PHYSICAL_ACTIVITY_BUCKETS}
           view={view}
+          insight={physicalInsight}
         />
         <LifestylePieCard
           title="Sleep"
@@ -186,6 +225,7 @@ export function PhysicalSleepPieCharts({
           colors={SLEEP_COLORS}
           labelOrder={SLEEP_BUCKETS}
           view={view}
+          insight={sleepInsight}
         />
       </div>
     </div>

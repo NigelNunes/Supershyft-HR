@@ -1,4 +1,5 @@
 import { CHART_INFO } from '../../content/chartInfo';
+import { getTopDiseaseRiskConcernInsight } from '../../content/chartInsights';
 import type { TopHighRiskDisease } from '../../types';
 import { ChartCard } from '../ui/ChartCard';
 import { InsightFooter } from '../ui/InsightFooter';
@@ -35,7 +36,7 @@ export function TopHighRiskDiseasesList({
         !loading && top ? (
           <InsightFooter
             tone="concern"
-            text={`${top.name} leads with ${top.highRiskPercent}% of ${insightPrefix} in elevated risk bands — prioritise screening and targeted interventions.`}
+            text={getTopDiseaseRiskConcernInsight(top, insightPrefix).text}
           />
         ) : undefined
       }

@@ -1,6 +1,11 @@
 import { mockDashboard } from '../data/mockDashboard';
 import { SHOW_EXTENDED_DASHBOARD_SECTIONS } from '../config/dashboard';
-import { useCampRiskLifestyleByGender, useCampOxidativeStress, useCampPositiveWins } from '../hooks/useCampDashboard';
+import {
+  useCampRiskLifestyleByGender,
+  useCampOxidativeStress,
+  useCampPositiveWins,
+  useCampCompanyAverageScores,
+} from '../hooks/useCampDashboard';
 import { DiseaseDeepDive } from '../components/charts/DiseaseDeepDive';
 import { OxidativeStressChart } from '../components/charts/OxidativeStressChart';
 import { BloodParameterPanels } from '../components/charts/BloodParameterPanels';
@@ -26,6 +31,11 @@ export function DashboardExtendedSections() {
     loading: positiveWinsLoading,
     error: positiveWinsError,
   } = useCampPositiveWins();
+  const {
+    data: companyScores,
+    loading: companyScoresLoading,
+    error: companyScoresError,
+  } = useCampCompanyAverageScores();
 
   const oxidativeData = oxidativeStress?.distribution ?? [];
   const oxidativeHeadcount = oxidativeStress?.totalEmployees;
@@ -33,7 +43,17 @@ export function DashboardExtendedSections() {
   return (
     <>
       {SHOW_EXTENDED_DASHBOARD_SECTIONS && (
-        <CompanyAverageScores scores={d.companyScores} />
+        <>
+          {companyScoresError && (
+            <p className="dashboard-api-error" role="alert">
+              {companyScoresError}
+            </p>
+          )}
+          <CompanyAverageScores
+            scores={companyScores ?? { nutrition: 0, fitness: 0, lifestyle: 0 }}
+            loading={companyScoresLoading}
+          />
+        </>
       )}
 
       <div className="section-title">Risk & lifestyle</div>

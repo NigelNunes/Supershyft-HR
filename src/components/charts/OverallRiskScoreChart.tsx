@@ -1,5 +1,6 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { CHART_INFO } from '../../content/chartInfo';
+import { getOverallRiskConcernInsight } from '../../content/chartInsights';
 import type { OverallRiskScoreBucket } from '../../types';
 import { ChartCard } from '../ui/ChartCard';
 import { InsightFooter } from '../ui/InsightFooter';
@@ -23,6 +24,8 @@ export function OverallRiskScoreChart({ buckets, loading = false }: OverallRiskS
     .reduce((sum, b) => sum + b.percent, 0);
   const elevatedDisplay = Math.round(elevated * 10) / 10;
   const totalCount = buckets.reduce((sum, b) => sum + b.count, 0);
+  const concernInsight =
+    buckets.length > 0 ? getOverallRiskConcernInsight(elevated) : undefined;
 
   return (
     <ChartCard
@@ -31,11 +34,8 @@ export function OverallRiskScoreChart({ buckets, loading = false }: OverallRiskS
       subtitle="Workforce distribution by risk band"
       info={CHART_INFO.overallRiskScore}
       insight={
-        buckets.length > 0 ? (
-          <InsightFooter
-            tone={elevated > 25 ? 'concern' : 'neutral'}
-            text={`${elevatedDisplay}% of employees fall in Increased Risk or High risk bands — use for programme prioritisation and doctor consultation outreach.`}
-          />
+        concernInsight ? (
+          <InsightFooter tone={concernInsight.tone} text={concernInsight.text} />
         ) : undefined
       }
     >

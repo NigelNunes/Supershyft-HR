@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { CHART_INFO } from '../../content/chartInfo';
+import { getOxidativeStressConcernInsight } from '../../content/chartInsights';
 import type { DepartmentSummary, OxidativeStressByDept } from '../../types';
 import { ChartCard } from '../ui/ChartCard';
 import { InsightFooter } from '../ui/InsightFooter';
@@ -71,10 +72,7 @@ export function OxidativeStressChart({
       info={CHART_INFO.oxidativeStress}
       insight={
         !loading && data.length > 0 ? (
-          <InsightFooter
-            tone={companyElevated > 20 ? 'concern' : 'neutral'}
-            text={`${companyElevated}% of employees are in elevated oxidative stress bands (High + Very High) — use for wellness programme prioritisation.`}
-          />
+          <InsightFooter {...getOxidativeStressConcernInsight(companyElevated)} />
         ) : undefined
       }
       className="oxidative-stress-card"

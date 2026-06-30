@@ -9,6 +9,7 @@ import type {
   ApiCampDashboardOxidativeStress,
   ApiCampDashboardParticipationByAge,
   ApiCampDashboardDiseaseGenderSection,
+  ApiCampDashboardCompanyAverageScores,
   ApiPositiveWins,
   CampDashboardSection,
 } from '../services/apiTypes';
@@ -16,6 +17,7 @@ import {
   mapCampKpis,
   mapCampRiskLifestyleByGender,
   mapCampPositiveWins,
+  mapCampCompanyAverageScores,
   mapCampOverallRiskScore,
   mapCampOxidativeStress,
   mapCampParticipationByAge,
@@ -32,6 +34,7 @@ import type {
   OverallRiskScoreBucket,
   ParticipationByAge,
   PositiveWins,
+  CompanyAverageScores,
 } from '../types';
 
 interface FetchState<T> {
@@ -130,4 +133,11 @@ export function useCampRiskLifestyleByGender() {
 
 export function useCampPositiveWins() {
   return useCampSection<ApiPositiveWins, PositiveWins>('positive_wins', mapCampPositiveWins);
+}
+
+export function useCampCompanyAverageScores() {
+  return useCampSection<ApiCampDashboardCompanyAverageScores, CompanyAverageScores>(
+    'company_average_scores',
+    mapCampCompanyAverageScores,
+  );
 }

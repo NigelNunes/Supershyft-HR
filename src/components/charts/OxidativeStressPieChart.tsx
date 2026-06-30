@@ -1,4 +1,5 @@
 import { CHART_INFO } from '../../content/chartInfo';
+import { getOxidativeStressConcernInsight } from '../../content/chartInsights';
 import type { OxidativeStressByDept } from '../../types';
 import { ChartCard } from '../ui/ChartCard';
 import { InsightFooter } from '../ui/InsightFooter';
@@ -19,12 +20,7 @@ export function OxidativeStressPieChart({ data, headcount = 0 }: OxidativeStress
       title="Oxidative stress"
       subtitle={`${data.department} · severity distribution`}
       info={CHART_INFO.deptOxidativePie}
-      insight={
-        <InsightFooter
-          tone={elevated > 20 ? 'concern' : 'neutral'}
-          text={`${elevated}% of this department are in elevated oxidative stress bands (High + Very High).`}
-        />
-      }
+      insight={<InsightFooter {...getOxidativeStressConcernInsight(elevated)} />}
       className="oxidative-stress-card"
     >
       <OxidativeStressPanelBody data={data} headcount={headcount} />

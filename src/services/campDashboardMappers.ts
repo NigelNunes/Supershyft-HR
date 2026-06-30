@@ -7,6 +7,7 @@ import type {
   ApiCampDashboardParticipationByAge,
   ApiCampDashboardDiseaseGenderSection,
   ApiCampDashboardDiseaseGenderItem,
+  ApiCampDashboardCompanyAverageScores,
   ApiPositiveWins,
 } from './apiTypes';
 import { DISEASES } from '../data/diseases';
@@ -22,6 +23,7 @@ import type {
   PositiveWins,
   RiskLevel,
   TopHighRiskDisease,
+  CompanyAverageScores,
 } from '../types';
 
 const OVERALL_RISK_GROUP_LABELS: Record<string, OverallRiskBand> = {
@@ -257,6 +259,16 @@ export function mapCampRiskLifestyleByGender(
     .map(mapDiseaseGenderItem);
 
   return { topHighRiskDiseases, diseases };
+}
+
+export function mapCampCompanyAverageScores(
+  api: ApiCampDashboardCompanyAverageScores,
+): CompanyAverageScores {
+  return {
+    nutrition: api.nutrition?.score ?? 0,
+    fitness: api.fitness?.score ?? 0,
+    lifestyle: api.lifestyle?.score ?? 0,
+  };
 }
 
 export function mapCampPositiveWins(api: ApiPositiveWins): PositiveWins {

@@ -121,6 +121,13 @@ export interface ApiCampDashboardDiseaseGenderSection {
   diseases: ApiCampDashboardDiseaseGenderItem[];
 }
 
+/** GET …/dashboard?section=company_average_scores */
+export interface ApiCampDashboardCompanyAverageScores {
+  nutrition: { score: number };
+  fitness: { score: number };
+  lifestyle: { score: number };
+}
+
 export type CampDashboardSection =
   | 'kpis'
   | 'participation_by_age'
@@ -129,7 +136,8 @@ export type CampDashboardSection =
   | 'distribution_by_sleeping_hours'
   | 'distribution_by_oxidative_stress'
   | 'distribution_by_gender_by_metabolic_syndrome'
-  | 'positive_wins';
+  | 'positive_wins'
+  | 'company_average_scores';
 
 /** GET /reports/camps/{camp_no}/participants */
 export interface ApiCampParticipant {
@@ -150,19 +158,6 @@ export interface ApiPaginatedMeta {
   page: number;
   limit: number;
   total: number;
-}
-
-/** GET /assessments/me */
-export interface ApiAssessment {
-  assessment_instance_id: number;
-  package_id: number;
-  package_code?: string | null;
-  package_display_name?: string | null;
-  engagement_id: number;
-  status: string;
-  metsights_record_id?: string | null;
-  assigned_at?: string | null;
-  completed_at?: string | null;
 }
 
 /** GET /organizations/we */
@@ -205,6 +200,11 @@ export interface ApiOrganizationCamp {
 }
 
 /** GET /users/me */
+export interface ApiCurrentUserEmployee {
+  employee_id: number;
+  role: string;
+}
+
 export interface ApiCurrentUser {
   user_id: number;
   first_name?: string | null;
@@ -216,4 +216,5 @@ export interface ApiCurrentUser {
   gender?: string | null;
   city?: string | null;
   status?: string | null;
+  employee?: ApiCurrentUserEmployee | null;
 }

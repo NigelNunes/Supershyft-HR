@@ -117,6 +117,8 @@ export function DashboardPage() {
         physical={apiPhysicalActivity ?? EMPTY_GENDER_DISTRIBUTION}
         sleep={apiSleep ?? EMPTY_GENDER_DISTRIBUTION}
         loading={physicalLoading || sleepLoading}
+        maleEnrolled={apiKpis?.maleEnrolled}
+        femaleEnrolled={apiKpis?.femaleEnrolled}
       />
 
       <DashboardExtendedSections />

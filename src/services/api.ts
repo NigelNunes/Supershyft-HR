@@ -81,7 +81,6 @@ export type {
   ApiCampDashboardDiseaseGenderSection,
   ApiCampDashboardDiseaseGenderItem,
   ApiCampDashboardSection,
-  ApiAssessment,
   ApiCampParticipant,
   ApiCurrentUser,
   ApiMyOrganization,
@@ -169,35 +168,9 @@ export const campParticipantsApi = {
   },
 };
 
-/** GET /assessments/me */
-export const assessmentsApi = {
-  list: (token: string, page = 1, limit = 20) =>
-    requestPaginated<import('./apiTypes').ApiAssessment[]>(
-      `/assessments/me?page=${page}&limit=${limit}`,
-      { headers: { Authorization: `Bearer ${token}` } },
-    ),
-
-  async listAll(token: string) {
-    const limit = 20;
-    let page = 1;
-    const items: import('./apiTypes').ApiAssessment[] = [];
-    let total = 0;
-
-    while (true) {
-      const { data, meta } = await assessmentsApi.list(token, page, limit);
-      items.push(...data);
-      total = meta.total;
-      if (items.length >= total || data.length < limit) break;
-      page += 1;
-    }
-
-    return { items, total };
-  },
-};
-
-/** GET /organizations/camps, /organizations/we, /organizations/{id}/camps */
+/** GET /organizations/we, /organizations/camps, /organizations/{id}/camps */
 export const organizationsApi = {
-  /** Camps visible to the authenticated user (permission-scoped). */
+  /** Admin-scoped camp list. */
   listVisibleCamps: (token: string, page = 1, limit = 20) =>
     requestPaginated<import('./apiTypes').ApiOrganizationCamp[]>(
       `/organizations/camps?page=${page}&limit=${limit}`,
@@ -298,13 +271,26 @@ export const organizationsApi = {
     return organizationsApi.listAllCamps(organizationId, token);
   },
 
-  /** Prefer permission-scoped camp list; fall back to org-specific list. */
-  async listCampsForUser(token: string) {
-    try {
-      const visible = await organizationsApi.listAllVisibleCamps(token);
-      if (visible.items.length > 0) return visible;
-    } catch {
-      // Fall through to organization-scoped lookup.
+  /** Camps list based on role from GET /users/me (admin → /organizations/camps). */
+  async listCampsForUser(
+    token: string,
+    options?: { organizationId?: number | null; role?: string | null },
+  ) {
+    let role = options?.role ?? null;
+    if (!role) {
+      const user = await request<import('./apiTypes').ApiCurrentUser>('/users/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      role = user.employee?.role ?? null;
+    }
+
+    if (role === 'admin') {
+      return organizationsApi.listAllVisibleCamps(token);
+    }
+
+    const organizationId = options?.organizationId;
+    if (organizationId != null) {
+      return organizationsApi.listAllCamps(organizationId, token);
     }
 
     return organizationsApi.listCampsForMyOrganizations(token);

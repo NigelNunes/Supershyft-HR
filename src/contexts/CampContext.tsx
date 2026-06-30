@@ -50,7 +50,7 @@ function readStoredCampOrganizationName(): string | null {
 }
 
 export function CampProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated, accessToken } = useAuth();
+  const { isAuthenticated, accessToken, user, userLoading } = useAuth();
   const [selectedCampNo, setSelectedCampNo] = useState<number | null>(() => readStoredCampNo());
   const [selectedCampOrganizationId, setSelectedCampOrganizationId] = useState<number | null>(
     () => readStoredCampOrganizationId(),
@@ -75,12 +75,12 @@ export function CampProvider({ children }: { children: ReactNode }) {
   }, [isAuthenticated, clearCamp]);
 
   useEffect(() => {
-    if (!accessToken || !selectedCampNo || selectedCampOrganizationId != null) return;
+    if (!accessToken || !selectedCampNo || selectedCampOrganizationId != null || userLoading) return;
 
     let cancelled = false;
 
     organizationsApi
-      .listAllVisibleCamps(accessToken)
+      .listCampsForUser(accessToken, { role: user?.employee?.role ?? null })
       .then(({ items }) => {
         if (cancelled) return;
         const camp = items.find((item) => item.camp_no === selectedCampNo);
@@ -96,7 +96,7 @@ export function CampProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [accessToken, selectedCampNo, selectedCampOrganizationId]);
+  }, [accessToken, selectedCampNo, selectedCampOrganizationId, user, userLoading]);
 
   const selectCamp = useCallback(
     async (campNo: number, organizationId?: number, organizationName?: string) => {

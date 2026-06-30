@@ -7,6 +7,7 @@ interface CompanyAverageScoresProps {
   title?: string;
   subtitle?: string;
   info?: string;
+  loading?: boolean;
 }
 
 function scoreBand(value: number): string {
@@ -21,6 +22,7 @@ export function CompanyAverageScores({
   title = 'Company average scores',
   subtitle = 'Nutrition · fitness · lifestyle (scale 0–100)',
   info = CHART_INFO.companyScores,
+  loading = false,
 }: CompanyAverageScoresProps) {
   const items = [
     { label: 'Nutrition score', value: scores.nutrition },
@@ -30,18 +32,22 @@ export function CompanyAverageScores({
 
   return (
     <ChartCard title={title} subtitle={subtitle} info={info} className="company-scores-card">
-      <div className="grid-3 company-scores-grid">
-        {items.map((item) => (
-          <div key={item.label} className="score-card">
-            <div className="score-card__label">{item.label}</div>
-            <div className="score-card__value">
-              {Math.round(item.value)}
-              <span> / 100</span>
+      {loading ? (
+        <p className="company-scores__loading">Loading company average scores…</p>
+      ) : (
+        <div className="grid-3 company-scores-grid">
+          {items.map((item) => (
+            <div key={item.label} className="score-card">
+              <div className="score-card__label">{item.label}</div>
+              <div className="score-card__value">
+                {Math.round(item.value)}
+                <span> / 100</span>
+              </div>
+              <div className="score-card__sub">{scoreBand(item.value)}</div>
             </div>
-            <div className="score-card__sub">{scoreBand(item.value)}</div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </ChartCard>
   );
 }
