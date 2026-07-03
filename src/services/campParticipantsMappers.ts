@@ -44,6 +44,31 @@ export function mapCampParticipantToEmployee(
   };
 }
 
+function employeeDisplayKey(employee: EmployeeRecord): string {
+  const normalize = (value: string) => value.trim().toLowerCase();
+  const phoneDigits = employee.phone.replace(/\D/g, '');
+  return [
+    normalize(employee.name),
+    phoneDigits,
+    normalize(employee.gender),
+    normalize(employee.bloodGroup),
+    normalize(employee.department),
+  ].join('|');
+}
+
+/** Keep the first row when name, phone, gender, blood group, and department all match. */
+export function dedupeEmployeesByDisplayColumns(employees: EmployeeRecord[]): EmployeeRecord[] {
+  const seen = new Set<string>();
+  return employees.filter((employee) => {
+    const key = employeeDisplayKey(employee);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export function mapCampParticipantsToEmployees(participants: ApiCampParticipant[]): EmployeeRecord[] {
-  return participants.map(mapCampParticipantToEmployee);
+  return dedupeEmployeesByDisplayColumns(
+    participants.map((participant, index) => mapCampParticipantToEmployee(participant, index)),
+  );
 }

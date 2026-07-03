@@ -26,6 +26,7 @@ export interface KpiSummary {
   totalBloodTest: number;
   bloodTestPercent?: number;
   doctorConsultation: number;
+  nutritionistConsultation: number;
   highRiskGroup: number;
 }
 
@@ -63,6 +64,7 @@ export interface OverallRiskScoreBucket {
 export interface DistributionSlice {
   label: string;
   percent: number;
+  count?: number;
 }
 
 export interface GenderDistributionPair {
@@ -108,7 +110,6 @@ export interface BloodParameterPanel {
   name: string;
   abnormalPercent: number;
   inRangePercent: number;
-  topConcern: string;
 }
 
 export interface GenderComparisonMetric {

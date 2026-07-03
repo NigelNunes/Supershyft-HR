@@ -75,6 +75,7 @@ export interface ApiCampDashboardKpis {
   total_blood_test: number;
   blood_test_percent: number;
   doctor_consultation: number;
+  nutritionist_consultation: number;
   high_risk_group: number;
 }
 
@@ -128,6 +129,18 @@ export interface ApiCampDashboardCompanyAverageScores {
   lifestyle: { score: number };
 }
 
+export interface ApiBloodLabMetric {
+  in_range_percent: number;
+}
+
+/** GET …/dashboard?section=blood_and_lab_intelligence */
+export interface ApiCampDashboardBloodAndLabIntelligence {
+  vitamin_profile: Record<string, ApiBloodLabMetric>;
+  diabetes_profile: Record<string, ApiBloodLabMetric>;
+  lipid_profile: Record<string, ApiBloodLabMetric>;
+  inflammatory: Record<string, ApiBloodLabMetric>;
+}
+
 export type CampDashboardSection =
   | 'kpis'
   | 'participation_by_age'
@@ -137,7 +150,8 @@ export type CampDashboardSection =
   | 'distribution_by_oxidative_stress'
   | 'distribution_by_gender_by_metabolic_syndrome'
   | 'positive_wins'
-  | 'company_average_scores';
+  | 'company_average_scores'
+  | 'blood_and_lab_intelligence';
 
 /** GET /reports/camps/{camp_no}/participants */
 export interface ApiCampParticipant {

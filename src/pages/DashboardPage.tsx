@@ -29,6 +29,17 @@ function formatKpiValue(value: number | undefined, loading: boolean, hasData: bo
   return value.toLocaleString();
 }
 
+function formatConsultationValue(
+  doctor: number | undefined,
+  nutritionist: number | undefined,
+  loading: boolean,
+  hasData: boolean,
+): string {
+  if (loading) return '…';
+  if (!hasData || doctor == null || nutritionist == null) return '—';
+  return `${doctor.toLocaleString()}/${nutritionist.toLocaleString()}`;
+}
+
 function formatBloodTestSub(kpis: KpiSummary | null, loading: boolean): string {
   if (loading) return 'Loading…';
   if (!kpis) return '—';
@@ -93,9 +104,14 @@ export function DashboardPage() {
           variant="blue"
         />
         <KpiCard
-          label="Doctor consultation"
-          value={formatKpiValue(apiKpis?.doctorConsultation, kpisLoading, hasKpis)}
-          sub="Enrolled for consultation"
+          label="Doctor/Nutritionist consultation"
+          value={formatConsultationValue(
+            apiKpis?.doctorConsultation,
+            apiKpis?.nutritionistConsultation,
+            kpisLoading,
+            hasKpis,
+          )}
+          sub="Doctor / Nutritionist"
           icon={Stethoscope}
           variant="amber"
         />

@@ -50,8 +50,39 @@
 }
 
 .physical-sleep-pie-unit__chart {
+  position: relative;
   width: 100%;
   height: 220px;
+}
+
+.physical-sleep-pie-unit__center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  pointer-events: none;
+  text-align: center;
+}
+
+.physical-sleep-pie-unit__center-value {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.physical-sleep-pie-unit__center-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  line-height: 1;
 }
 
 .physical-sleep-card-body {

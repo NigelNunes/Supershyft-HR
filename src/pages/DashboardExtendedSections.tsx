@@ -5,6 +5,7 @@ import {
   useCampOxidativeStress,
   useCampPositiveWins,
   useCampCompanyAverageScores,
+  useCampBloodAndLabIntelligence,
 } from '../hooks/useCampDashboard';
 import { DiseaseDeepDive } from '../components/charts/DiseaseDeepDive';
 import { OxidativeStressChart } from '../components/charts/OxidativeStressChart';
@@ -12,6 +13,7 @@ import { BloodParameterPanels } from '../components/charts/BloodParameterPanels'
 import { TopHighRiskDiseasesList } from '../components/charts/TopHighRiskDiseasesList';
 import { CompanyAverageScores } from '../components/charts/CompanyAverageScores';
 import { PositiveWinsPanel } from '../components/charts/PositiveWinsPanel';
+import { LeadershipTakeawaysSection } from '../components/charts/LeadershipTakeawaysSection';
 
 /** Dashboard sections below the main KPI / participation charts. */
 export function DashboardExtendedSections() {
@@ -36,6 +38,11 @@ export function DashboardExtendedSections() {
     loading: companyScoresLoading,
     error: companyScoresError,
   } = useCampCompanyAverageScores();
+  const {
+    data: bloodPanels,
+    loading: bloodPanelsLoading,
+    error: bloodPanelsError,
+  } = useCampBloodAndLabIntelligence();
 
   const oxidativeData = oxidativeStress?.distribution ?? [];
   const oxidativeHeadcount = oxidativeStress?.totalEmployees;
@@ -89,7 +96,12 @@ export function DashboardExtendedSections() {
       {SHOW_EXTENDED_DASHBOARD_SECTIONS && (
         <>
           <div className="section-title">Blood & lab intelligence</div>
-          <BloodParameterPanels panels={d.bloodPanels} />
+          {bloodPanelsError && (
+            <p className="dashboard-api-error" role="alert">
+              {bloodPanelsError}
+            </p>
+          )}
+          <BloodParameterPanels panels={bloodPanels ?? []} loading={bloodPanelsLoading} />
         </>
       )}
 
@@ -105,6 +117,8 @@ export function DashboardExtendedSections() {
         }
         loading={positiveWinsLoading}
       />
+
+      <LeadershipTakeawaysSection />
     </>
   );
 }

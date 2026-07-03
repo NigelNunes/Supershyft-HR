@@ -22,7 +22,7 @@ function matchesEmployeeName(name: string, query: string): boolean {
 
 export function EmployeesPage() {
   const [query, setQuery] = useState('');
-  const { employees, total, loading, error } = useCampParticipants();
+  const { employees, loading, error } = useCampParticipants();
 
   const filtered = useMemo(
     () => employees.filter((employee) => matchesEmployeeName(employee.name, query)),
@@ -30,7 +30,7 @@ export function EmployeesPage() {
   );
 
   const isSearching = query.trim().length > 0;
-  const participantCount = total || employees.length;
+  const participantCount = employees.length;
 
   return (
     <div className="employees-page">

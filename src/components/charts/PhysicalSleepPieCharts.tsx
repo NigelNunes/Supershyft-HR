@@ -15,7 +15,6 @@ import { ChartCard } from '../ui/ChartCard';
 import { GenderViewToggle } from '../ui/GenderViewToggle';
 import { InsightFooter } from '../ui/InsightFooter';
 import { useChartTheme } from './chartTheme';
-import { pctTooltip } from './tooltipFormat';
 import './PhysicalSleepPieCharts.css';
 
 interface PhysicalSleepPieChartsProps {
@@ -56,25 +55,38 @@ function SharedLegend({
   );
 }
 
+function totalCount(slices: DistributionSlice[]): number | null {
+  if (slices.length === 0) return null;
+  return slices.reduce((sum, slice) => sum + (slice.count ?? 0), 0);
+}
+
 function SinglePie({
   data,
   colors,
   labelOrder,
   gender,
   showLegend,
+  loading = false,
 }: {
   data: DistributionSlice[];
   colors: string[];
   labelOrder: readonly string[];
   gender: 'male' | 'female';
   showLegend: boolean;
+  loading?: boolean;
 }) {
   const chart = useChartTheme();
   const chartData = labelOrder.map((label) => {
     const slice = data.find((d) => d.label === label);
-    return { name: label, value: slice?.percent ?? 0 };
+    return {
+      name: label,
+      value: slice?.percent ?? 0,
+      count: slice?.count ?? 0,
+    };
   });
   const genderLabel = gender === 'male' ? 'Male' : 'Female';
+  const total = totalCount(data);
+  const hasData = total != null && data.length > 0;
 
   return (
     <div className="physical-sleep-pie-unit">
@@ -98,10 +110,23 @@ function SinglePie({
                 <Cell key={entry.name} fill={colorForLabel(entry.name, labelOrder, colors)} />
               ))}
             </Pie>
-            <Tooltip {...chart.tooltipProps} formatter={pctTooltip} />
+            <Tooltip
+              {...chart.tooltipProps}
+              formatter={(value, _name, item) => {
+                const count = (item?.payload as { count?: number })?.count ?? 0;
+                const v = typeof value === 'number' ? value : Number(value);
+                return [`${v}% (${count.toLocaleString()})`, 'Share'];
+              }}
+            />
             {showLegend && <Legend wrapperStyle={chart.legendStyle} />}
           </PieChart>
         </ResponsiveContainer>
+        <div className="physical-sleep-pie-unit__center" aria-hidden>
+          <span className="physical-sleep-pie-unit__center-value">
+            {loading ? '…' : hasData ? total.toLocaleString() : '—'}
+          </span>
+          <span className="physical-sleep-pie-unit__center-label">Total</span>
+        </div>
       </div>
     </div>
   );
@@ -116,6 +141,7 @@ function LifestylePieCard({
   labelOrder,
   view,
   insight,
+  loading = false,
 }: {
   title: string;
   subtitle: string;
@@ -125,6 +151,7 @@ function LifestylePieCard({
   labelOrder: readonly string[];
   view: LifestyleGenderView;
   insight?: ChartInsight;
+  loading?: boolean;
 }) {
   const showMale = view === 'both' || view === 'male';
   const showFemale = view === 'both' || view === 'female';
@@ -148,6 +175,7 @@ function LifestylePieCard({
               labelOrder={labelOrder}
               gender="male"
               showLegend={!isBoth}
+              loading={loading}
             />
           )}
           {showFemale && (
@@ -157,6 +185,7 @@ function LifestylePieCard({
               labelOrder={labelOrder}
               gender="female"
               showLegend={!isBoth}
+              loading={loading}
             />
           )}
         </div>
@@ -212,6 +241,7 @@ export function PhysicalSleepPieCharts({
           labelOrder={PHYSICAL_ACTIVITY_BUCKETS}
           view={view}
           insight={physicalInsight}
+          loading={loading}
         />
         <LifestylePieCard
           title="Sleep"
@@ -226,6 +256,7 @@ export function PhysicalSleepPieCharts({
           labelOrder={SLEEP_BUCKETS}
           view={view}
           insight={sleepInsight}
+          loading={loading}
         />
       </div>
     </div>

@@ -10,6 +10,7 @@ import type {
   ApiCampDashboardParticipationByAge,
   ApiCampDashboardDiseaseGenderSection,
   ApiCampDashboardCompanyAverageScores,
+  ApiCampDashboardBloodAndLabIntelligence,
   ApiPositiveWins,
   CampDashboardSection,
 } from '../services/apiTypes';
@@ -23,6 +24,7 @@ import {
   mapCampParticipationByAge,
   mapCampPhysicalActivity,
   mapCampSleep,
+  mapCampBloodAndLabIntelligence,
 } from '../services/campDashboardMappers';
 import type {
   CampOxidativeStressView,
@@ -35,6 +37,7 @@ import type {
   ParticipationByAge,
   PositiveWins,
   CompanyAverageScores,
+  BloodParameterPanel,
 } from '../types';
 
 interface FetchState<T> {
@@ -139,5 +142,12 @@ export function useCampCompanyAverageScores() {
   return useCampSection<ApiCampDashboardCompanyAverageScores, CompanyAverageScores>(
     'company_average_scores',
     mapCampCompanyAverageScores,
+  );
+}
+
+export function useCampBloodAndLabIntelligence() {
+  return useCampSection<ApiCampDashboardBloodAndLabIntelligence, BloodParameterPanel[]>(
+    'blood_and_lab_intelligence',
+    mapCampBloodAndLabIntelligence,
   );
 }

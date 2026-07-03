@@ -27,25 +27,30 @@
   height: 120px;
 }
 
-.blood-panel__pct {
+.blood-panel__center {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -58%);
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.blood-panel__pct {
   font-size: 1.25rem;
   font-weight: 500;
   letter-spacing: -0.02em;
+  line-height: 1;
 }
 
 .blood-panel__label {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, 20%);
   font-size: 0.6875rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  line-height: 1;
 }
 
 .blood-panels .chart-card__body {

@@ -8,6 +8,7 @@ import type {
   ApiCampDashboardDiseaseGenderSection,
   ApiCampDashboardDiseaseGenderItem,
   ApiCampDashboardCompanyAverageScores,
+  ApiCampDashboardBloodAndLabIntelligence,
   ApiPositiveWins,
 } from './apiTypes';
 import { DISEASES } from '../data/diseases';
@@ -24,6 +25,7 @@ import type {
   RiskLevel,
   TopHighRiskDisease,
   CompanyAverageScores,
+  BloodParameterPanel,
 } from '../types';
 
 const OVERALL_RISK_GROUP_LABELS: Record<string, OverallRiskBand> = {
@@ -164,6 +166,7 @@ function mapGenderDistributionSide(
   return side.group.map((key, i) => ({
     label: labelMap[key] ?? key.replace(/_/g, ' '),
     percent: side.percent[i] ?? 0,
+    count: side.count[i] ?? 0,
   }));
 }
 
@@ -185,6 +188,7 @@ export function mapCampKpis(api: ApiCampDashboardKpis): KpiSummary {
     totalBloodTest: api.total_blood_test,
     bloodTestPercent: api.blood_test_percent,
     doctorConsultation: api.doctor_consultation,
+    nutritionistConsultation: api.nutritionist_consultation,
     highRiskGroup: api.high_risk_group,
   };
 }
@@ -283,4 +287,47 @@ export function mapCampPositiveWins(api: ApiPositiveWins): PositiveWins {
     })),
     healthyProfiles: api.healthy_profiles ?? [],
   };
+}
+
+const BLOOD_LAB_PANEL_SPECS = [
+  {
+    id: 'b12',
+    name: 'Vitamin B12',
+    profile: 'vitamin_profile' as const,
+    apiKey: 'vitamin_b12',
+  },
+  {
+    id: 'd3',
+    name: 'Vitamin D3',
+    profile: 'vitamin_profile' as const,
+    apiKey: 'vitamin_d_total-25_hydroxy',
+  },
+  {
+    id: 'diabetes',
+    name: 'Diabetes',
+    profile: 'diabetes_profile' as const,
+    apiKey: 'hba1c',
+  },
+  {
+    id: 'lipid',
+    name: 'Lipid',
+    profile: 'lipid_profile' as const,
+    apiKey: 'cholesterol_total__triglycerides__ldl_cholestrol',
+  },
+  {
+    id: 'inflammatory',
+    name: 'Inflammatory',
+    profile: 'inflammatory' as const,
+    apiKey: 'homocysteine__hs-crp__esr',
+  },
+] as const;
+
+export function mapCampBloodAndLabIntelligence(
+  api: ApiCampDashboardBloodAndLabIntelligence,
+): BloodParameterPanel[] {
+  return BLOOD_LAB_PANEL_SPECS.map(({ id, name, profile, apiKey }) => {
+    const inRangePercent = Math.round(api[profile]?.[apiKey]?.in_range_percent ?? 0);
+    const abnormalPercent = Math.max(0, 100 - inRangePercent);
+    return { id, name, inRangePercent, abnormalPercent };
+  });
 }

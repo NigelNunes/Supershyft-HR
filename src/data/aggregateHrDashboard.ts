@@ -602,13 +602,7 @@ const STATIC_INTERVENTIONS: Intervention[] = [
   },
 ];
 
-const STATIC_BLOOD_PANELS: DashboardData['bloodPanels'] = [
-  { id: 'b12', name: 'Vitamin B12', abnormalPercent: 34, inRangePercent: 66, topConcern: 'Deficiency in R&D and Sales' },
-  { id: 'd3', name: 'Vitamin D3', abnormalPercent: 41, inRangePercent: 59, topConcern: 'Low levels across indoor roles' },
-  { id: 'diabetes', name: 'Diabetes', abnormalPercent: 22, inRangePercent: 78, topConcern: 'Pre-diabetic trend in Operations' },
-  { id: 'lipid', name: 'Lipid', abnormalPercent: 29, inRangePercent: 71, topConcern: 'Elevated LDL in male cohort' },
-  { id: 'inflammatory', name: 'Inflammatory', abnormalPercent: 18, inRangePercent: 82, topConcern: 'Hs-CRP elevation in Sales' },
-];
+const STATIC_BLOOD_PANELS: DashboardData['bloodPanels'] = [];
 
 export function buildDashboardData(participants: CampParticipant[] = CAMP_PARTICIPANTS): DashboardData {
   const enrolled = participants.length;
@@ -670,6 +664,7 @@ export function buildDashboardData(participants: CampParticipant[] = CAMP_PARTIC
       employeesEnrolled: DISPLAY_ENROLLED,
       totalBloodTest: scaleCount(bloodTests),
       doctorConsultation: scaleCount(doctorConsults),
+      nutritionistConsultation: scaleCount(Math.round(doctorConsults * 0.75)),
       highRiskGroup: scaleCount(highRisk),
     },
     participationByAge: buildParticipationByAge(participants),
