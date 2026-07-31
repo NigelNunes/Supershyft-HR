@@ -30,6 +30,12 @@ export interface KpiSummary {
   highRiskGroup: number;
 }
 
+export interface RankingSummary {
+  city: string;
+  cityRank: number;
+  industryRank: number;
+}
+
 export interface ParticipationByAge {
   ageGroup: string;
   enrolled: number;

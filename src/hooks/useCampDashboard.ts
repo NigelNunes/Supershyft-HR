@@ -11,6 +11,7 @@ import type {
   ApiCampDashboardDiseaseGenderSection,
   ApiCampDashboardCompanyAverageScores,
   ApiCampDashboardBloodAndLabIntelligence,
+  ApiCampDashboardRanking,
   ApiPositiveWins,
   CampDashboardSection,
 } from '../services/apiTypes';
@@ -25,6 +26,7 @@ import {
   mapCampPhysicalActivity,
   mapCampSleep,
   mapCampBloodAndLabIntelligence,
+  mapCampRanking,
 } from '../services/campDashboardMappers';
 import type {
   CampOxidativeStressView,
@@ -36,6 +38,7 @@ import type {
   OverallRiskScoreBucket,
   ParticipationByAge,
   PositiveWins,
+  RankingSummary,
   CompanyAverageScores,
   BloodParameterPanel,
 } from '../types';
@@ -150,4 +153,8 @@ export function useCampBloodAndLabIntelligence() {
     'blood_and_lab_intelligence',
     mapCampBloodAndLabIntelligence,
   );
+}
+
+export function useCampRanking() {
+  return useCampSection<ApiCampDashboardRanking, RankingSummary | null>('ranking', mapCampRanking);
 }

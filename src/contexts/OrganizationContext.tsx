@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 import { organizationsApi } from '../services/api';
-import type { ApiMyOrganization } from '../services/apiTypes';
+import type { ApiMyOrganization, ApiOrganizationDepartment } from '../services/apiTypes';
 import { useAuth } from './AuthContext';
 import { useCamp } from './CampContext';
 
@@ -18,7 +18,7 @@ interface OrganizationContextValue {
   activeOrganization: ApiMyOrganization | null;
   organizationName: string;
   organizationLogo: string | null;
-  departments: NonNullable<ApiMyOrganization['departments']>;
+  departments: ApiOrganizationDepartment[];
   loading: boolean;
   error: string | null;
 }
@@ -31,6 +31,44 @@ export function resolveOrganizationLogoUrl(logo: string | null | undefined): str
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
   if (!API_BASE) return trimmed;
   return `${API_BASE.replace(/\/$/, '')}/${trimmed.replace(/^\//, '')}`;
+}
+
+function slugifyDepartmentName(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/** Normalize /organizations/me department entries into { department, slug }. */
+export function normalizeOrganizationDepartments(
+  departments: ApiMyOrganization['departments'],
+): ApiOrganizationDepartment[] {
+  if (!Array.isArray(departments)) return [];
+
+  const seen = new Set<string>();
+  const result: ApiOrganizationDepartment[] = [];
+
+  for (const entry of departments) {
+    const rawName =
+      typeof entry === 'string'
+        ? entry
+        : (entry?.department ??
+          (entry as { name?: string | null })?.name ??
+          '');
+    const department = String(rawName).trim();
+    if (!department) continue;
+
+    const rawSlug = typeof entry === 'string' ? '' : (entry?.slug ?? '');
+    const slug = String(rawSlug).trim() || slugifyDepartmentName(department);
+    if (!slug || seen.has(slug)) continue;
+
+    seen.add(slug);
+    result.push({ department, slug });
+  }
+
+  return result;
 }
 
 export function OrganizationProvider({ children }: { children: ReactNode }) {
@@ -73,13 +111,14 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   }, [isAuthenticated, accessToken, selectedCampOrganizationId]);
 
   const value = useMemo<OrganizationContextValue>(() => {
-    const organizationName = activeOrganization?.name ?? selectedCampOrganizationName ?? 'Organization';
+    const organizationName =
+      activeOrganization?.name ?? selectedCampOrganizationName ?? 'Organization';
 
     return {
       activeOrganization,
       organizationName,
       organizationLogo: resolveOrganizationLogoUrl(activeOrganization?.logo),
-      departments: activeOrganization?.departments ?? [],
+      departments: normalizeOrganizationDepartments(activeOrganization?.departments),
       loading,
       error,
     };

@@ -141,6 +141,14 @@ export interface ApiCampDashboardBloodAndLabIntelligence {
   inflammatory: Record<string, ApiBloodLabMetric>;
 }
 
+/** GET …/dashboard?section=ranking — city key → ranks */
+export interface ApiCampDashboardRankingEntry {
+  rank: number;
+  industry_rank: number;
+}
+
+export type ApiCampDashboardRanking = Record<string, ApiCampDashboardRankingEntry>;
+
 export type CampDashboardSection =
   | 'kpis'
   | 'participation_by_age'
@@ -151,7 +159,8 @@ export type CampDashboardSection =
   | 'distribution_by_gender_by_metabolic_syndrome'
   | 'positive_wins'
   | 'company_average_scores'
-  | 'blood_and_lab_intelligence';
+  | 'blood_and_lab_intelligence'
+  | 'ranking';
 
 /** GET /reports/camps/{camp_no}/participants */
 export interface ApiCampParticipant {
@@ -174,12 +183,13 @@ export interface ApiPaginatedMeta {
   total: number;
 }
 
-/** GET /organizations/we */
+/** Department entry from GET /organizations/me (and /organizations/we). */
 export interface ApiOrganizationDepartment {
   department: string;
   slug: string;
 }
 
+/** GET /organizations/me — current organization profile including departments. */
 export interface ApiMyOrganization {
   organization_id: number;
   name: string;
@@ -193,7 +203,7 @@ export interface ApiMyOrganization {
   country?: string | null;
   contact_person_user_id?: number | null;
   bd_employee_id?: number | null;
-  departments?: ApiOrganizationDepartment[] | null;
+  departments?: Array<ApiOrganizationDepartment | string> | null;
   status?: string | null;
   created_at?: string | null;
   created_employee_id?: number | null;

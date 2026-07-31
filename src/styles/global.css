@@ -148,6 +148,37 @@ input {
   margin-top: 4px;
 }
 
+.dashboard-ranks {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  flex-shrink: 0;
+}
+
+.dashboard-rank {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 4.5rem;
+}
+
+.dashboard-rank__value {
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.dashboard-rank__label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
 .back-link {
   display: inline-flex;
   align-items: center;
@@ -159,6 +190,10 @@ input {
 
 .back-link:hover {
   color: var(--accent);
+}
+
+.page-header .badge-live {
+  margin-top: 10px;
 }
 
 .badge-live {

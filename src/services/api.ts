@@ -183,6 +183,12 @@ export const organizationsApi = {
       { headers: { Authorization: `Bearer ${token}` } },
     ),
 
+  /** Current user's organization (includes department names). */
+  getMe: (token: string) =>
+    request<import('./apiTypes').ApiMyOrganization>('/organizations/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
   get: (organizationId: number, token: string) =>
     request<import('./apiTypes').ApiMyOrganization>(`/organizations/${organizationId}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -193,8 +199,17 @@ export const organizationsApi = {
     return items.find((org) => org.organization_id === organizationId) ?? null;
   },
 
-  /** Load org profile for the selected camp's organization_id. */
+  /** Load org profile (prefer /organizations/me) for the selected camp's organization_id. */
   async getForSelectedCamp(organizationId: number, token: string) {
+    try {
+      const me = await organizationsApi.getMe(token);
+      if (me && (me.organization_id == null || me.organization_id === organizationId)) {
+        return me;
+      }
+    } catch {
+      // Fall through to /organizations/we and /organizations/{id}.
+    }
+
     const fromWe = await organizationsApi.getFromMyOrganizations(organizationId, token);
     if (fromWe) return fromWe;
 

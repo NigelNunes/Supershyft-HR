@@ -9,6 +9,7 @@ import type {
   ApiCampDashboardDiseaseGenderItem,
   ApiCampDashboardCompanyAverageScores,
   ApiCampDashboardBloodAndLabIntelligence,
+  ApiCampDashboardRanking,
   ApiPositiveWins,
 } from './apiTypes';
 import { DISEASES } from '../data/diseases';
@@ -22,6 +23,7 @@ import type {
   OverallRiskScoreBucket,
   ParticipationByAge,
   PositiveWins,
+  RankingSummary,
   RiskLevel,
   TopHighRiskDisease,
   CompanyAverageScores,
@@ -190,6 +192,19 @@ export function mapCampKpis(api: ApiCampDashboardKpis): KpiSummary {
     doctorConsultation: api.doctor_consultation,
     nutritionistConsultation: api.nutritionist_consultation,
     highRiskGroup: api.high_risk_group,
+  };
+}
+
+export function mapCampRanking(api: ApiCampDashboardRanking): RankingSummary | null {
+  const entry = Object.entries(api ?? {}).find(
+    ([, value]) => value != null && typeof value.rank === 'number',
+  );
+  if (!entry) return null;
+  const [city, ranks] = entry;
+  return {
+    city,
+    cityRank: ranks.rank,
+    industryRank: ranks.industry_rank,
   };
 }
 

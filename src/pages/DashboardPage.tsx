@@ -4,6 +4,7 @@ import {
   useCampOverallRiskScore,
   useCampParticipationByAge,
   useCampPhysicalActivity,
+  useCampRanking,
   useCampSleep,
 } from '../hooks/useCampDashboard';
 import { KpiCard } from '../components/ui/KpiCard';
@@ -53,6 +54,7 @@ function formatBloodTestSub(kpis: KpiSummary | null, loading: boolean): string {
 
 export function DashboardPage() {
   const { data: apiKpis, loading: kpisLoading, error: kpisError } = useCampKpis();
+  const { data: apiRanking, loading: rankingLoading, error: rankingError } = useCampRanking();
   const { data: apiParticipationByAge, loading: ageLoading, error: ageError } =
     useCampParticipationByAge();
   const {
@@ -68,6 +70,7 @@ export function DashboardPage() {
   const { data: apiSleep, loading: sleepLoading, error: sleepError } = useCampSleep();
 
   const hasKpis = apiKpis != null;
+  const hasRanking = apiRanking != null;
 
   return (
     <div className="dashboard-page">
@@ -75,16 +78,30 @@ export function DashboardPage() {
         <div>
           <h1>HR health intelligence dashboard</h1>
           <p>Workforce wellness analysis</p>
+          <span className="badge-live">
+            <span className="dot" />
+            Live data
+          </span>
         </div>
-        <span className="badge-live">
-          <span className="dot" />
-          Live data
-        </span>
+        <div className="dashboard-ranks" aria-label="Organization ranks">
+          <div className="dashboard-rank">
+            <span className="dashboard-rank__value">
+              {formatKpiValue(apiRanking?.cityRank, rankingLoading, hasRanking)}
+            </span>
+            <span className="dashboard-rank__label">City Rank</span>
+          </div>
+          <div className="dashboard-rank">
+            <span className="dashboard-rank__value">
+              {formatKpiValue(apiRanking?.industryRank, rankingLoading, hasRanking)}
+            </span>
+            <span className="dashboard-rank__label">Industry Rank</span>
+          </div>
+        </div>
       </header>
 
-      {(kpisError || ageError || riskError || physicalError || sleepError) && (
+      {(kpisError || rankingError || ageError || riskError || physicalError || sleepError) && (
         <p className="dashboard-api-error" role="alert">
-          {kpisError || ageError || riskError || physicalError || sleepError}
+          {kpisError || rankingError || ageError || riskError || physicalError || sleepError}
         </p>
       )}
 

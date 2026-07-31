@@ -79,6 +79,20 @@
     font-size: 0.75rem;
   }
 
+  .dashboard-ranks {
+    align-self: stretch;
+    justify-content: flex-start;
+    gap: 24px;
+  }
+
+  .dashboard-rank {
+    align-items: flex-start;
+  }
+
+  .dashboard-rank__value {
+    font-size: 1.25rem;
+  }
+
   .kpi-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;

@@ -1,5 +1,4 @@
 import { ChartCard } from '../ui/ChartCard';
-import { InsightFooter } from '../ui/InsightFooter';
 import { bloodPanelInfo } from '../../content/chartInfo';
 import type { BloodParameterPanel } from '../../types';
 import { useChartTheme } from './chartTheme';
@@ -26,23 +25,17 @@ export function BloodParameterPanels({ panels, loading = false }: BloodParameter
     <div className="blood-panels">
       {displayPanels.map((panel) => {
         const hasData = panels.length > 0;
-        const inRangePercent = hasData ? panel.inRangePercent : 0;
-        const abnormalPercent = hasData ? panel.abnormalPercent : 0;
-        const showConcern = hasData && abnormalPercent > 30;
+        const outOfRangePercent = hasData
+          ? (panel.abnormalPercent > 0
+              ? panel.abnormalPercent
+              : Math.max(0, 100 - panel.inRangePercent))
+          : 0;
 
         return (
           <ChartCard
             key={panel.id}
             title={panel.name}
             info={bloodPanelInfo(panel.id, panel.name)}
-            insight={
-              hasData ? (
-                <InsightFooter
-                  tone={showConcern ? 'concern' : 'neutral'}
-                  text={`${showConcern ? 'Concern' : 'Insight'}: ${abnormalPercent}% outside optimal range.`}
-                />
-              ) : undefined
-            }
           >
             <div className="blood-panel__ring">
               <svg viewBox="0 0 120 120" className="blood-panel__svg" aria-hidden>
@@ -52,18 +45,18 @@ export function BloodParameterPanels({ panels, loading = false }: BloodParameter
                   cy="60"
                   r="52"
                   fill="none"
-                  stroke={showConcern ? chart.colors.danger : chart.colors.accent}
+                  stroke={chart.colors.danger}
                   strokeWidth="10"
-                  strokeDasharray={`${(inRangePercent / 100) * 327} 327`}
+                  strokeDasharray={`${(outOfRangePercent / 100) * 327} 327`}
                   strokeLinecap="round"
                   transform="rotate(-90 60 60)"
                 />
               </svg>
               <div className="blood-panel__center">
                 <span className="blood-panel__pct">
-                  {loading ? '…' : hasData ? `${inRangePercent}%` : '—'}
+                  {loading ? '…' : hasData ? `${outOfRangePercent}%` : '—'}
                 </span>
-                <span className="blood-panel__label">in range</span>
+                <span className="blood-panel__label">out of range</span>
               </div>
             </div>
           </ChartCard>
