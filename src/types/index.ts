@@ -25,6 +25,8 @@ export interface KpiSummary {
   femaleEnrolled?: number;
   totalBloodTest: number;
   bloodTestPercent?: number;
+  totalBioAiReports?: number;
+  bioAiPercent?: number;
   doctorConsultation: number;
   nutritionistConsultation: number;
   highRiskGroup: number;
@@ -164,10 +166,23 @@ export interface DepartmentGenderBreakdown {
 export interface DepartmentDetail extends DepartmentSummary {
   avgRiskScore: number;
   topHighRiskDiseases: TopHighRiskDisease[];
+  diseases: DiseaseRiskData[];
   genderBreakdown: DepartmentGenderBreakdown;
   lifestyleDistribution: DepartmentLifestyleDistribution;
+  physicalActivityByGender: GenderDistributionPair;
+  sleepQualityByGender: GenderDistributionPair;
   oxidativeStress: OxidativeStressByDept;
   companyScores: CompanyAverageScores;
+  kpis: KpiSummary;
+  participationByAge: ParticipationByAge[];
+  overallRiskScore: OverallRiskScoreBucket[];
+  /** Mapped for MetabolicAgeDistributionCard (GOOD / NEEDS ATTENTION / HIGH RISK). */
+  metabolicAgeCategories: {
+    key: 'good' | 'attention' | 'highRisk';
+    label: string;
+    count: number;
+    percent: number;
+  }[];
 }
 
 export interface CampHistoryEntry {

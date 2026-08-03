@@ -1,0 +1,35 @@
+.pie-hover-tooltip {
+  padding: 12px;
+  border-radius: 12px;
+  background: #191c26;
+  outline: 1px solid rgba(255, 255, 255, 0.2);
+  outline-offset: -1px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.pie-hover-tooltip__row {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 20px;
+}
+
+.pie-hover-tooltip__count {
+  color: #ffffff;
+  font-family: var(--font);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 2rem;
+}
+
+.pie-hover-tooltip__percent {
+  color: #9a9a9a;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}

@@ -1,6 +1,7 @@
 /**
  * Optional dashboard sections toggle.
- * Set to `true` to show Company average scores and Blood & lab intelligence.
+ * Set to `true` to show Blood & lab intelligence on the dashboard.
+ * Company average scores live on Camp Report.
  */
 export const SHOW_EXTENDED_DASHBOARD_SECTIONS = true;
 

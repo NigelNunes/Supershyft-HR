@@ -15,6 +15,7 @@ import { ChartCard } from '../ui/ChartCard';
 import { GenderViewToggle } from '../ui/GenderViewToggle';
 import { InsightFooter } from '../ui/InsightFooter';
 import { useChartTheme } from './chartTheme';
+import { PieHoverTooltip } from './PieHoverTooltip';
 import './PhysicalSleepPieCharts.css';
 
 interface PhysicalSleepPieChartsProps {
@@ -110,14 +111,7 @@ function SinglePie({
                 <Cell key={entry.name} fill={colorForLabel(entry.name, labelOrder, colors)} />
               ))}
             </Pie>
-            <Tooltip
-              {...chart.tooltipProps}
-              formatter={(value, _name, item) => {
-                const count = (item?.payload as { count?: number })?.count ?? 0;
-                const v = typeof value === 'number' ? value : Number(value);
-                return [`${v}% (${count.toLocaleString()})`, 'Share'];
-              }}
-            />
+            <Tooltip content={<PieHoverTooltip />} wrapperStyle={{ zIndex: 20, outline: 'none' }} />
             {showLegend && <Legend wrapperStyle={chart.legendStyle} />}
           </PieChart>
         </ResponsiveContainer>

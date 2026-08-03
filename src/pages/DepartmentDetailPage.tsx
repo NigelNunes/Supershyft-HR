@@ -1,21 +1,98 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Users, AlertTriangle, Gauge } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { getDepartmentDetail } from '../data/mockDashboard';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { ComingSoonPanel } from '../components/ui/ComingSoonPanel';
 import { CHART_INFO } from '../content/chartInfo';
-import { KpiCard } from '../components/ui/KpiCard';
-import { DeptLifestylePieCharts } from '../components/charts/DeptLifestylePieCharts';
-import { OxidativeStressPieChart } from '../components/charts/OxidativeStressPieChart';
+import { DashboardHeader, type YearOption } from '../components/layout/DashboardHeader';
+import { DashboardMetricCards } from '../components/ui/DashboardMetricCards';
+import { MetabolicAgeDistributionCard } from '../components/charts/MetabolicAgeDistributionCard';
+import { ParticipationCharts } from '../components/charts/ParticipationCharts';
+import { OverallRiskScoreChart } from '../components/charts/OverallRiskScoreChart';
 import { CompanyAverageScores } from '../components/charts/CompanyAverageScores';
+import { PhysicalSleepSegmentCharts } from '../components/charts/PhysicalSleepSegmentCharts';
+import type { GenderDistributionPair } from '../types';
+import './DepartmentDetailPage.css';
 
-function formatDeptGender(male: number, female: number): string {
-  return `M: ${male.toLocaleString()} · F: ${female.toLocaleString()}`;
+const EMPTY_GENDER_DISTRIBUTION: GenderDistributionPair = { male: [], female: [] };
+
+function DepartmentDetailPageContent({
+  onRefresh,
+  departmentName,
+  detail,
+}: {
+  onRefresh: () => void;
+  departmentName: string;
+  detail: NonNullable<ReturnType<typeof getDepartmentDetail>>;
+}) {
+  const [selectedYear, setSelectedYear] = useState<YearOption>('2026');
+  const { genderBreakdown } = detail;
+
+  return (
+    <div className="dashboard-page">
+      <div className="dept-detail-back">
+        <Link to="/departments" className="back-link">
+          <ArrowLeft size={16} /> Departments
+        </Link>
+      </div>
+
+      <DashboardHeader
+        title={`${departmentName} Health Report`}
+        subtitle="Workforce wellness analysis"
+        onRefresh={onRefresh}
+        selectedYear={selectedYear}
+        onYearChange={setSelectedYear}
+      />
+
+      <div className="dashboard-metrics-row">
+        <div className="dashboard-metrics-col">
+          <DashboardMetricCards
+            kpis={detail.kpis}
+            ranking={null}
+            showRanking={false}
+            selectedYear={selectedYear}
+          />
+          <MetabolicAgeDistributionCard
+            categories={detail.metabolicAgeCategories}
+            selectedYear={selectedYear}
+          />
+        </div>
+        <div className="dashboard-metrics-col">
+          <ParticipationCharts
+            byAge={detail.participationByAge}
+            selectedYear={selectedYear}
+          />
+          <OverallRiskScoreChart
+            buckets={detail.overallRiskScore}
+            selectedYear={selectedYear}
+          />
+        </div>
+      </div>
+
+      <PhysicalSleepSegmentCharts
+        physical={detail.physicalActivityByGender ?? EMPTY_GENDER_DISTRIBUTION}
+        sleep={detail.sleepQualityByGender ?? EMPTY_GENDER_DISTRIBUTION}
+        maleEnrolled={genderBreakdown.male}
+        femaleEnrolled={genderBreakdown.female}
+        selectedYear={selectedYear}
+      />
+
+      <CompanyAverageScores
+        scores={detail.companyScores}
+        title="Company average scores"
+        subtitle="Nutrition · fitness · lifestyle (scale 0–100)"
+        info={CHART_INFO.deptCompanyScores}
+        selectedYear={selectedYear}
+      />
+    </div>
+  );
 }
 
 export function DepartmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { departments } = useOrganization();
+  const [refreshKey, setRefreshKey] = useState(0);
   const orgDepartment = departments.find((dept) => dept.slug === id);
   const detail = id ? getDepartmentDetail(id) : null;
 
@@ -50,54 +127,12 @@ export function DepartmentDetailPage() {
     );
   }
 
-  const { genderBreakdown } = detail;
-
   return (
-    <div className="dashboard-page">
-      <header className="page-header">
-        <div>
-          <Link to="/departments" className="back-link">
-            <ArrowLeft size={16} /> Departments
-          </Link>
-          <h1>{departmentName}</h1>
-          <p>Department health profile</p>
-        </div>
-      </header>
-
-      <div className="kpi-grid kpi-grid--3">
-        <KpiCard
-          label="Employees"
-          value={detail.headcount.toLocaleString()}
-          sub={formatDeptGender(genderBreakdown.male, genderBreakdown.female)}
-          icon={Users}
-          variant="green"
-        />
-        <KpiCard
-          label="High risk"
-          value={`${detail.highRiskPercent}%`}
-          sub="Metabolic age ≥3 yrs above actual"
-          icon={AlertTriangle}
-          variant="red"
-        />
-        <KpiCard
-          label="Average risk score"
-          value={Math.round(detail.avgRiskScore).toString()}
-          sub="Composite score (scale 0–100)"
-          icon={Gauge}
-          variant="amber"
-        />
-      </div>
-
-      <CompanyAverageScores
-        scores={detail.companyScores}
-        title="Department average scores"
-        subtitle="Nutrition · fitness · lifestyle (scale 0–100)"
-        info={CHART_INFO.deptCompanyScores}
-      />
-
-      <DeptLifestylePieCharts data={detail.lifestyleDistribution} departmentName={detail.name} />
-
-      <OxidativeStressPieChart data={detail.oxidativeStress} headcount={detail.headcount} />
-    </div>
+    <DepartmentDetailPageContent
+      key={`${id}-${refreshKey}`}
+      departmentName={departmentName}
+      detail={detail}
+      onRefresh={() => setRefreshKey((k) => k + 1)}
+    />
   );
 }

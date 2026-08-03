@@ -88,6 +88,9 @@ export const CHART_INFO = {
 
   interventions:
     'Suggested workforce wellness actions based on risk, lifestyle, and lab patterns from this camp. Impact estimates are illustrative for HR planning.',
+
+  executiveRanking:
+    'National and industry standing for this organization versus peer companies, plus city-level ranks on the map. Lower rank numbers indicate stronger relative performance.',
 } as const;
 
 const LIFESTYLE_INFO: Record<string, string> = {
@@ -106,7 +109,7 @@ export function lifestyleInfo(itemId: string, itemTitle: string, dimension: Togg
 }
 
 const BLOOD_PANEL_INFO: Record<string, string> = {
-  b12: 'Vitamin B12 levels from blood tests. The ring shows the share of results within the normal reference range; the remainder may indicate deficiency or borderline levels.',
+  b12: 'Vitamin B12 levels from blood tests. Each lit dot represents about 5% of results within the normal reference range; empty dots are outside optimal range.',
   d3: 'Vitamin D3 levels—often low in indoor and office roles with limited sun exposure. In-range percentage reflects workforce sufficiency for bone and immune health.',
   diabetes: 'Fasting glucose and related markers for diabetes and pre-diabetes risk. In-range share helps gauge metabolic health across the workforce.',
   lipid: 'Cholesterol panel (e.g. LDL, HDL, triglycerides) as a cardiovascular risk indicator. Shows how many results meet clinical reference ranges.',
@@ -116,6 +119,6 @@ const BLOOD_PANEL_INFO: Record<string, string> = {
 export function bloodPanelInfo(panelId: string, panelName: string): string {
   return (
     BLOOD_PANEL_INFO[panelId] ??
-    `Summary of ${panelName} blood test results for enrolled employees. The ring shows the percentage within clinical reference ranges versus outside optimal range.`
+    `Summary of ${panelName} blood test results for enrolled employees. Lit dots show the share within clinical reference ranges versus outside optimal range.`
   );
 }

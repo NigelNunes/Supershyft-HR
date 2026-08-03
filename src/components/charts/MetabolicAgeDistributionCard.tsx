@@ -1,0 +1,299 @@
+import { useId, useMemo } from 'react';
+import { AlertCircle, Info } from 'lucide-react';
+import { CHART_INFO } from '../../content/chartInfo';
+import {
+  DUMMY_ALL_YEARS_METABOLIC_AGE,
+  DUMMY_ALL_YEARS_METABOLIC_INSIGHT,
+} from '../../data/dummyAllYearsMetrics';
+import type { YearOption } from '../layout/DashboardHeader';
+import './MetabolicAgeDistributionCard.css';
+
+export interface MetabolicAgeCategory {
+  key: 'good' | 'attention' | 'highRisk';
+  label: string;
+  count: number;
+  percent: number;
+}
+
+/** Temporary dummy data until metabolic-age API is wired. */
+export const DUMMY_METABOLIC_AGE_CATEGORIES: MetabolicAgeCategory[] = [
+  { key: 'good', label: 'GOOD', count: 132, percent: 68 },
+  { key: 'attention', label: 'NEEDS ATTENTION', count: 69, percent: 27 },
+  { key: 'highRisk', label: 'HIGH RISK', count: 23, percent: 15 },
+];
+
+interface MetabolicAgeDistributionCardProps {
+  categories?: MetabolicAgeCategory[];
+  selectedYear?: YearOption;
+}
+
+const VIEW_W = 640;
+const VIEW_H = 192;
+const MID = VIEW_H / 2;
+
+/** Column centers — dashed guides + stats columns. */
+const COL_X = [VIEW_W * 0.17, VIEW_W * 0.5, VIEW_W * 0.83] as const;
+
+/**
+ * Organic snake silhouette.
+ * Start: flat vertical face + soft rounded corners, then a slight outward flare
+ * before tapering (matches Figma head). Half-heights kept under full bleed.
+ */
+const SILHOUETTE: { x: number; top: number; bot: number }[] = [
+  { x: 0, top: 78, bot: 78 },
+  { x: 6, top: 82, bot: 82 },
+  { x: 14, top: 85, bot: 85 },
+  { x: 26, top: 86, bot: 86 },
+  { x: 42, top: 86, bot: 86 },
+  { x: 60, top: 86, bot: 86 },
+  { x: 80, top: 86, bot: 86 },
+  { x: 100, top: 85, bot: 85 },
+  { x: 120, top: 84, bot: 84 },
+  { x: 140, top: 80, bot: 80 },
+  { x: 160, top: 72, bot: 72 },
+  { x: 180, top: 64, bot: 65 },
+  { x: 200, top: 57, bot: 59 },
+  { x: 220, top: 54, bot: 56 },
+  { x: 240, top: 53, bot: 56 },
+  { x: 260, top: 54, bot: 58 },
+  { x: 280, top: 52, bot: 57 },
+  { x: 300, top: 48, bot: 55 },
+  { x: 320, top: 44, bot: 53 },
+  { x: 340, top: 42, bot: 50 },
+  { x: 360, top: 36, bot: 44 },
+  { x: 380, top: 33, bot: 41 },
+  { x: 400, top: 32, bot: 35 },
+  { x: 420, top: 28, bot: 34 },
+  { x: 440, top: 24, bot: 30 },
+  { x: 460, top: 25, bot: 28 },
+  { x: 480, top: 22, bot: 26 },
+  { x: 500, top: 21, bot: 22 },
+  { x: 520, top: 15, bot: 19 },
+  { x: 540, top: 12, bot: 14 },
+  { x: 560, top: 10, bot: 10 },
+  { x: 580, top: 7, bot: 7 },
+  { x: 600, top: 5, bot: 7 },
+  { x: 620, top: 1, bot: 3 },
+  { x: 640, top: 0, bot: 0 },
+];
+
+/** Figma dummy reference counts used to author the silhouette. */
+const REF_COUNTS = [132, 69, 23] as const;
+
+type Pt = { x: number; y: number };
+
+function smoothThrough(points: Pt[]): string {
+  if (points.length < 2) return '';
+  const pts = [points[0], ...points, points[points.length - 1]];
+  let d = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
+  for (let i = 1; i < pts.length - 2; i++) {
+    const p0 = pts[i - 1];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2];
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+  }
+  return d;
+}
+
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * Math.min(1, Math.max(0, t));
+}
+
+/** Relative amplitude along x from three category counts (1 at the max count). */
+function amplitudeAtX(x: number, counts: [number, number, number]): number {
+  const max = Math.max(...counts, 1);
+  const a0 = counts[0] / max;
+  const a1 = counts[1] / max;
+  const a2 = counts[2] / max;
+  const [x0, x1, x2] = COL_X;
+
+  if (x <= x0) return lerp(a0 * 0.98, a0, x / x0);
+  if (x <= x1) return lerp(a0, a1, (x - x0) / (x1 - x0));
+  if (x <= x2) return lerp(a1, a2, (x - x1) / (x2 - x1));
+  return lerp(a2, 0, (x - x2) / (VIEW_W - x2));
+}
+
+function buildSnakePath(counts: [number, number, number]): string {
+  const top: Pt[] = [];
+  const bottom: Pt[] = [];
+
+  for (const point of SILHOUETTE) {
+    const dataAmp = amplitudeAtX(point.x, counts);
+    const refAmp = amplitudeAtX(point.x, [...REF_COUNTS]);
+    // Keep Figma edge character; scale thickness when category mix changes
+    const scale = refAmp > 0.02 ? dataAmp / refAmp : dataAmp > 0 ? 1 : 0;
+    top.push({ x: point.x, y: MID - point.top * scale });
+    bottom.push({ x: point.x, y: MID + point.bot * scale });
+  }
+
+  top[top.length - 1] = { x: VIEW_W, y: MID };
+  bottom[bottom.length - 1] = { x: VIEW_W, y: MID };
+
+  const topPath = smoothThrough(top);
+  const bottomPath = smoothThrough([...bottom].reverse()).replace(/^M/, 'L');
+  return `${topPath} ${bottomPath} Z`;
+}
+
+function MetabolicAgeSnake({ categories }: { categories: MetabolicAgeCategory[] }) {
+  const uid = useId().replace(/:/g, '');
+  const fillId = `metabolic-snake-fill-${uid}`;
+  const glowId = `metabolic-snake-glow-${uid}`;
+
+  const { path, dividers } = useMemo(() => {
+    const counts = categories.map((c) => c.count) as [number, number, number];
+    return {
+      path: buildSnakePath(counts),
+      dividers: [...COL_X],
+    };
+  }, [categories]);
+
+  return (
+    <div className="metabolic-snake" aria-hidden>
+      <svg
+        className="metabolic-snake__svg"
+        viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <linearGradient id={fillId} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.85" />
+            <stop offset="30%" stopColor="#6366f1" stopOpacity="0.72" />
+            <stop offset="100%" stopColor="#2dd4bf" stopOpacity="0.92" />
+          </linearGradient>
+          <filter id={glowId} x="-6%" y="-35%" width="112%" height="170%">
+            <feDropShadow dx="0" dy="0" stdDeviation="5" floodColor="rgba(101, 242, 255, 0.3)" />
+          </filter>
+        </defs>
+
+        {dividers.map((x) => (
+          <line
+            key={x}
+            x1={x}
+            y1="0"
+            x2={x}
+            y2={VIEW_H}
+            className="metabolic-snake__divider"
+          />
+        ))}
+
+        <path
+          d={path}
+          fill={`url(#${fillId})`}
+          stroke="rgba(255, 255, 255, 0.2)"
+          strokeWidth="1"
+          filter={`url(#${glowId})`}
+        />
+      </svg>
+    </div>
+  );
+}
+
+export function MetabolicAgeDistributionCard({
+  categories = DUMMY_METABOLIC_AGE_CATEGORIES,
+  selectedYear = '2026',
+}: MetabolicAgeDistributionCardProps) {
+  const highRisk = categories.find((c) => c.key === 'highRisk');
+  const insightPercent = highRisk?.percent ?? 0;
+  const isAllYears = selectedYear === 'all';
+
+  return (
+    <article className={`metabolic-age-card${isAllYears ? ' metabolic-age-card--allyears' : ''}`}>
+      <header className="metabolic-age-card__header">
+        <div className="metabolic-age-card__title-row">
+          <h3 className="metabolic-age-card__title">Metabolic Age Distribution</h3>
+          <span className="metabolic-age-card__info" tabIndex={0}>
+            <Info size={16} aria-hidden />
+            <span className="metabolic-age-card__info-popup" role="tooltip">
+              {CHART_INFO.metabolicAge}
+            </span>
+          </span>
+        </div>
+        <p className="metabolic-age-card__subtitle">
+          Distribution by number of employees metabolic age compared to actual age
+        </p>
+      </header>
+
+      {isAllYears ? (
+        <>
+          {/* TEMPORARY: DUMMY_ALL_YEARS_METABOLIC_* — remove when multi-year API exists */}
+          <div className="metabolic-age-bars">
+            {DUMMY_ALL_YEARS_METABOLIC_AGE.map((row) => {
+              const goodEnd = row.good;
+              const cautionEnd = row.good + row.caution;
+              return (
+                <div key={row.year} className="metabolic-age-bars__row">
+                  <span className="metabolic-age-bars__year">{row.year}</span>
+                  <div className="metabolic-age-bars__track" aria-hidden>
+                    <div
+                      className="metabolic-age-bars__seg metabolic-age-bars__seg--high"
+                      style={{ width: '100%' }}
+                    />
+                    <div
+                      className="metabolic-age-bars__seg metabolic-age-bars__seg--caution"
+                      style={{ width: `${cautionEnd}%` }}
+                    />
+                    <div
+                      className="metabolic-age-bars__seg metabolic-age-bars__seg--good"
+                      style={{ width: `${goodEnd}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <ul className="metabolic-age-bars__legend">
+            <li>
+              <span className="metabolic-age-bars__dot metabolic-age-bars__dot--good" />
+              <span>GOOD</span>
+            </li>
+            <li>
+              <span className="metabolic-age-bars__dot metabolic-age-bars__dot--caution" />
+              <span>CAUTION</span>
+            </li>
+            <li>
+              <span className="metabolic-age-bars__dot metabolic-age-bars__dot--high" />
+              <span>HIGH RISK</span>
+            </li>
+          </ul>
+
+          <div className="metabolic-age-card__insight">
+            <AlertCircle size={20} aria-hidden />
+            <p>{DUMMY_ALL_YEARS_METABOLIC_INSIGHT}</p>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="metabolic-age-card__stats">
+            {categories.map((category) => (
+              <div
+                key={category.key}
+                className={`metabolic-age-stat metabolic-age-stat--${category.key}`}
+              >
+                <span className="metabolic-age-stat__label">{category.label}</span>
+                <span className="metabolic-age-stat__count">
+                  {category.count.toLocaleString()}
+                </span>
+                <span className="metabolic-age-stat__percent">{category.percent}%</span>
+              </div>
+            ))}
+          </div>
+
+          <MetabolicAgeSnake categories={categories} />
+
+          <div className="metabolic-age-card__insight">
+            <AlertCircle size={20} aria-hidden />
+            <p>
+              {insightPercent}% Employees have their metabolic age &gt;3 years of their actual age
+            </p>
+          </div>
+        </>
+      )}
+    </article>
+  );
+}

@@ -1,20 +1,148 @@
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { Cell, Pie, PieChart, Tooltip } from 'recharts';
+import { Info, Lightbulb } from 'lucide-react';
 import { CHART_INFO } from '../../content/chartInfo';
+import {
+  DUMMY_AGE_BANDS,
+  DUMMY_ALL_YEARS_AGE_INSIGHT,
+  DUMMY_ALL_YEARS_AGE_PARTICIPATION,
+} from '../../data/dummyAllYearsMetrics';
+import type { YearOption } from '../layout/DashboardHeader';
 import type { ParticipationByAge } from '../../types';
-import { ChartCard } from '../ui/ChartCard';
-import { InsightFooter } from '../ui/InsightFooter';
-import { useChartTheme } from './chartTheme';
+import { PieHoverTooltip } from './PieHoverTooltip';
 import './ParticipationCharts.css';
 
-const AGE_COLORS = ['#378ADD', '#5DCAA5', '#7F77DD', '#EF9F27', '#E24B4A'];
+const AGE_COLORS = ['#3B82F6', '#34D399', '#8A61F7', '#FB923C', '#F87171'];
 
 interface ParticipationChartsProps {
   byAge: ParticipationByAge[];
   loading?: boolean;
+  selectedYear?: YearOption;
 }
 
-export function ParticipationCharts({ byAge, loading = false }: ParticipationChartsProps) {
-  const chart = useChartTheme();
+function AgePie({
+  data,
+  assessed,
+  size = 'lg',
+  centerLabel = 'Enrolled',
+}: {
+  data: { name: string; value: number; enrolled: number; color: string }[];
+  assessed: number | string;
+  size?: 'lg' | 'sm';
+  centerLabel?: string;
+}) {
+  const top =
+    data.length > 0
+      ? data.reduce((best, row) => (row.value > best.value ? row : best), data[0])
+      : null;
+  const dim = size === 'sm' ? 128 : 224;
+  const inner = size === 'sm' ? 46 : 62;
+  const outer = size === 'sm' ? 58 : 92;
+
+  return (
+    <div
+      className={`participation-age-pie__chart participation-age-pie__chart--${size}`}
+      style={{ width: dim, height: dim }}
+    >
+      <PieChart width={dim} height={dim} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
+        <Pie
+          data={data}
+          dataKey="value"
+          nameKey="name"
+          cx="50%"
+          cy="50%"
+          innerRadius={inner}
+          outerRadius={outer}
+          paddingAngle={3.5}
+          cornerRadius={size === 'sm' ? 5 : 7}
+          stroke="none"
+        >
+          {data.map((entry) => {
+            const isLead = top != null && entry.name === top.name;
+            return (
+              <Cell
+                key={entry.name}
+                fill={entry.color}
+                stroke={isLead ? 'rgba(255,255,255,0.18)' : 'none'}
+                strokeWidth={isLead ? 1 : 0}
+                style={
+                  isLead
+                    ? {
+                        filter: 'drop-shadow(0px -2px 8px rgba(153, 162, 249, 0.22))',
+                      }
+                    : undefined
+                }
+              />
+            );
+          })}
+        </Pie>
+        <Tooltip content={<PieHoverTooltip />} wrapperStyle={{ zIndex: 20, outline: 'none' }} />
+      </PieChart>
+      <div className="participation-age-pie__center" aria-hidden>
+        <span className="participation-age-pie__center-value">{assessed}</span>
+        <span className="participation-age-pie__center-label">{centerLabel}</span>
+      </div>
+    </div>
+  );
+}
+
+function AllYearsParticipation() {
+  // TEMPORARY: DUMMY_ALL_YEARS_AGE_* — remove when multi-year API exists
+  return (
+    <>
+      <div className="participation-age-card__allyears">
+        <div className="participation-age-card__allyears-pies">
+          {DUMMY_ALL_YEARS_AGE_PARTICIPATION.map((yearBlock) => {
+            const chartData = yearBlock.bands.map((row, i) => ({
+              name: row.ageGroup,
+              value: row.percent,
+              enrolled: row.enrolled,
+              color: AGE_COLORS[i % AGE_COLORS.length],
+            }));
+            return (
+              <div key={yearBlock.year} className="participation-age-card__allyears-col">
+                <span className="participation-age-card__allyears-year">{yearBlock.year}</span>
+                <AgePie
+                  data={chartData}
+                  assessed={yearBlock.assessed.toLocaleString()}
+                  size="sm"
+                  centerLabel="Assessed"
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        <ul className="participation-age-pie__legend participation-age-pie__legend--horizontal">
+          {DUMMY_AGE_BANDS.map((band, i) => (
+            <li key={band} className="participation-age-pie__legend-item">
+              <span
+                className="participation-age-pie__dot"
+                style={{ backgroundColor: AGE_COLORS[i % AGE_COLORS.length] }}
+              />
+              <span className="participation-age-pie__label">{band}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <footer className="participation-age-card__insight">
+        <div className="participation-age-card__insight-label">
+          <Lightbulb size={20} aria-hidden />
+          <span>Insight</span>
+        </div>
+        <p className="participation-age-card__insight-text">{DUMMY_ALL_YEARS_AGE_INSIGHT}</p>
+      </footer>
+    </>
+  );
+}
+
+function SingleYearParticipation({
+  byAge,
+  loading,
+}: {
+  byAge: ParticipationByAge[];
+  loading: boolean;
+}) {
   const chartData = byAge.map((row, i) => ({
     name: row.ageGroup,
     value: row.percent,
@@ -28,87 +156,79 @@ export function ParticipationCharts({ byAge, loading = false }: ParticipationCha
       : null;
 
   return (
-    <ChartCard
-      className="participation-age-card"
-      title="Age-wise participation"
-      subtitle="Employees enrolled by age group"
-      info={CHART_INFO.participationByAge}
-      insight={
-        topCohort ? (
-          <InsightFooter
-            tone="neutral"
-            text={`${topCohort.ageGroup} is the largest cohort at ${topCohort.percent}% (${topCohort.enrolled.toLocaleString()} employees) — tailor camp messaging and scheduling for under-represented age bands.`}
-          />
-        ) : undefined
-      }
-    >
-      <div className="participation-age-pie">
-        <div className="participation-age-pie__chart">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={chartData}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                innerRadius={58}
-                outerRadius={92}
-                paddingAngle={3}
-                stroke="none"
-              >
-                {chartData.map((entry) => (
-                  <Cell key={entry.name} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip
-                {...chart.tooltipProps}
-                formatter={(value, _name, item) => {
-                  const enrolled = (item?.payload as { enrolled?: number })?.enrolled ?? 0;
-                  const v = typeof value === 'number' ? value : Number(value);
-                  return [`${v}% (${enrolled.toLocaleString()} employees)`, 'Share'];
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="participation-age-pie__center" aria-hidden>
-            <span className="participation-age-pie__center-value">
-              {loading ? '…' : byAge.length > 0 ? totalEnrolled.toLocaleString() : '—'}
-            </span>
-            <span className="participation-age-pie__center-label">enrolled</span>
-          </div>
-        </div>
-        <ul className="participation-age-pie__breakdown">
+    <>
+      <div className="participation-age-card__body">
+        <AgePie
+          data={chartData}
+          assessed={loading ? '…' : byAge.length > 0 ? totalEnrolled.toLocaleString() : '—'}
+          size="lg"
+          centerLabel="Enrolled"
+        />
+
+        <ul className="participation-age-pie__legend">
+          {loading && byAge.length === 0 && (
+            <li className="participation-age-pie__empty">Loading…</li>
+          )}
+          {!loading && byAge.length === 0 && (
+            <li className="participation-age-pie__empty">No data available</li>
+          )}
           {byAge.map((row, i) => (
-            <li
-              key={row.ageGroup}
-              className={
-                topCohort?.ageGroup === row.ageGroup
-                  ? 'participation-age-pie__row participation-age-pie__row--lead'
-                  : 'participation-age-pie__row'
-              }
-            >
-              <span
-                className="participation-age-pie__dot"
-                style={{ backgroundColor: AGE_COLORS[i % AGE_COLORS.length] }}
-              />
-              <span className="participation-age-pie__label">{row.ageGroup}</span>
+            <li key={row.ageGroup} className="participation-age-pie__row">
+              <span className="participation-age-pie__row-left">
+                <span
+                  className="participation-age-pie__dot"
+                  style={{ backgroundColor: AGE_COLORS[i % AGE_COLORS.length] }}
+                />
+                <span className="participation-age-pie__label">{row.ageGroup}</span>
+              </span>
               <span className="participation-age-pie__stat">
                 {row.percent}% · {row.enrolled.toLocaleString()}
               </span>
             </li>
           ))}
-          <li className="participation-age-pie__total">
-            <span>
-              {loading
-                ? 'Loading…'
-                : byAge.length > 0
-                  ? `${totalEnrolled.toLocaleString()} employees enrolled`
-                  : 'No data available'}
-            </span>
-          </li>
         </ul>
       </div>
-    </ChartCard>
+
+      {topCohort && (
+        <footer className="participation-age-card__insight">
+          <div className="participation-age-card__insight-label">
+            <Lightbulb size={20} aria-hidden />
+            <span>Insight</span>
+          </div>
+          <p className="participation-age-card__insight-text">
+            {`${topCohort.ageGroup} is the largest cohort at ${topCohort.percent}% (${topCohort.enrolled.toLocaleString()} employees) — tailor camp messaging and scheduling for under-represented age bands.`}
+          </p>
+        </footer>
+      )}
+    </>
+  );
+}
+
+export function ParticipationCharts({
+  byAge,
+  loading = false,
+  selectedYear = '2026',
+}: ParticipationChartsProps) {
+  return (
+    <article className="participation-age-card">
+      <header className="participation-age-card__header">
+        <div className="participation-age-card__title-row">
+          <h3 className="participation-age-card__title">Age-wise participation</h3>
+          <span className="participation-age-card__info" tabIndex={0}>
+            <Info size={16} aria-hidden />
+            <span className="participation-age-card__info-popup" role="tooltip">
+              {CHART_INFO.participationByAge}
+            </span>
+          </span>
+        </div>
+        <p className="participation-age-card__subtitle">Employees enrolled by age group</p>
+      </header>
+
+      {selectedYear === 'all' ? (
+        <AllYearsParticipation />
+      ) : (
+        <SingleYearParticipation byAge={byAge} loading={loading} />
+      )}
+    </article>
   );
 }

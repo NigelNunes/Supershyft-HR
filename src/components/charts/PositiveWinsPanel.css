@@ -1,75 +1,253 @@
-.positive-wins-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-}
-
-.positive-wins-grid > * {
-  min-width: 0;
-}
-
-@media (max-width: 900px) {
-  .positive-wins-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.positive-wins-col h4 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--positive);
-  margin-bottom: 12px;
-}
-
-.positive-wins-col ul {
-  list-style: none;
+.positive-wins {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.positive-wins-col li {
-  font-size: 0.8125rem;
-  color: var(--text);
-  line-height: 1.4;
-  padding: 8px 10px;
-  background: var(--positive-soft);
-  border-radius: var(--radius-sm);
-  display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  border-radius: 1.5rem;
+  background: rgba(25, 28, 38, 0.6);
+  outline: 1px solid rgba(255, 255, 255, 0.05);
+  outline-offset: -1px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
-.positive-wins__badge {
-  font-size: 0.625rem;
-  font-weight: 600;
-  padding: 2px 8px;
+.positive-wins__header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  width: 100%;
+}
+
+.positive-wins__title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.positive-wins__title {
+  margin: 0;
+  color: #e5e7eb;
+  font-family: 'Lato', var(--font);
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.5rem;
+}
+
+.positive-wins__info {
+  position: relative;
+  display: inline-flex;
+  color: #9a9a9a;
+  cursor: help;
+}
+
+.positive-wins__info:hover,
+.positive-wins__info:focus-visible {
+  color: #e5e7eb;
+  outline: none;
+}
+
+.positive-wins__info-popup {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 20;
+  width: min(280px, 70vw);
+  padding: 10px 12px;
   border-radius: 10px;
-  background: var(--positive);
-  color: #fff;
-  flex-shrink: 0;
+  background: rgba(25, 28, 38, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e5e7eb;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
-.positive-wins__name {
-  flex: 1;
+.positive-wins__info:hover .positive-wins__info-popup,
+.positive-wins__info:focus-visible .positive-wins__info-popup {
+  display: block;
 }
 
-.positive-wins-col__empty {
+.positive-wins__subtitle {
+  margin: 0;
+  color: #a3a3a3;
+  font-family: 'Lato', var(--font);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.25rem;
+}
+
+.positive-wins__columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  width: 100%;
+  min-height: 15rem;
+  align-items: stretch;
+}
+
+.positive-wins__col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem 1rem;
+  box-sizing: border-box;
+  border-radius: 2rem;
+  outline: 1px solid rgba(255, 255, 255, 0.1);
+  outline-offset: -1px;
+  overflow: hidden;
+}
+
+.positive-wins__col-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.positive-wins__col-head--profiles {
+  gap: 1rem;
+}
+
+.positive-wins__icon {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  color: var(--text-muted);
-  background: transparent;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  outline: 1px solid transparent;
+  outline-offset: -1px;
+}
+
+.positive-wins__icon--emerald {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  outline-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+}
+
+.positive-wins__icon--blue {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  outline-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+  opacity: 0.95;
+}
+
+.positive-wins__icon--purple {
+  color: #a855f7;
+  background: rgba(168, 85, 247, 0.1);
+  outline-color: rgba(168, 85, 247, 0.4);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+}
+
+.positive-wins__col-title {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.positive-wins__col-title--emerald {
+  color: #10b981;
+  font-family: 'Lato', var(--font);
+}
+
+.positive-wins__col-title--blue {
+  color: #3b82f6;
+  font-family: 'Manrope', var(--font);
+}
+
+.positive-wins__col-title--purple {
+  color: #a855f7;
+  font-family: 'Lato', var(--font);
+}
+
+.positive-wins__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: center;
+  justify-content: flex-start;
+  gap: 0.375rem;
+  width: 100%;
+}
+
+.positive-wins__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2rem;
+  padding: 0.5rem 1rem;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.4);
+  outline: 1px solid transparent;
+  outline-offset: -1px;
+}
+
+.positive-wins__chip--emerald {
+  outline-color: rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
+.positive-wins__chip--blue {
+  outline-color: rgba(59, 130, 246, 0.3);
+  color: #3b82f6;
+}
+
+.positive-wins__chip--purple {
+  outline-color: rgba(168, 85, 247, 0.3);
+  color: #a855f7;
+}
+
+.positive-wins__chip-label {
+  color: #d1d5db;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1rem;
+  font-family: 'DM Sans', 'Manrope', var(--font);
+}
+
+.positive-wins__chip--blue .positive-wins__chip-label,
+.positive-wins__chip--purple .positive-wins__chip-label {
+  font-family: 'Manrope', var(--font);
+}
+
+.positive-wins__empty {
+  margin: 0;
+  width: 100%;
+  color: #a3a3a3;
+  font-family: 'DM Sans', var(--font);
+  font-size: 0.75rem;
   font-style: italic;
+  line-height: 1.25rem;
+  text-align: center;
 }
 
 .positive-wins__loading {
   margin: 0;
+  width: 100%;
+  color: #a3a3a3;
+  font-family: 'DM Sans', var(--font);
   font-size: 0.8125rem;
-  color: var(--text-muted);
   text-align: center;
+}
+
+@media (max-width: 900px) {
+  .positive-wins__columns {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
 }

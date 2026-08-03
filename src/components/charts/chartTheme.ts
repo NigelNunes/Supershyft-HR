@@ -51,10 +51,10 @@ export const RISK_COLORS: Record<string, string> = {
 };
 
 export const OVERALL_RISK_COLORS: Record<string, string> = {
-  Optimal: '#1D9E75',
-  'Low risk': '#5DCAA5',
-  'Increased Risk': '#EF9F27',
-  'High risk': '#E24B4A',
+  Optimal: '#3B82F6',
+  'Low risk': '#8A61F7',
+  'Increased Risk': '#FF589B',
+  'High risk': '#DC6E26',
 };
 
 /** Theme-aware Recharts tooltip + axis tokens (use inside chart components). */

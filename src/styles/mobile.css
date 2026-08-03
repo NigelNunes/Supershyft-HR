@@ -9,58 +9,13 @@
   .main-area,
   .main-area.sidebar-collapsed {
     margin-left: 0;
+    padding-left: 0;
     align-items: stretch;
   }
 
-  [data-theme='dark'] .main-area::before,
-  [data-theme='dark'] .main-area::after,
-  [data-theme='dark'] .main-area.sidebar-collapsed::before,
-  [data-theme='dark'] .main-area.sidebar-collapsed::after {
-    left: 0;
-  }
-
   .page-content {
-    padding: 16px 14px 36px;
+    padding: 64px 14px 36px;
     max-width: 100%;
-  }
-
-  .top-bar__inner {
-    grid-template-columns: auto 1fr auto;
-    gap: 8px;
-    padding: 12px 14px;
-  }
-
-  .top-bar__platform-logo {
-    height: 22px;
-    max-width: 88px;
-  }
-
-  .top-bar__platform-name {
-    font-size: 0.875rem;
-  }
-
-  .top-bar__leading {
-    display: flex;
-    align-items: center;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .top-bar__menu-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--bg);
-    color: var(--text);
-  }
-
-  .top-bar__menu-btn:hover {
-    background: var(--border-subtle);
   }
 
   .page-header {
@@ -187,14 +142,9 @@
     font-size: 0.6875rem;
   }
 
-  .blood-panels {
+  .blood-lab-panels {
     grid-template-columns: 1fr;
     gap: 12px;
-  }
-
-  .blood-panel__svg {
-    width: 100px;
-    height: 100px;
   }
 
   .heatmap-scroll {
@@ -256,7 +206,7 @@
     padding: 16px 18px;
   }
 
-  .positive-wins-grid {
+  .positive-wins__columns {
     gap: 16px;
   }
 
@@ -264,11 +214,6 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
-  }
-
-  .top-bar__btn--text {
-    padding: 0 10px;
-    font-size: 0.75rem;
   }
 }
 

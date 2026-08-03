@@ -12,7 +12,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { DepartmentsPage } from './pages/DepartmentsPage';
 import { DepartmentDetailPage } from './pages/DepartmentDetailPage';
 import { EmployeesPage } from './pages/EmployeesPage';
-import { KeyInsightsPage } from './pages/KeyInsightsPage';
+import { CampReportPage } from './pages/CampReportPage';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -59,7 +59,7 @@ export default function App() {
                 <Route path="departments" element={<DepartmentsPage />} />
                 <Route path="departments/:id" element={<DepartmentDetailPage />} />
                 <Route path="employees" element={<EmployeesPage />} />
-                <Route path="insights" element={<KeyInsightsPage />} />
+                <Route path="insights" element={<CampReportPage />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

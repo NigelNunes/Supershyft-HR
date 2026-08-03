@@ -1,0 +1,327 @@
+.metabolic-age-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  width: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+  border-radius: 24px;
+  background: rgba(25, 28, 38, 0.6);
+  outline: 1px solid rgba(255, 255, 255, 0.05);
+  outline-offset: -1px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  margin-bottom: 0;
+}
+
+.metabolic-age-card__header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.metabolic-age-card__title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.metabolic-age-card__title {
+  margin: 0;
+  color: #e5e7eb;
+  font-family: 'Lato', var(--font);
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.5rem;
+}
+
+.metabolic-age-card__info {
+  position: relative;
+  display: inline-flex;
+  color: #9a9a9a;
+  cursor: help;
+}
+
+.metabolic-age-card__info:hover,
+.metabolic-age-card__info:focus-visible {
+  color: #e5e7eb;
+  outline: none;
+}
+
+.metabolic-age-card__info-popup {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 20;
+  width: min(280px, 70vw);
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(25, 28, 38, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e5e7eb;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.metabolic-age-card__info:hover .metabolic-age-card__info-popup,
+.metabolic-age-card__info:focus-visible .metabolic-age-card__info-popup {
+  display: block;
+}
+
+.metabolic-age-card__subtitle {
+  margin: 0;
+  color: #9a9a9a;
+  font-family: 'Lato', var(--font);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.25rem;
+}
+
+.metabolic-age-card__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+.metabolic-age-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.metabolic-age-stat__label {
+  padding-bottom: 8px;
+  font-family: var(--font);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+
+.metabolic-age-stat--good .metabolic-age-stat__label {
+  color: #34d399;
+}
+
+.metabolic-age-stat--attention .metabolic-age-stat__label {
+  color: #e5ff64;
+}
+
+.metabolic-age-stat--highRisk .metabolic-age-stat__label {
+  color: #de4a4a;
+}
+
+.metabolic-age-stat__count {
+  padding-bottom: 16px;
+  color: #ffffff;
+  font-family: var(--font);
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 2.25rem;
+}
+
+.metabolic-age-stat__percent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.5rem;
+  padding: 4px 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  outline: 1px solid rgba(255, 255, 255, 0.2);
+  outline-offset: -1px;
+  backdrop-filter: blur(2px);
+  color: #ffffff;
+  font-family: var(--font);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+
+.metabolic-snake {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 176px;
+  display: flex;
+  align-items: center;
+}
+
+.metabolic-snake__svg {
+  display: block;
+  width: 100%;
+  height: 176px;
+  max-height: 176px;
+  overflow: visible;
+}
+
+.metabolic-snake__divider {
+  stroke: #475569;
+  stroke-width: 1.05;
+  stroke-dasharray: 4 5;
+  vector-effect: non-scaling-stroke;
+}
+
+.metabolic-age-card__insight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 32px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  outline: 1px solid rgba(255, 255, 255, 0.2);
+  outline-offset: -1px;
+  color: #e5e7eb;
+}
+
+.metabolic-age-card__insight p {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.75rem;
+}
+
+.metabolic-age-card__insight svg {
+  flex-shrink: 0;
+  color: #ffffff;
+}
+
+.metabolic-age-card--allyears {
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.metabolic-age-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+
+.metabolic-age-bars__row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.metabolic-age-bars__year {
+  color: #9a9a9a;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1rem;
+}
+
+.metabolic-age-bars__track {
+  position: relative;
+  width: 100%;
+  height: 20px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #4dcfff;
+}
+
+.metabolic-age-bars__seg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 999px;
+}
+
+.metabolic-age-bars__seg--high {
+  background: #4dcfff;
+  z-index: 1;
+}
+
+.metabolic-age-bars__seg--caution {
+  background: #0077ff;
+  z-index: 2;
+  box-shadow: 1px 0 12px rgba(0, 0, 0, 1);
+}
+
+.metabolic-age-bars__seg--good {
+  background: #a855f7;
+  z-index: 3;
+  box-shadow: 1px 0 20px rgba(0, 0, 0, 1);
+}
+
+.metabolic-age-bars__legend {
+  list-style: none;
+  margin: 0 auto;
+  padding: 8px 12px 0;
+  width: min(100%, 24rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.metabolic-age-bars__legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #e5e7eb;
+  font-family: Inter, var(--font);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1rem;
+}
+
+.metabolic-age-bars__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.metabolic-age-bars__dot--good {
+  background: #a855f7;
+}
+
+.metabolic-age-bars__dot--caution {
+  background: #3b82f6;
+}
+
+.metabolic-age-bars__dot--high {
+  background: #4dcfff;
+}
+
+@media (max-width: 700px) {
+  .metabolic-age-card__stats {
+    gap: 12px;
+  }
+
+  .metabolic-age-stat__count {
+    font-size: 1.5rem;
+    line-height: 1.75rem;
+    padding-bottom: 10px;
+  }
+
+  .metabolic-snake {
+    min-height: 150px;
+  }
+
+  .metabolic-snake__svg {
+    height: 150px;
+    max-height: 150px;
+  }
+
+  .metabolic-age-card__insight {
+    padding: 14px 16px;
+  }
+
+  .metabolic-age-bars {
+    padding: 0;
+  }
+}

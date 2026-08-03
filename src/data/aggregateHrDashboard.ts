@@ -13,6 +13,7 @@ import type {
   GenderDistributionPair,
   Intervention,
   KeyInsightsData,
+  KpiSummary,
   LifestyleIndicator,
   MetabolicAgeSummary,
   OverallRiskScoreBucket,
@@ -798,14 +799,60 @@ export function buildDepartmentDetail(
   const rawMale = inDept.filter((p) => p.gender === 'Male').length;
   const rawFemale = inDept.filter((p) => p.gender === 'Female').length;
   const genderScale = deptSummary.headcount / (inDept.length || 1);
+  const scaleDept = (n: number) => Math.round(n * genderScale);
+
+  const bloodTests = inDept.filter((p) => p.bloodTestDone).length;
+  const doctorConsults = inDept.filter((p) => p.doctorConsultation).length;
+  /** Bio-AI not on participant yet — approximate as share of blood tests. */
+  const bioAi = Math.round(bloodTests * 0.8);
+
+  let metGood = 0;
+  let metAttention = 0;
+  let metHigh = 0;
+  for (const p of inDept) {
+    const gap = metabolicGapYears(p);
+    if (gap >= 3) metHigh += 1;
+    else if (gap >= 2) metAttention += 1;
+    else metGood += 1;
+  }
+
+  const riskBands: Record<OverallRiskScoreBucket['band'], number> = {
+    Optimal: 0,
+    'Low risk': 0,
+    'Increased Risk': 0,
+    'High risk': 0,
+  };
+  for (const p of inDept) {
+    riskBands[overallRiskBandFromScore(compositeRiskScore(p))] += 1;
+  }
+
+  const maleScaled = scaleDept(rawMale);
+  const femaleScaled = scaleDept(rawFemale);
+  const bloodScaled = scaleDept(bloodTests);
+  const bioAiScaled = scaleDept(bioAi);
+  const doctorScaled = scaleDept(doctorConsults);
+
+  const kpis: KpiSummary = {
+    employeesEnrolled: deptSummary.headcount,
+    maleEnrolled: maleScaled,
+    femaleEnrolled: femaleScaled,
+    totalBloodTest: bloodScaled,
+    bloodTestPercent: percent(bloodTests, inDept.length),
+    totalBioAiReports: bioAiScaled,
+    bioAiPercent: percent(bioAi, inDept.length),
+    doctorConsultation: doctorScaled,
+    nutritionistConsultation: 0,
+    highRiskGroup: scaleDept(inDept.filter(isHighMetabolicRisk).length),
+  };
 
   return {
     ...deptSummary,
     avgRiskScore: Math.round(avg(inDept.map(spanScores100)) * 10) / 10,
     topHighRiskDiseases: buildTopHighRiskDiseases(inDept),
+    diseases: buildDiseaseDataFromPool(inDept, (p) => p.gender, GENDER_KEYS),
     genderBreakdown: {
-      male: Math.round(rawMale * genderScale),
-      female: Math.round(rawFemale * genderScale),
+      male: maleScaled,
+      female: femaleScaled,
     },
     lifestyleDistribution: {
       physical: buildDist([...PHYSICAL_ACTIVITY_BUCKETS], (p) =>
@@ -813,6 +860,16 @@ export function buildDepartmentDetail(
       ),
       sleep: buildDist([...SLEEP_BUCKETS], (p) => sleepBucketFromApi(p.healthSpan.lifestyle?.sleep)),
     },
+    physicalActivityByGender: buildGenderDistribution(
+      inDept,
+      (p) => physicalActivityFromApi(p.healthSpan.lifestyle?.physical_activity),
+      [...PHYSICAL_ACTIVITY_BUCKETS],
+    ),
+    sleepQualityByGender: buildGenderDistribution(
+      inDept,
+      (p) => sleepBucketFromApi(p.healthSpan.lifestyle?.sleep),
+      [...SLEEP_BUCKETS],
+    ),
     oxidativeStress: {
       department: deptSummary.name,
       low: percent(oxLow, oxTotal),
@@ -821,5 +878,39 @@ export function buildDepartmentDetail(
       veryHigh: percent(oxVery, oxTotal),
     },
     companyScores: buildCompanyScores(inDept),
+    kpis,
+    participationByAge: AGE_GROUPS.map((ageGroup) => {
+      const enrolled = inDept.filter((p) => p.ageGroup === ageGroup).length;
+      return {
+        ageGroup,
+        enrolled: scaleDept(enrolled),
+        percent: percent(enrolled, inDept.length),
+      };
+    }),
+    overallRiskScore: (Object.keys(riskBands) as OverallRiskScoreBucket['band'][]).map((band) => ({
+      band,
+      count: scaleDept(riskBands[band]),
+      percent: percent(riskBands[band], inDept.length),
+    })),
+    metabolicAgeCategories: [
+      {
+        key: 'good' as const,
+        label: 'GOOD',
+        count: scaleDept(metGood),
+        percent: percent(metGood, inDept.length),
+      },
+      {
+        key: 'attention' as const,
+        label: 'NEEDS ATTENTION',
+        count: scaleDept(metAttention),
+        percent: percent(metAttention, inDept.length),
+      },
+      {
+        key: 'highRisk' as const,
+        label: 'HIGH RISK',
+        count: scaleDept(metHigh),
+        percent: percent(metHigh, inDept.length),
+      },
+    ],
   };
 }

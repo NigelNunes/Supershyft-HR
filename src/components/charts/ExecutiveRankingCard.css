@@ -1,0 +1,332 @@
+.executive-ranking-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 34rem;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  border-radius: 1.5rem;
+  background: rgba(25, 28, 38, 0.6);
+  outline: 1px solid rgba(255, 255, 255, 0.05);
+  outline-offset: -1px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  overflow: hidden;
+}
+
+.executive-ranking-card__content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.5rem;
+  width: min(22rem, 36%);
+}
+
+.executive-ranking-card__header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  width: 100%;
+  max-width: 24rem;
+}
+
+.executive-ranking-card__title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.executive-ranking-card__title {
+  margin: 0;
+  color: #e5e7eb;
+  font-family: 'Lato', var(--font);
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.5rem;
+}
+
+.executive-ranking-card__info {
+  position: relative;
+  display: inline-flex;
+  color: #9a9a9a;
+  cursor: help;
+}
+
+.executive-ranking-card__info:hover,
+.executive-ranking-card__info:focus-visible {
+  color: #e5e7eb;
+  outline: none;
+}
+
+.executive-ranking-card__info-popup {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 20;
+  width: min(280px, 70vw);
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(25, 28, 38, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e5e7eb;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.executive-ranking-card__info:hover .executive-ranking-card__info-popup,
+.executive-ranking-card__info:focus-visible .executive-ranking-card__info-popup {
+  display: block;
+}
+
+.executive-ranking-card__subtitle {
+  margin: 0;
+  color: #a3a3a3;
+  font-family: 'Lato', var(--font);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.25rem;
+}
+
+.executive-ranking-card__ranks {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 20rem;
+}
+
+.executive-ranking-card__ranks--allyears {
+  gap: 1.5rem;
+  max-width: 20rem;
+}
+
+.executive-rank-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  padding: 1.5rem 2rem;
+  box-sizing: border-box;
+  border-radius: 20px;
+  background: linear-gradient(47deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
+  outline: 1px solid rgba(255, 255, 255, 0.1);
+  outline-offset: -1px;
+  overflow: hidden;
+}
+
+.executive-rank-panel--allyears {
+  gap: 0;
+  align-items: stretch;
+  padding: 1.5rem 2rem;
+}
+
+.executive-rank-panel__allyears-label {
+  color: #ffffff;
+  font-family: 'DM Sans', var(--font);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.executive-rank-panel__allyears-body {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+}
+
+.executive-rank-spark {
+  display: block;
+  width: 100%;
+  height: 3rem;
+  overflow: visible;
+}
+
+.executive-rank-panel__allyears-years {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.executive-rank-panel__allyears-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.executive-rank-panel__allyears-value {
+  color: #d6d3d1;
+  font-family: 'DM Sans', var(--font);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 2rem;
+}
+
+.executive-rank-panel__allyears-year {
+  color: rgba(163, 163, 163, 0.3);
+  font-family: 'DM Sans', var(--font);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.executive-rank-panel__row {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.executive-rank-panel__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.375rem;
+  min-width: 6rem;
+}
+
+.executive-rank-panel__label {
+  color: #ffffff;
+  font-family: 'DM Sans', var(--font);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1rem;
+}
+
+.executive-rank-panel__value {
+  margin: 0;
+  font-family: 'DM Sans', var(--font);
+  font-size: 2.25rem;
+  line-height: 3.5rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+}
+
+.executive-rank-panel__hash {
+  font-weight: 300;
+}
+
+.executive-rank-panel__value span:last-child {
+  font-weight: 700;
+}
+
+.executive-rank-panel__value--emerald {
+  color: #10b981;
+}
+
+.executive-rank-panel__value--lime {
+  color: #e5ff64;
+}
+
+.executive-rank-panel__footer {
+  margin: 0;
+  width: 100%;
+  text-align: left;
+  color: #a3a3a3;
+  font-family: 'DM Sans', var(--font);
+  font-size: 0.75rem;
+  font-weight: 300;
+  line-height: 0.75rem;
+}
+
+.executive-rank-bars {
+  display: flex;
+  width: 7rem;
+  justify-content: flex-start;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.executive-rank-bars__bar {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.executive-rank-bars--emerald .executive-rank-bars__bar--active {
+  background: #10b981;
+  box-shadow: 0 0 10px rgba(6, 255, 85, 0.5);
+}
+
+.executive-rank-bars--lime .executive-rank-bars__bar--active {
+  background: #e5ff64;
+  box-shadow: 0 0 10px rgba(229, 255, 101, 0.5);
+}
+
+/* Map fills right side */
+.executive-map {
+  position: absolute;
+  z-index: 1;
+  top: -4%;
+  right: -6%;
+  bottom: -6%;
+  width: 70%;
+  pointer-events: none;
+}
+
+/* Shared transform so hex map + city boxes stay locked together */
+.executive-map__stage {
+  position: absolute;
+  inset: -2% -4% -4% -2%;
+  transform: rotate(8deg) scale(1.5, 1.12);
+  transform-origin: 45% 42%;
+}
+
+.executive-map__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+@media (max-width: 960px) {
+  .executive-ranking-card {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .executive-ranking-card__content {
+    width: 100%;
+    max-width: none;
+  }
+
+  .executive-ranking-card__ranks {
+    max-width: none;
+  }
+
+  .executive-map {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    min-height: 26rem;
+    margin: 0 -0.5rem -1rem;
+  }
+
+  .executive-map__stage {
+    transform: rotate(6.5deg) scale(1.25, 1.1);
+    transform-origin: center center;
+  }
+}
