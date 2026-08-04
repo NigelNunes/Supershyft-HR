@@ -1,5 +1,5 @@
 import { Info } from 'lucide-react';
-import { highlightIndexForRank } from '../../utils/rankSparkline';
+import { highlightIndexForRank, uniformAscendingHeights } from '../../utils/rankSparkline';
 import { CHART_INFO } from '../../content/chartInfo';
 import {
   DUMMY_ALL_YEARS_METRICS,
@@ -18,8 +18,8 @@ interface ExecutiveRankingCardProps {
   selectedYear?: YearOption;
 }
 
-const NATIONAL_BAR_HEIGHTS = [12, 14, 16, 20, 24, 28, 36, 40, 44, 44, 48, 56, 56, 64, 64, 64];
-const INDUSTRY_BAR_HEIGHTS = [12, 14, 16, 20, 24, 28, 36, 40, 44, 44, 48, 56, 56, 64, 64, 64];
+const NATIONAL_BAR_HEIGHTS = uniformAscendingHeights(16, 12, 64);
+const INDUSTRY_BAR_HEIGHTS = uniformAscendingHeights(16, 12, 64);
 
 function RankBars({
   heights,

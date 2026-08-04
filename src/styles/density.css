@@ -1,0 +1,251 @@
+/**
+ * Laptop density for Windows DPI scaling.
+ * Windows 1080p at 125–150% reports a shorter CSS viewport than typical MacBooks,
+ * so the same rem/px UI feels oversized and clipped. Large / tall Mac viewports
+ * keep the default look (do not use a broad max-width: 1440 breakpoint alone).
+ */
+
+html {
+  font-size: 16px;
+}
+
+:root {
+  --density-page-pad-y: 28px;
+  --density-page-pad-x: 32px;
+  --density-card-pad: 24px;
+  --density-sidebar-gap: 48px;
+  --density-nav-gap: 16px;
+}
+
+/* Short CSS viewport — common after Windows display scaling */
+@media (max-height: 900px) {
+  html {
+    font-size: 13.5px;
+  }
+
+  :root {
+    --sidebar-width: 210px;
+    --sidebar-collapsed: 68px;
+    --sidebar-inset: 10px;
+    --density-page-pad-y: 14px;
+    --density-page-pad-x: 18px;
+    --density-card-pad: 14px;
+    --density-sidebar-gap: 24px;
+    --density-nav-gap: 6px;
+  }
+
+  .sidebar {
+    top: 10px;
+    left: 10px;
+    bottom: 10px;
+    padding: 16px 10px;
+    border-radius: 18px;
+  }
+
+  .sidebar__top {
+    gap: var(--density-sidebar-gap);
+  }
+
+  .sidebar__nav {
+    gap: var(--density-nav-gap);
+  }
+
+  .sidebar__company {
+    font-size: 1.05rem;
+  }
+
+  .sidebar__link {
+    font-size: 0.875rem;
+    padding: 7px 10px;
+    border-radius: 10px;
+  }
+
+  .sidebar__logo {
+    width: 36px;
+    height: 36px;
+  }
+
+  .page-content {
+    padding: var(--density-page-pad-y) var(--density-page-pad-x) 24px;
+  }
+
+  .dashboard-header {
+    margin-bottom: 12px;
+    gap: 12px;
+  }
+
+  .dashboard-header__title {
+    font-size: 1.2rem;
+    line-height: 1.45rem;
+  }
+
+  .dashboard-metrics-row {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .dashboard-metrics-col {
+    gap: 10px;
+  }
+
+  .metric-cards {
+    gap: 8px;
+  }
+
+  .metric-card {
+    min-height: 96px;
+    padding: 10px 14px;
+    border-radius: 14px;
+  }
+
+  .metric-card__rank-value,
+  .metric-card__value {
+    font-size: 1.6rem;
+    line-height: 1.85rem;
+  }
+
+  .metric-rank-spark {
+    height: 44px;
+  }
+
+  .sidebar__footer {
+    gap: 12px;
+  }
+
+  .sidebar__avatar {
+    min-width: 40px;
+    height: 40px;
+    padding: 8px 12px;
+    font-size: 1.2rem;
+  }
+
+  .participation-age-card,
+  .metabolic-age-card,
+  .overall-risk-card,
+  .chart-card {
+    padding: var(--density-card-pad);
+    border-radius: 16px;
+  }
+
+  .participation-age-pie__chart {
+    width: 148px;
+    height: 148px;
+  }
+
+  .participation-age-pie__center-value {
+    font-size: 1.35rem;
+    line-height: 1.35rem;
+  }
+
+  .participation-age-pie__legend {
+    width: auto;
+    min-width: 0;
+    flex: 1 1 auto;
+    max-width: none;
+    gap: 6px;
+  }
+
+  .participation-age-pie__label,
+  .participation-age-pie__stat {
+    font-size: 0.6875rem;
+    line-height: 0.9rem;
+  }
+
+  .participation-age-card__body {
+    gap: 8px;
+    padding: 0;
+  }
+
+  .participation-age-card__insight {
+    gap: 6px;
+  }
+
+  .participation-age-card__insight-text {
+    font-size: 0.7rem;
+    line-height: 1.15rem;
+  }
+
+  .metabolic-age-stat__count {
+    font-size: 1.35rem;
+  }
+
+  .emp-summary-card {
+    min-height: 9.25rem;
+    padding: 0.9rem 1rem;
+  }
+
+  .emp-summary-card__number {
+    font-size: 1.6rem;
+    line-height: 1.9rem;
+  }
+
+  .emp-summary-card__unit {
+    font-size: 0.95rem;
+  }
+
+  .emp-summary-card__pending {
+    font-size: 0.875rem;
+  }
+}
+
+/* Very short / classic Windows laptop (e.g. 1366×768, 1080p @ 150%) */
+@media (max-height: 780px), (max-width: 1366px) and (max-height: 900px) {
+  html {
+    font-size: 12.5px;
+  }
+
+  :root {
+    --sidebar-width: 190px;
+    --sidebar-collapsed: 64px;
+    --sidebar-inset: 8px;
+    --density-sidebar-gap: 16px;
+    --density-page-pad-y: 10px;
+    --density-page-pad-x: 14px;
+    --density-card-pad: 12px;
+  }
+
+  .sidebar {
+    top: 8px;
+    left: 8px;
+    bottom: 8px;
+    padding: 12px 8px;
+  }
+
+  .metric-card {
+    min-height: 84px;
+    padding: 8px 12px;
+  }
+
+  .metric-card__rank-value,
+  .metric-card__value {
+    font-size: 1.45rem;
+    line-height: 1.65rem;
+  }
+
+  .participation-age-pie__chart {
+    width: 128px;
+    height: 128px;
+  }
+
+  .participation-age-pie__center-value {
+    font-size: 1.2rem;
+    line-height: 1.2rem;
+  }
+
+  .emp-summary-card {
+    min-height: 8.5rem;
+  }
+}
+
+/* Prefer stacking pie + legend when the age card is narrow */
+@media (max-height: 900px) and (max-width: 1400px) {
+  .participation-age-card__body {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .participation-age-pie__legend {
+    flex: 1 1 100%;
+    max-width: 280px;
+  }
+}

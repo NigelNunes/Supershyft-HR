@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import './styles/global.css';
+import './styles/density.css';
 import './styles/charts.css';
 import './styles/dark-background.css';
 import './styles/mobile.css';

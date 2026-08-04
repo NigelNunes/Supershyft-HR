@@ -35,49 +35,34 @@ const MID = VIEW_H / 2;
 const COL_X = [VIEW_W * 0.17, VIEW_W * 0.5, VIEW_W * 0.83] as const;
 
 /**
- * Organic snake silhouette.
- * Start: flat vertical face + soft rounded corners, then a slight outward flare
- * before tapering (matches Figma head). Half-heights kept under full bleed.
+ * Uniform ribbon silhouette (half-heights from midline).
+ * Soft rounded head → steady taper → pointed tip. Top/bottom stay symmetric
+ * so the snake reads clean instead of scattered.
  */
-const SILHOUETTE: { x: number; top: number; bot: number }[] = [
-  { x: 0, top: 78, bot: 78 },
-  { x: 6, top: 82, bot: 82 },
-  { x: 14, top: 85, bot: 85 },
-  { x: 26, top: 86, bot: 86 },
-  { x: 42, top: 86, bot: 86 },
-  { x: 60, top: 86, bot: 86 },
-  { x: 80, top: 86, bot: 86 },
-  { x: 100, top: 85, bot: 85 },
-  { x: 120, top: 84, bot: 84 },
-  { x: 140, top: 80, bot: 80 },
-  { x: 160, top: 72, bot: 72 },
-  { x: 180, top: 64, bot: 65 },
-  { x: 200, top: 57, bot: 59 },
-  { x: 220, top: 54, bot: 56 },
-  { x: 240, top: 53, bot: 56 },
-  { x: 260, top: 54, bot: 58 },
-  { x: 280, top: 52, bot: 57 },
-  { x: 300, top: 48, bot: 55 },
-  { x: 320, top: 44, bot: 53 },
-  { x: 340, top: 42, bot: 50 },
-  { x: 360, top: 36, bot: 44 },
-  { x: 380, top: 33, bot: 41 },
-  { x: 400, top: 32, bot: 35 },
-  { x: 420, top: 28, bot: 34 },
-  { x: 440, top: 24, bot: 30 },
-  { x: 460, top: 25, bot: 28 },
-  { x: 480, top: 22, bot: 26 },
-  { x: 500, top: 21, bot: 22 },
-  { x: 520, top: 15, bot: 19 },
-  { x: 540, top: 12, bot: 14 },
-  { x: 560, top: 10, bot: 10 },
-  { x: 580, top: 7, bot: 7 },
-  { x: 600, top: 5, bot: 7 },
-  { x: 620, top: 1, bot: 3 },
-  { x: 640, top: 0, bot: 0 },
+const SILHOUETTE: { x: number; half: number }[] = [
+  { x: 0, half: 72 },
+  { x: 12, half: 80 },
+  { x: 28, half: 84 },
+  { x: 48, half: 84 },
+  { x: 80, half: 82 },
+  { x: 120, half: 78 },
+  { x: 160, half: 72 },
+  { x: 200, half: 64 },
+  { x: 240, half: 56 },
+  { x: 280, half: 48 },
+  { x: 320, half: 40 },
+  { x: 360, half: 33 },
+  { x: 400, half: 26 },
+  { x: 440, half: 20 },
+  { x: 480, half: 15 },
+  { x: 520, half: 11 },
+  { x: 560, half: 7 },
+  { x: 600, half: 4 },
+  { x: 628, half: 1.5 },
+  { x: 640, half: 0 },
 ];
 
-/** Figma dummy reference counts used to author the silhouette. */
+/** Reference mix used when authoring the silhouette proportions. */
 const REF_COUNTS = [132, 69, 23] as const;
 
 type Pt = { x: number; y: number };
@@ -91,10 +76,11 @@ function smoothThrough(points: Pt[]): string {
     const p1 = pts[i];
     const p2 = pts[i + 1];
     const p3 = pts[i + 2];
-    const cp1x = p1.x + (p2.x - p0.x) / 6;
-    const cp1y = p1.y + (p2.y - p0.y) / 6;
-    const cp2x = p2.x - (p3.x - p1.x) / 6;
-    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    // Gentler handles = smoother ribbon edges
+    const cp1x = p1.x + (p2.x - p0.x) / 7;
+    const cp1y = p1.y + (p2.y - p0.y) / 7;
+    const cp2x = p2.x - (p3.x - p1.x) / 7;
+    const cp2y = p2.y - (p3.y - p1.y) / 7;
     d += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
   }
   return d;
@@ -102,6 +88,11 @@ function smoothThrough(points: Pt[]): string {
 
 function lerp(a: number, b: number, t: number) {
   return a + (b - a) * Math.min(1, Math.max(0, t));
+}
+
+function smoothstep(t: number) {
+  const x = Math.min(1, Math.max(0, t));
+  return x * x * (3 - 2 * x);
 }
 
 /** Relative amplitude along x from three category counts (1 at the max count). */
@@ -112,10 +103,10 @@ function amplitudeAtX(x: number, counts: [number, number, number]): number {
   const a2 = counts[2] / max;
   const [x0, x1, x2] = COL_X;
 
-  if (x <= x0) return lerp(a0 * 0.98, a0, x / x0);
-  if (x <= x1) return lerp(a0, a1, (x - x0) / (x1 - x0));
-  if (x <= x2) return lerp(a1, a2, (x - x1) / (x2 - x1));
-  return lerp(a2, 0, (x - x2) / (VIEW_W - x2));
+  if (x <= x0) return lerp(a0 * 0.96, a0, smoothstep(x / x0));
+  if (x <= x1) return lerp(a0, a1, smoothstep((x - x0) / (x1 - x0)));
+  if (x <= x2) return lerp(a1, a2, smoothstep((x - x1) / (x2 - x1)));
+  return lerp(a2, 0, smoothstep((x - x2) / (VIEW_W - x2)));
 }
 
 function buildSnakePath(counts: [number, number, number]): string {
@@ -125,10 +116,11 @@ function buildSnakePath(counts: [number, number, number]): string {
   for (const point of SILHOUETTE) {
     const dataAmp = amplitudeAtX(point.x, counts);
     const refAmp = amplitudeAtX(point.x, [...REF_COUNTS]);
-    // Keep Figma edge character; scale thickness when category mix changes
     const scale = refAmp > 0.02 ? dataAmp / refAmp : dataAmp > 0 ? 1 : 0;
-    top.push({ x: point.x, y: MID - point.top * scale });
-    bottom.push({ x: point.x, y: MID + point.bot * scale });
+    // Soft clamp so extreme mixes don't explode thickness
+    const half = point.half * Math.min(scale, 1.15);
+    top.push({ x: point.x, y: MID - half });
+    bottom.push({ x: point.x, y: MID + half });
   }
 
   top[top.length - 1] = { x: VIEW_W, y: MID };

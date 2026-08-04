@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Droplets, FileText, Stethoscope, Users } from 'lucide-react';
 import { DUMMY_ALL_YEARS_METRICS, DUMMY_EXECUTIVE_RANKING } from '../../data/dummyAllYearsMetrics';
-import { highlightIndexForRank } from '../../utils/rankSparkline';
+import { highlightIndexForRank, uniformAscendingHeights } from '../../utils/rankSparkline';
 import type { YearOption } from '../layout/DashboardHeader';
 import type { KpiSummary, RankingSummary } from '../../types';
 import './DashboardMetricCards.css';
@@ -34,45 +34,13 @@ function displayPercentOfEnrolled(
   return `${Math.round((count / enrolled) * 100)}% of enrolled`;
 }
 
-/** Figma rank sparkline — bar heights (px) left→right. */
-const RANK_SPARK_BARS: { left: number; height: number }[] = [
-  { left: 1.78, height: 0.2 },
-  { left: 4.46, height: 0.39 },
-  { left: 7.14, height: 0.59 },
-  { left: 9.82, height: 1.18 },
-  { left: 12.5, height: 2 },
-  { left: 15.17, height: 3.35 },
-  { left: 17.85, height: 4 },
-  { left: 20.53, height: 4.92 },
-  { left: 23.21, height: 6 },
-  { left: 25.89, height: 6 },
-  { left: 28.56, height: 6 },
-  { left: 31.24, height: 8 },
-  { left: 33.93, height: 8 },
-  { left: 36.6, height: 10 },
-  { left: 39.28, height: 12 },
-  { left: 41.95, height: 12 },
-  { left: 44.63, height: 12 },
-  { left: 47.32, height: 14 },
-  { left: 49.99, height: 14 },
-  { left: 52.66, height: 16 },
-  { left: 55.35, height: 16 },
-  { left: 58.03, height: 20 },
-  { left: 60.71, height: 20 },
-  { left: 63.38, height: 24 },
-  { left: 66.05, height: 24 },
-  { left: 68.74, height: 28 },
-  { left: 71.42, height: 28 },
-  { left: 74.09, height: 32 },
-  { left: 76.77, height: 32 },
-  { left: 79.45, height: 36 },
-  { left: 82.14, height: 40 },
-  { left: 84.81, height: 44 },
-  { left: 87.48, height: 48 },
-  { left: 90.16, height: 56 },
-  { left: 92.84, height: 56 },
-  { left: 95.53, height: 56 },
-];
+/** Even left spacing + uniformly ascending heights (left → right). */
+const RANK_SPARK_BAR_COUNT = 36;
+const RANK_SPARK_HEIGHTS = uniformAscendingHeights(RANK_SPARK_BAR_COUNT, 2, 56);
+const RANK_SPARK_BARS: { left: number; height: number }[] = RANK_SPARK_HEIGHTS.map((height, i) => ({
+  left: 1.78 + i * ((95.53 - 1.78) / (RANK_SPARK_BAR_COUNT - 1)),
+  height,
+}));
 
 function RankSparkline({
   variant,

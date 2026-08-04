@@ -57,14 +57,14 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 96px;
+  gap: clamp(28px, 6vh, 64px);
   width: 100%;
   min-width: 0;
 }
 
 .sidebar--collapsed .sidebar__top {
   align-items: center;
-  gap: 96px;
+  gap: clamp(28px, 6vh, 64px);
 }
 
 .sidebar__brand-wrap {
@@ -160,7 +160,7 @@
 }
 
 .sidebar__company {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   font-family: var(--font);
   color: var(--sidebar-text);
@@ -289,7 +289,7 @@
 .sidebar__nav {
   display: flex;
   flex-direction: column;
-  gap: 36px;
+  gap: 12px;
   width: 100%;
 }
 
@@ -301,9 +301,9 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 10px 12px;
   border-radius: 12px;
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 500;
   font-family: var(--font);
   color: var(--sidebar-muted);

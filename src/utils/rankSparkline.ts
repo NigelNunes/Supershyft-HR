@@ -10,3 +10,12 @@ export function highlightIndexForRank(rank: number, among: number, barCount: num
   // Invert: best rank sits on the tall right-hand bars
   return Math.round(((safeAmong - clamped) / (safeAmong - 1)) * (barCount - 1));
 }
+
+/** Evenly ascending bar heights left → right (worst → best). */
+export function uniformAscendingHeights(count: number, minHeight: number, maxHeight: number): number[] {
+  if (count <= 1) return [maxHeight];
+  return Array.from({ length: count }, (_, i) => {
+    const t = i / (count - 1);
+    return Math.round((minHeight + (maxHeight - minHeight) * t) * 100) / 100;
+  });
+}
