@@ -1,15 +1,110 @@
 /**
- * TEMPORARY DUMMY DATA — All Years dashboard views.
+ * TEMPORARY DUMMY DATA — All Years dashboard views + per-year snapshots.
  * Delete this file (and its imports) when multi-year API is wired.
  */
+import type {
+  BloodParameterPanel,
+  CompanyAverageScores,
+  DiseaseRiskData,
+  GenderDistributionPair,
+  KpiSummary,
+  OverallRiskScoreBucket,
+  ParticipationByAge,
+  RankingSummary,
+  RiskLevel,
+  TopHighRiskDisease,
+} from '../types';
+import type { YearOption } from '../components/layout/DashboardHeader';
+
+export type MetabolicAgeCategoryDummy = {
+  key: 'good' | 'attention' | 'highRisk';
+  label: string;
+  count: number;
+  percent: number;
+};
+
+/**
+ * Canonical per-year KPI totals — All Years cards and single-year views both read from this.
+ * Order for series arrays is always 2024 → 2025 → 2026.
+ */
+const YEAR_KPI_CORE = {
+  2024: {
+    employeesEnrolled: 620,
+    bloodTestPercent: 88,
+    bioAiPercent: 72,
+    doctorRate: 0.32,
+    maleShare: 0.58,
+    highRiskGroup: 93,
+  },
+  2025: {
+    employeesEnrolled: 900,
+    bloodTestPercent: 91,
+    bioAiPercent: 78,
+    doctorRate: 0.4,
+    maleShare: 0.56,
+    highRiskGroup: 90,
+  },
+  2026: {
+    employeesEnrolled: 1120,
+    bloodTestPercent: 94,
+    bioAiPercent: 85,
+    doctorRate: 0.48,
+    maleShare: 0.54,
+    highRiskGroup: 56,
+  },
+} as const;
+
+function buildYearKpi(year: 2024 | 2025 | 2026): KpiSummary {
+  const core = YEAR_KPI_CORE[year];
+  const enrolled = core.employeesEnrolled;
+  const blood = Math.round((enrolled * core.bloodTestPercent) / 100);
+  const bio = Math.round((enrolled * core.bioAiPercent) / 100);
+  const doctor = Math.round(enrolled * core.doctorRate);
+  const male = Math.round(enrolled * core.maleShare);
+  return {
+    employeesEnrolled: enrolled,
+    maleEnrolled: male,
+    femaleEnrolled: enrolled - male,
+    totalBloodTest: blood,
+    bloodTestPercent: core.bloodTestPercent,
+    totalBioAiReports: bio,
+    bioAiPercent: core.bioAiPercent,
+    doctorConsultation: doctor,
+    nutritionistConsultation: Math.round(doctor * 0.75),
+    highRiskGroup: core.highRiskGroup,
+  };
+}
+
+const KPI_2024 = buildYearKpi(2024);
+const KPI_2025 = buildYearKpi(2025);
+const KPI_2026 = buildYearKpi(2026);
+
+/** Rankings: improving toward ~10 by 2026. Index 0=2024, 1=2025, 2=2026. */
 export const DUMMY_ALL_YEARS_METRICS = {
   years: [2024, 2025, 2026] as const,
-  nationalRank: [56, 48, 41] as const,
-  industryRank: [56, 48, 41] as const,
-  employees: [80, 180, 140] as const,
-  bloodTests: [80, 180, 140] as const,
-  bioAiReports: [80, 180, 140] as const,
-  consultations: [80, 180, 140] as const,
+  nationalRank: [14, 11, 9] as const,
+  industryRank: [12, 10, 8] as const,
+  employees: [
+    KPI_2024.employeesEnrolled,
+    KPI_2025.employeesEnrolled,
+    KPI_2026.employeesEnrolled,
+  ] as const,
+  bloodTests: [
+    KPI_2024.totalBloodTest,
+    KPI_2025.totalBloodTest,
+    KPI_2026.totalBloodTest,
+  ] as const,
+  bioAiReports: [
+    KPI_2024.totalBioAiReports ?? 0,
+    KPI_2025.totalBioAiReports ?? 0,
+    KPI_2026.totalBioAiReports ?? 0,
+  ] as const,
+  /** Doctor consultations — matches the doctor side of single-year Doctor/Nutritionist. */
+  consultations: [
+    KPI_2024.doctorConsultation,
+    KPI_2025.doctorConsultation,
+    KPI_2026.doctorConsultation,
+  ] as const,
 } as const;
 
 /** Age bands shared by All Years participation pies. */
@@ -55,9 +150,9 @@ export const DUMMY_ALL_YEARS_AGE_PARTICIPATION = [
   },
 ] as const;
 
-/** Insight copy for All Years age participation (dummy). */
+/** Insight copy for All Years age participation (dummy) — mirrors 2026 row. */
 export const DUMMY_ALL_YEARS_AGE_INSIGHT =
-  '36-45 is the largest cohort at 34.3% (48 employees) — tailor camp messaging and scheduling for under-represented age bands.';
+  '36-45 is the largest cohort at 34% (381 employees) — tailor camp messaging and scheduling for under-represented age bands.';
 
 /**
  * TEMPORARY — Metabolic age stacked bars for All Years (newest → oldest).
@@ -70,7 +165,7 @@ export const DUMMY_ALL_YEARS_METABOLIC_AGE = [
 ] as const;
 
 export const DUMMY_ALL_YEARS_METABOLIC_INSIGHT =
-  '15% Employees have their metabolic age >3 years of their actual age';
+  '15% of employees have their metabolic age >3 years above their actual age';
 
 /**
  * TEMPORARY — Overall risk score by year (newest → oldest).
@@ -114,17 +209,17 @@ export const DUMMY_ALL_YEARS_OVERALL_RISK_CONCERN =
 
 /** TEMPORARY — Camp Report Executive Ranking (map cities + among counts). */
 export const DUMMY_EXECUTIVE_RANKING = {
-  nationalRank: 17,
+  nationalRank: 9,
   nationalAmong: 38,
   nationalAmongLabel: 'Among 38 companies in region',
-  industryRank: 4,
+  industryRank: 8,
   industryAmong: 12,
   industryAmongLabel: 'Among 12 companies',
   cities: [
-    { name: 'GURUGRAM', rank: 12, tone: 'red', top: '24%', left: '36%' },
-    { name: 'PUNE', rank: 8, tone: 'blue', top: '46%', left: '4%' },
+    { name: 'GURUGRAM', rank: 11, tone: 'red', top: '24%', left: '36%' },
+    { name: 'PUNE', rank: 10, tone: 'blue', top: '46%', left: '4%' },
     { name: 'HYDERABAD', rank: 9, tone: 'pink', top: '58%', left: '48%' },
-    { name: 'BANGALORE', rank: 3, tone: 'teal', top: '74%', left: '22%' },
+    { name: 'BANGALORE', rank: 7, tone: 'teal', top: '74%', left: '22%' },
   ],
 } as const;
 
@@ -459,3 +554,207 @@ export const DUMMY_ALL_YEARS_BLOOD_PANELS = [
     deltaPercent: -6,
   },
 ] as const;
+
+export type CampYear = 2024 | 2025 | 2026;
+
+export function parseCampYear(year: YearOption | string | undefined): CampYear | null {
+  if (year === '2024' || year === '2025' || year === '2026') return Number(year) as CampYear;
+  return null;
+}
+
+function yearMetricsIndex(year: CampYear): 0 | 1 | 2 {
+  return (year - 2024) as 0 | 1 | 2;
+}
+
+function ageRow(year: CampYear) {
+  const row = DUMMY_ALL_YEARS_AGE_PARTICIPATION.find((r) => r.year === year);
+  if (!row) throw new Error(`Missing age participation for ${year}`);
+  return row;
+}
+
+function riskRow(year: CampYear) {
+  const row = DUMMY_ALL_YEARS_OVERALL_RISK.find((r) => r.year === year);
+  if (!row) throw new Error(`Missing overall risk for ${year}`);
+  return row;
+}
+
+function metabolicRow(year: CampYear) {
+  const row = DUMMY_ALL_YEARS_METABOLIC_AGE.find((r) => r.year === year);
+  if (!row) throw new Error(`Missing metabolic age for ${year}`);
+  return row;
+}
+
+function lifestyleToPair(
+  rows: readonly AllYearsLifestyleYearRow[],
+  year: CampYear,
+  enrolled: number,
+): { label: string; percent: number; count: number }[] {
+  const row = rows.find((r) => r.year === year);
+  if (!row) return [];
+  return row.slices.map((slice) => ({
+    label: slice.label,
+    percent: slice.percent,
+    count: Math.round((slice.percent / 100) * enrolled),
+  }));
+}
+
+/** Distinct dummy KPIs per camp year — identical to All Years metric card values. */
+export function getDummyYearKpis(year: CampYear): KpiSummary {
+  if (year === 2024) return { ...KPI_2024 };
+  if (year === 2025) return { ...KPI_2025 };
+  return { ...KPI_2026 };
+}
+
+export function getDummyYearRanking(year: CampYear): RankingSummary {
+  const i = yearMetricsIndex(year);
+  return {
+    city: 'Mumbai',
+    cityRank: DUMMY_ALL_YEARS_METRICS.nationalRank[i],
+    industryRank: DUMMY_ALL_YEARS_METRICS.industryRank[i],
+  };
+}
+
+export function getDummyYearExecutiveRanking(year: CampYear) {
+  const i = yearMetricsIndex(year);
+  const nationalRank = DUMMY_ALL_YEARS_METRICS.nationalRank[i];
+  const industryRank = DUMMY_ALL_YEARS_METRICS.industryRank[i];
+  // Keep city pins near ~10 and consistent with national improvement.
+  const cityBump = [3, 1, 0][i];
+  return {
+    nationalRank,
+    nationalAmong: DUMMY_EXECUTIVE_RANKING.nationalAmong,
+    nationalAmongLabel: DUMMY_EXECUTIVE_RANKING.nationalAmongLabel,
+    industryRank,
+    industryAmong: DUMMY_EXECUTIVE_RANKING.industryAmong,
+    industryAmongLabel: DUMMY_EXECUTIVE_RANKING.industryAmongLabel,
+    cities: DUMMY_EXECUTIVE_RANKING.cities.map((city) => ({
+      ...city,
+      rank: Math.max(1, city.rank + cityBump),
+    })),
+  };
+}
+
+export function getDummyYearParticipationByAge(year: CampYear): ParticipationByAge[] {
+  return ageRow(year).bands.map((band) => ({
+    ageGroup: band.ageGroup,
+    enrolled: band.enrolled,
+    percent: band.percent,
+  }));
+}
+
+export function getDummyYearOverallRisk(year: CampYear): OverallRiskScoreBucket[] {
+  return riskRow(year).bands.map((band) => ({
+    band: band.band as OverallRiskScoreBucket['band'],
+    percent: band.percent,
+    count: band.count,
+  }));
+}
+
+export function getDummyYearMetabolicAge(year: CampYear): MetabolicAgeCategoryDummy[] {
+  const row = metabolicRow(year);
+  const enrolled = ageRow(year).assessed;
+  return [
+    {
+      key: 'good',
+      label: 'GOOD',
+      percent: row.good,
+      count: Math.round((row.good / 100) * enrolled),
+    },
+    {
+      key: 'attention',
+      label: 'NEEDS ATTENTION',
+      percent: row.caution,
+      count: Math.round((row.caution / 100) * enrolled),
+    },
+    {
+      key: 'highRisk',
+      label: 'HIGH RISK',
+      percent: row.highRisk,
+      count: Math.round((row.highRisk / 100) * enrolled),
+    },
+  ];
+}
+
+export function getDummyYearCompanyScores(year: CampYear): CompanyAverageScores {
+  const i = yearMetricsIndex(year);
+  return {
+    nutrition: DUMMY_ALL_YEARS_COMPANY_SCORES.nutrition[i],
+    fitness: DUMMY_ALL_YEARS_COMPANY_SCORES.fitness[i],
+    lifestyle: DUMMY_ALL_YEARS_COMPANY_SCORES.lifestyle[i],
+  };
+}
+
+export function getDummyYearPhysicalActivity(year: CampYear): GenderDistributionPair {
+  const kpis = getDummyYearKpis(year);
+  const maleN = kpis.maleEnrolled ?? Math.round(kpis.employeesEnrolled * 0.55);
+  const femaleN = kpis.femaleEnrolled ?? kpis.employeesEnrolled - maleN;
+  return {
+    male: lifestyleToPair(DUMMY_ALL_YEARS_PHYSICAL.male, year, maleN),
+    female: lifestyleToPair(DUMMY_ALL_YEARS_PHYSICAL.female, year, femaleN),
+  };
+}
+
+export function getDummyYearSleep(year: CampYear): GenderDistributionPair {
+  const kpis = getDummyYearKpis(year);
+  const maleN = kpis.maleEnrolled ?? Math.round(kpis.employeesEnrolled * 0.55);
+  const femaleN = kpis.femaleEnrolled ?? kpis.employeesEnrolled - maleN;
+  return {
+    male: lifestyleToPair(DUMMY_ALL_YEARS_SLEEP.male, year, maleN),
+    female: lifestyleToPair(DUMMY_ALL_YEARS_SLEEP.female, year, femaleN),
+  };
+}
+
+const YEAR_BLOOD_BASE: { id: string; name: string; base: number }[] = [
+  { id: 'b12', name: 'Vitamin B12', base: 66 },
+  { id: 'd3', name: 'Vitamin D', base: 59 },
+  { id: 'hba1c', name: 'HbA1c', base: 78 },
+  { id: 'ldl', name: 'LDL Cholesterol', base: 71 },
+  { id: 'tsh', name: 'TSH', base: 82 },
+];
+
+export function getDummyYearBloodPanels(year: CampYear): BloodParameterPanel[] {
+  const bump = { 2024: -8, 2025: -3, 2026: 0 }[year];
+  return YEAR_BLOOD_BASE.map((panel) => {
+    const inRangePercent = Math.max(35, Math.min(95, panel.base + bump));
+    return {
+      id: panel.id,
+      name: panel.name,
+      inRangePercent,
+      abnormalPercent: 100 - inRangePercent,
+    };
+  });
+}
+
+export function getDummyYearTopDiseases(year: CampYear): TopHighRiskDisease[] {
+  const lead = DUMMY_ALL_YEARS_TOP_DISEASE_RISKS.find((d) => d.year === year);
+  const others = DUMMY_ALL_YEARS_TOP_DISEASE_RISKS.filter((d) => d.year !== year);
+  const list = lead ? [lead, ...others] : [...DUMMY_ALL_YEARS_TOP_DISEASE_RISKS];
+  const scale = { 2024: 1.15, 2025: 1.05, 2026: 1 }[year];
+  return list.slice(0, 3).map((d, idx) => ({
+    name: d.name,
+    highRiskPercent: Math.round(d.highRiskPercent * scale * (1 - idx * 0.08) * 10) / 10,
+  }));
+}
+
+export function getDummyYearDiseases(year: CampYear): DiseaseRiskData[] {
+  const yi = yearMetricsIndex(year);
+  const levels: RiskLevel[] = ['Healthy', 'Increased', 'High', 'Very High'];
+
+  return DUMMY_ALL_YEARS_DISEASE_DEEP_DIVE.map((row) => {
+    const buckets = levels.map((level) => ({
+      level,
+      segments: {
+        Male: row.male[level][yi],
+        Female: row.female[level][yi],
+      },
+    }));
+    const healthyAvg = (buckets[0].segments.Male + buckets[0].segments.Female) / 2;
+    const overallStatus: RiskLevel =
+      healthyAvg >= 70 ? 'Healthy' : healthyAvg >= 55 ? 'Increased' : healthyAvg >= 40 ? 'High' : 'Very High';
+    return {
+      disease: { code: row.code as DiseaseRiskData['disease']['code'], name: row.name },
+      buckets,
+      overallStatus,
+    };
+  });
+}

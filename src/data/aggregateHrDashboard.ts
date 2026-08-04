@@ -30,6 +30,7 @@ import {
   DISPLAY_ENROLLED,
   ORG_HEADCOUNT,
   apiRiskStatusToLevel,
+  departmentSlug,
   physicalActivityFromApi,
   sleepBucketFromApi,
   PHYSICAL_ACTIVITY_BUCKETS,
@@ -389,15 +390,13 @@ function buildParticipationByGender(participants: CampParticipant[]): Participat
 function buildDepartments(participants: CampParticipant[]): DepartmentSummary[] {
   return DEPARTMENTS.map((name) => {
     const inDept = participants.filter((p) => p.department === name);
-    const headcount = Math.round(
-      (inDept.length / participants.length) * ORG_HEADCOUNT,
-    );
+    const headcount = inDept.length;
     const highRisk = inDept.filter(isHighMetabolicRisk).length;
     return {
-      id: name.toLowerCase().replace(/\s+/g, '-'),
+      id: departmentSlug(name),
       name,
-      headcount: Math.max(headcount, inDept.length),
-      enrolledPercent: percent(inDept.length, headcount || 1),
+      headcount,
+      enrolledPercent: 100,
       highRiskPercent: percent(highRisk, inDept.length || 1),
     };
   });
@@ -783,7 +782,10 @@ export function buildDepartmentDetail(
   id: string,
   participants: CampParticipant[] = CAMP_PARTICIPANTS,
 ): DepartmentDetail | null {
-  const deptSummary = buildDepartments(participants).find((d) => d.id === id);
+  const slug = id.trim().toLowerCase();
+  const deptSummary =
+    buildDepartments(participants).find((d) => d.id === slug) ??
+    buildDepartments(participants).find((d) => departmentSlug(d.name) === slug);
   if (!deptSummary) return null;
 
   const inDept = participants.filter((p) => p.department === deptSummary.name);
@@ -815,13 +817,22 @@ export function buildDepartmentDetail(
 
   const rawMale = inDept.filter((p) => p.gender === 'Male').length;
   const rawFemale = inDept.filter((p) => p.gender === 'Female').length;
-  const genderScale = deptSummary.headcount / (inDept.length || 1);
-  const scaleDept = (n: number) => Math.round(n * genderScale);
+  const scaleDept = (n: number) => n;
 
   const bloodTests = inDept.filter((p) => p.bloodTestDone).length;
   const doctorConsults = inDept.filter((p) => p.doctorConsultation).length;
-  /** Bio-AI not on participant yet — approximate as share of blood tests. */
-  const bioAi = Math.round(bloodTests * 0.8);
+  /** Matches buildAlignedJourney bio-AI completion rules. */
+  const bioAi = inDept.filter((p) => {
+    if (!p.bloodTestDone) return false;
+    if (p.doctorConsultation) return true;
+    let h = 2166136261;
+    const seed = `${p.id}:bioAiReport`;
+    for (let i = 0; i < seed.length; i += 1) {
+      h ^= seed.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0) / 4294967295 < 0.55;
+  }).length;
 
   let metGood = 0;
   let metAttention = 0;
@@ -858,7 +869,7 @@ export function buildDepartmentDetail(
     totalBioAiReports: bioAiScaled,
     bioAiPercent: percent(bioAi, inDept.length),
     doctorConsultation: doctorScaled,
-    nutritionistConsultation: 0,
+    nutritionistConsultation: Math.round(doctorScaled * 0.75),
     highRiskGroup: scaleDept(inDept.filter(isHighMetabolicRisk).length),
   };
 

@@ -4,6 +4,8 @@ import { CHART_INFO } from '../../content/chartInfo';
 import {
   DUMMY_ALL_YEARS_METRICS,
   DUMMY_EXECUTIVE_RANKING,
+  getDummyYearExecutiveRanking,
+  parseCampYear,
 } from '../../data/dummyAllYearsMetrics';
 import type { RankingSummary } from '../../types';
 import type { YearOption } from '../layout/DashboardHeader';
@@ -125,8 +127,8 @@ export function ExecutiveRankingCard({
   selectedYear = '2026',
 }: ExecutiveRankingCardProps) {
   const isAllYears = selectedYear === 'all';
-  // TEMPORARY fallbacks from DUMMY_EXECUTIVE_RANKING when API fields are missing
-  const d = DUMMY_EXECUTIVE_RANKING;
+  const campYear = parseCampYear(selectedYear);
+  const d = campYear ? getDummyYearExecutiveRanking(campYear) : DUMMY_EXECUTIVE_RANKING;
   const allYears = DUMMY_ALL_YEARS_METRICS;
   const nationalRank = rankingLoading
     ? null

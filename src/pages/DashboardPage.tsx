@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   useCampKpis,
   useCampOverallRiskScore,
@@ -11,6 +11,14 @@ import { ParticipationCharts } from '../components/charts/ParticipationCharts';
 import { MetabolicAgeDistributionCard } from '../components/charts/MetabolicAgeDistributionCard';
 import { OverallRiskScoreChart } from '../components/charts/OverallRiskScoreChart';
 import { DashboardExtendedSections } from './DashboardExtendedSections';
+import {
+  getDummyYearKpis,
+  getDummyYearMetabolicAge,
+  getDummyYearOverallRisk,
+  getDummyYearParticipationByAge,
+  getDummyYearRanking,
+  parseCampYear,
+} from '../data/dummyAllYearsMetrics';
 
 function DashboardPageContent({ onRefresh }: { onRefresh: () => void }) {
   const [selectedYear, setSelectedYear] = useState<YearOption>('2026');
@@ -24,6 +32,23 @@ function DashboardPageContent({ onRefresh }: { onRefresh: () => void }) {
     error: riskError,
   } = useCampOverallRiskScore();
 
+  const campYear = parseCampYear(selectedYear);
+  const yearData = useMemo(() => {
+    if (!campYear) return null;
+    return {
+      kpis: getDummyYearKpis(campYear),
+      ranking: getDummyYearRanking(campYear),
+      participationByAge: getDummyYearParticipationByAge(campYear),
+      overallRiskScore: getDummyYearOverallRisk(campYear),
+      metabolicAge: getDummyYearMetabolicAge(campYear),
+    };
+  }, [campYear]);
+
+  const kpis = yearData?.kpis ?? apiKpis;
+  const ranking = yearData?.ranking ?? apiRanking;
+  const participationByAge = yearData?.participationByAge ?? apiParticipationByAge ?? [];
+  const overallRiskScore = yearData?.overallRiskScore ?? apiOverallRiskScore ?? [];
+
   return (
     <div className="dashboard-page">
       <DashboardHeader
@@ -32,7 +57,7 @@ function DashboardPageContent({ onRefresh }: { onRefresh: () => void }) {
         onYearChange={setSelectedYear}
       />
 
-      {(kpisError || rankingError || ageError || riskError) && (
+      {(kpisError || rankingError || ageError || riskError) && !yearData && (
         <p className="dashboard-api-error" role="alert">
           {kpisError || rankingError || ageError || riskError}
         </p>
@@ -41,23 +66,26 @@ function DashboardPageContent({ onRefresh }: { onRefresh: () => void }) {
       <div className="dashboard-metrics-row">
         <div className="dashboard-metrics-col">
           <DashboardMetricCards
-            kpis={apiKpis}
-            ranking={apiRanking}
-            kpisLoading={kpisLoading}
-            rankingLoading={rankingLoading}
+            kpis={kpis}
+            ranking={ranking}
+            kpisLoading={!yearData && kpisLoading}
+            rankingLoading={!yearData && rankingLoading}
             selectedYear={selectedYear}
           />
-          <MetabolicAgeDistributionCard selectedYear={selectedYear} />
+          <MetabolicAgeDistributionCard
+            categories={yearData?.metabolicAge}
+            selectedYear={selectedYear}
+          />
         </div>
         <div className="dashboard-metrics-col">
           <ParticipationCharts
-            byAge={apiParticipationByAge ?? []}
-            loading={ageLoading}
+            byAge={participationByAge}
+            loading={!yearData && ageLoading}
             selectedYear={selectedYear}
           />
           <OverallRiskScoreChart
-            buckets={apiOverallRiskScore ?? []}
-            loading={riskLoading}
+            buckets={overallRiskScore}
+            loading={!yearData && riskLoading}
             selectedYear={selectedYear}
           />
         </div>

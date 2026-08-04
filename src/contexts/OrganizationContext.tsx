@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import abcLogo from '../assets/abc-logo.svg';
 import { DEMO_MODE, DEMO_ORG_ID, DEMO_ORG_NAME } from '../config/demo';
-import { DEPARTMENTS } from '../data/participantPool';
+import { DEPARTMENTS, departmentSlug } from '../data/participantPool';
 import type { ApiMyOrganization, ApiOrganizationDepartment } from '../services/apiTypes';
 import { useAuth } from './AuthContext';
 import { useCamp } from './CampContext';
@@ -16,14 +16,6 @@ interface OrganizationContextValue {
 }
 
 const OrganizationContext = createContext<OrganizationContextValue | null>(null);
-
-function slugifyDepartmentName(name: string): string {
-  return name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
 
 /** Normalize /organizations/me department entries into { department, slug }. */
 export function normalizeOrganizationDepartments(
@@ -45,7 +37,7 @@ export function normalizeOrganizationDepartments(
     if (!department) continue;
 
     const rawSlug = typeof entry === 'string' ? '' : (entry?.slug ?? '');
-    const slug = String(rawSlug).trim() || slugifyDepartmentName(department);
+    const slug = String(rawSlug).trim() || departmentSlug(department);
     if (!slug || seen.has(slug)) continue;
 
     seen.add(slug);
@@ -79,7 +71,7 @@ const DEMO_ORGANIZATION: ApiMyOrganization = {
   country: 'India',
   departments: DEPARTMENTS.map((department) => ({
     department,
-    slug: slugifyDepartmentName(department),
+    slug: departmentSlug(department),
   })),
   status: 'active',
 };

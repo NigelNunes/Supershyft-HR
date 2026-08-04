@@ -18,6 +18,33 @@ export const DEPARTMENTS = [
   'Customer Success',
   'Supply Chain',
 ] as const;
+
+/** Demo headcounts — varied by typical corp mix; must sum to cohort size (362). */
+export const DEPARTMENT_HEADCOUNTS: Record<(typeof DEPARTMENTS)[number], number> = {
+  Technology: 72,
+  'R&D': 48,
+  Sales: 55,
+  Operations: 58,
+  Finance: 28,
+  HR: 18,
+  Marketing: 32,
+  Legal: 14,
+  'Customer Success': 22,
+  'Supply Chain': 15,
+};
+
+export function departmentSlug(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/** Flat department assignment list matching DEPARTMENT_HEADCOUNTS. */
+export const DEPARTMENT_ASSIGNMENTS: (typeof DEPARTMENTS)[number][] = DEPARTMENTS.flatMap((name) =>
+  Array.from({ length: DEPARTMENT_HEADCOUNTS[name] }, () => name),
+);
 const AGE_GROUPS = ['18–25', '26–35', '36–45', '46–55', '55+'] as const;
 
 /** Display buckets for physical activity pies. */
@@ -193,7 +220,7 @@ export function sleepBucketFromApi(label: string | null | undefined): SleepBucke
 
 function buildParticipant(index: number): CampParticipant {
   const rand = seeded(1000 + index * 53);
-  const dept = DEPARTMENTS[index % DEPARTMENTS.length];
+  const dept = DEPARTMENT_ASSIGNMENTS[index] ?? DEPARTMENTS[index % DEPARTMENTS.length];
   const gender = genderForIndex(index);
   const age = Math.round(22 + rand() * 33);
   const chronologicalAge = age;
@@ -303,8 +330,9 @@ function buildParticipant(index: number): CampParticipant {
 }
 
 /** Representative enrolled camp cohort (demo KPIs use this length directly — SCALE = 1). */
-export const CAMP_PARTICIPANTS: CampParticipant[] = Array.from({ length: 362 }, (_, i) =>
-  buildParticipant(i),
+export const CAMP_PARTICIPANTS: CampParticipant[] = Array.from(
+  { length: DEPARTMENT_ASSIGNMENTS.length },
+  (_, i) => buildParticipant(i),
 );
 
 export const DISPLAY_ENROLLED = CAMP_PARTICIPANTS.length;

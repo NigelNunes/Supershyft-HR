@@ -51,7 +51,7 @@ export function demoKpis(): KpiSummary {
 export function demoRanking(): RankingSummary {
   return {
     city: 'Mumbai',
-    cityRank: 12,
+    cityRank: 9,
     industryRank: 8,
   };
 }
