@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   BarChart3,
   ChevronDown,
@@ -10,13 +10,17 @@ import {
   Sun,
   Users,
 } from 'lucide-react';
+import {
+  DEMO_CAMP_NAME,
+  DEMO_CAMP_NO,
+  DEMO_ORG_ID,
+  DEMO_ORG_NAME,
+} from '../../config/demo';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCamp } from '../../contexts/CampContext';
 import { useOrganization } from '../../contexts/OrganizationContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { organizationsApi } from '../../services/api';
 import type { ApiOrganizationCamp } from '../../services/apiTypes';
-import { formatCampDate } from '../../utils/campDisplay';
 import { formatUserDisplayName, formatUserPhone, userInitial } from '../../utils/userDisplay';
 import './Sidebar.css';
 
@@ -31,8 +35,20 @@ interface SidebarProps {
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true as const },
   { to: '/insights', label: 'Camp Report', icon: BarChart3 },
-  { to: '/departments', label: 'Departments', icon: Network, hasChevron: true as const },
   { to: '/employees', label: 'All Employees', icon: Users },
+];
+
+const DEMO_CAMPS: ApiOrganizationCamp[] = [
+  {
+    camp_no: DEMO_CAMP_NO,
+    camp_name: DEMO_CAMP_NAME,
+    organization_id: DEMO_ORG_ID,
+    organization_name: DEMO_ORG_NAME,
+    start_date: '2024-11-01',
+    engagement_count: 1086,
+    department_count: 10,
+    report_count: 1086,
+  },
 ];
 
 export function Sidebar({
@@ -42,11 +58,13 @@ export function Sidebar({
   mobileOpen = false,
   onNavigate,
 }: SidebarProps) {
-  const { user, userLoading, accessToken, logout } = useAuth();
-  const { selectedCampNo, selectedCampOrganizationId, selectCamp } = useCamp();
-  const { organizationName, organizationLogo, loading: orgLoading } = useOrganization();
+  const { user, userLoading, logout } = useAuth();
+  const { selectedCampNo } = useCamp();
+  const { organizationName, organizationLogo, departments, loading: orgLoading } =
+    useOrganization();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const showLabels = isMobile || !collapsed;
   const sidebarCollapsed = !isMobile && collapsed;
@@ -54,44 +72,16 @@ export function Sidebar({
   const displayPhone = user ? formatUserPhone(user.phone) : '';
   const companyLabel = orgLoading ? 'Loading…' : organizationName;
   const companyInitial = companyLabel.charAt(0).toUpperCase() || '?';
+  const activeDepartmentSlug = location.pathname.startsWith('/departments/')
+    ? location.pathname.slice('/departments/'.length).split('/')[0]
+    : null;
+  const departmentsActive = Boolean(activeDepartmentSlug);
 
   const [campsOpen, setCampsOpen] = useState(false);
-  const [camps, setCamps] = useState<ApiOrganizationCamp[]>([]);
-  const [campsLoading, setCampsLoading] = useState(false);
-  const [campsError, setCampsError] = useState('');
-  const [selectingCampNo, setSelectingCampNo] = useState<number | null>(null);
+  const [departmentsOpen, setDepartmentsOpen] = useState(false);
+  const camps = DEMO_CAMPS;
   const campsRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!accessToken || userLoading) {
-      if (!accessToken) setCamps([]);
-      return;
-    }
-
-    let cancelled = false;
-    setCampsLoading(true);
-    setCampsError('');
-
-    organizationsApi
-      .listCampsForUser(accessToken, {
-        organizationId: selectedCampOrganizationId,
-        role: user?.employee?.role ?? null,
-      })
-      .then(({ items }) => {
-        if (cancelled) return;
-        setCamps(items);
-        setCampsLoading(false);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setCampsError(err instanceof Error ? err.message : 'Failed to load camps');
-        setCampsLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [accessToken, selectedCampOrganizationId, user, userLoading]);
+  const departmentsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!campsOpen) return;
@@ -107,32 +97,47 @@ export function Sidebar({
   }, [campsOpen]);
 
   useEffect(() => {
+    if (!departmentsOpen) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!departmentsRef.current?.contains(event.target as Node)) {
+        setDepartmentsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [departmentsOpen]);
+
+  useEffect(() => {
     setCampsOpen(false);
+    setDepartmentsOpen(false);
   }, [collapsed, mobileOpen]);
 
-  const selectedCamp = camps.find((camp) => camp.camp_no === selectedCampNo);
-  const campSubtitle = selectedCamp?.camp_name ?? 'Select camp';
+  const selectedCamp = camps.find((camp) => camp.camp_no === selectedCampNo) ?? camps[0];
+  const campSubtitle = selectedCamp?.camp_name ?? DEMO_CAMP_NAME;
 
-  const handleSelectCamp = async (camp: ApiOrganizationCamp) => {
-    if (camp.camp_no === selectedCampNo) {
-      setCampsOpen(false);
+  const handleSelectCamp = (camp: ApiOrganizationCamp) => {
+    setCampsOpen(false);
+    if (camp.camp_no === selectedCampNo) return;
+    navigate('/', { replace: true });
+    onNavigate?.();
+  };
+
+  const handleToggleDepartments = () => {
+    if (sidebarCollapsed) {
+      onToggle();
+      setDepartmentsOpen(true);
       return;
     }
+    setCampsOpen(false);
+    setDepartmentsOpen((open) => !open);
+  };
 
-    setSelectingCampNo(camp.camp_no);
-    setCampsError('');
-
-    const result = await selectCamp(camp.camp_no, camp.organization_id, camp.organization_name);
-    setSelectingCampNo(null);
-
-    if (result.ok) {
-      setCampsOpen(false);
-      navigate('/', { replace: true });
-      onNavigate?.();
-      return;
-    }
-
-    setCampsError(result.error ?? 'Unable to access this camp.');
+  const handleSelectDepartment = (slug: string) => {
+    setDepartmentsOpen(false);
+    navigate(`/departments/${slug}`);
+    onNavigate?.();
   };
 
   const handleLogout = () => {
@@ -199,7 +204,10 @@ export function Sidebar({
               <button
                 type="button"
                 className="sidebar__brand-picker"
-                onClick={() => setCampsOpen((open) => !open)}
+                onClick={() => {
+                  setDepartmentsOpen(false);
+                  setCampsOpen((open) => !open);
+                }}
                 aria-expanded={campsOpen}
                 aria-controls="sidebar-camps-list"
               >
@@ -223,52 +231,32 @@ export function Sidebar({
               role="region"
               aria-label="Camps"
             >
-              {campsLoading && <p className="sidebar__camps-status">Loading camps…</p>}
-
-              {!campsLoading && camps.length > 0 && (
-                <ul className="sidebar__camps-list">
-                  {camps.map((camp) => {
-                    const isSelected = camp.camp_no === selectedCampNo;
-                    const isSelecting = selectingCampNo === camp.camp_no;
-
-                    return (
-                      <li key={camp.camp_no}>
-                        <button
-                          type="button"
-                          className={`sidebar__camp-item${isSelected ? ' sidebar__camp-item--active' : ''}`}
-                          onClick={() => void handleSelectCamp(camp)}
-                          disabled={selectingCampNo !== null}
-                          aria-current={isSelected ? 'true' : undefined}
-                        >
-                          <span className="sidebar__camp-item-name">{camp.camp_name}</span>
-                          <span className="sidebar__camp-item-meta">
-                            {camp.organization_name} · {formatCampDate(camp.start_date)}
-                          </span>
-                          {isSelecting && (
-                            <span className="sidebar__camp-item-loading">Opening…</span>
-                          )}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-
-              {!campsLoading && !campsError && camps.length === 0 && (
-                <p className="sidebar__camps-status">No camps found.</p>
-              )}
-
-              {campsError && (
-                <p className="sidebar__camps-error" role="alert">
-                  {campsError}
-                </p>
-              )}
+              <ul className="sidebar__camps-list">
+                {camps.map((camp) => {
+                  const isSelected = camp.camp_no === selectedCampNo;
+                  return (
+                    <li key={camp.camp_no}>
+                      <button
+                        type="button"
+                        className={`sidebar__camp-item${isSelected ? ' sidebar__camp-item--active' : ''}`}
+                        onClick={() => handleSelectCamp(camp)}
+                        aria-current={isSelected ? 'true' : undefined}
+                      >
+                        <span className="sidebar__camp-item-name">{camp.camp_name}</span>
+                        <span className="sidebar__camp-item-meta">
+                          {camp.organization_name} · Nov 2024
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
           )}
         </div>
 
         <nav className="sidebar__nav">
-          {navItems.map((item) => (
+          {navItems.slice(0, 2).map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -281,9 +269,91 @@ export function Sidebar({
             >
               <item.icon size={20} strokeWidth={1.75} />
               {showLabels && <span>{item.label}</span>}
-              {showLabels && 'hasChevron' in item && item.hasChevron && (
-                <ChevronDown size={16} className="sidebar__link-chevron" aria-hidden />
+            </NavLink>
+          ))}
+
+          <div
+            className={[
+              'sidebar__nav-dropdown',
+              departmentsOpen ? 'sidebar__nav-dropdown--open' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            ref={departmentsRef}
+          >
+            <button
+              type="button"
+              className={`sidebar__link sidebar__link--button${
+                departmentsActive || departmentsOpen ? ' sidebar__link--active' : ''
+              }`}
+              onClick={handleToggleDepartments}
+              aria-expanded={departmentsOpen}
+              aria-controls="sidebar-departments-list"
+              title={sidebarCollapsed ? 'Departments' : undefined}
+            >
+              <Network size={20} strokeWidth={1.75} />
+              {showLabels && <span>Departments</span>}
+              {showLabels && (
+                <ChevronDown
+                  size={16}
+                  className={`sidebar__link-chevron${
+                    departmentsOpen ? ' sidebar__link-chevron--open' : ''
+                  }`}
+                  aria-hidden
+                />
               )}
+            </button>
+
+            {departmentsOpen && !sidebarCollapsed && (
+              <div
+                id="sidebar-departments-list"
+                className="sidebar__camps-panel sidebar__nav-dropdown-panel"
+                role="region"
+                aria-label="Departments"
+              >
+                {orgLoading && <p className="sidebar__camps-status">Loading departments…</p>}
+
+                {!orgLoading && departments.length > 0 && (
+                  <ul className="sidebar__camps-list">
+                    {departments.map((dept) => {
+                      const isSelected = dept.slug === activeDepartmentSlug;
+                      return (
+                        <li key={dept.slug}>
+                          <button
+                            type="button"
+                            className={`sidebar__camp-item${
+                              isSelected ? ' sidebar__camp-item--active' : ''
+                            }`}
+                            onClick={() => handleSelectDepartment(dept.slug)}
+                            aria-current={isSelected ? 'true' : undefined}
+                          >
+                            <span className="sidebar__camp-item-name">{dept.department}</span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+
+                {!orgLoading && departments.length === 0 && (
+                  <p className="sidebar__camps-status">No departments found.</p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {navItems.slice(2).map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onClick={onNavigate}
+              title={sidebarCollapsed ? item.label : undefined}
+              className={({ isActive }) =>
+                `sidebar__link${isActive ? ' sidebar__link--active' : ''}`
+              }
+            >
+              <item.icon size={20} strokeWidth={1.75} />
+              {showLabels && <span>{item.label}</span>}
             </NavLink>
           ))}
         </nav>

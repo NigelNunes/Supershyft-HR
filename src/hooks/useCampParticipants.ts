@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCamp } from '../contexts/CampContext';
-import { campParticipantsApi } from '../services/api';
-import { mapCampParticipantsToEmployees } from '../services/campParticipantsMappers';
+import { mockDashboard } from '../data/mockDashboard';
 import type { EmployeeRecord } from '../types';
 
 interface CampParticipantsState {
@@ -12,13 +11,14 @@ interface CampParticipantsState {
   error: string | null;
 }
 
+/** Offline demo employees — never calls participants API. */
 export function useCampParticipants(): CampParticipantsState {
   const { accessToken } = useAuth();
   const { selectedCampNo } = useCamp();
   const [state, setState] = useState<CampParticipantsState>({
     employees: [],
     total: 0,
-    loading: false,
+    loading: true,
     error: null,
   });
 
@@ -28,29 +28,13 @@ export function useCampParticipants(): CampParticipantsState {
       return;
     }
 
-    let cancelled = false;
-    setState((prev) => ({ ...prev, loading: true, error: null }));
-
-    campParticipantsApi
-      .listAll(selectedCampNo, accessToken)
-      .then(({ items, total }) => {
-        if (cancelled) return;
-        setState({
-          employees: mapCampParticipantsToEmployees(items),
-          total,
-          loading: false,
-          error: null,
-        });
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        const message = err instanceof Error ? err.message : 'Request failed';
-        setState({ employees: [], total: 0, loading: false, error: message });
-      });
-
-    return () => {
-      cancelled = true;
-    };
+    const employees = mockDashboard.employees;
+    setState({
+      employees,
+      total: employees.length,
+      loading: false,
+      error: null,
+    });
   }, [accessToken, selectedCampNo]);
 
   return state;

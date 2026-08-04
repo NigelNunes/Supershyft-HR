@@ -7,8 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { campDashboardApi, organizationsApi } from '../services/api';
-import { accessDeniedMessage, isAccessDeniedError } from '../services/apiErrors';
+import { DEMO_CAMP_NO, DEMO_ORG_ID, DEMO_ORG_NAME } from '../config/demo';
 import { useAuth } from './AuthContext';
 
 interface CampContextValue {
@@ -28,35 +27,20 @@ const CAMP_NO_KEY = 'hr-dashboard-camp-no';
 const CAMP_ORG_ID_KEY = 'hr-dashboard-camp-org-id';
 const CAMP_ORG_NAME_KEY = 'hr-dashboard-camp-org-name';
 
-function readStoredCampNo(): number | null {
-  if (typeof window === 'undefined') return null;
-  const stored = sessionStorage.getItem(CAMP_NO_KEY);
-  if (!stored) return null;
-  const parsed = Number(stored);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-function readStoredCampOrganizationId(): number | null {
-  if (typeof window === 'undefined') return null;
-  const stored = sessionStorage.getItem(CAMP_ORG_ID_KEY);
-  if (!stored) return null;
-  const parsed = Number(stored);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-function readStoredCampOrganizationName(): string | null {
-  if (typeof window === 'undefined') return null;
-  return sessionStorage.getItem(CAMP_ORG_NAME_KEY);
+function storeDemoCamp() {
+  sessionStorage.setItem(CAMP_NO_KEY, String(DEMO_CAMP_NO));
+  sessionStorage.setItem(CAMP_ORG_ID_KEY, String(DEMO_ORG_ID));
+  sessionStorage.setItem(CAMP_ORG_NAME_KEY, DEMO_ORG_NAME);
 }
 
 export function CampProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated, accessToken, user, userLoading } = useAuth();
-  const [selectedCampNo, setSelectedCampNo] = useState<number | null>(() => readStoredCampNo());
+  const { isAuthenticated } = useAuth();
+  const [selectedCampNo, setSelectedCampNo] = useState<number | null>(DEMO_CAMP_NO);
   const [selectedCampOrganizationId, setSelectedCampOrganizationId] = useState<number | null>(
-    () => readStoredCampOrganizationId(),
+    DEMO_ORG_ID,
   );
   const [selectedCampOrganizationName, setSelectedCampOrganizationName] = useState<string | null>(
-    () => readStoredCampOrganizationName(),
+    DEMO_ORG_NAME,
   );
 
   const clearCamp = useCallback(() => {
@@ -71,74 +55,42 @@ export function CampProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isAuthenticated) {
       clearCamp();
+      return;
     }
+    storeDemoCamp();
+    setSelectedCampNo(DEMO_CAMP_NO);
+    setSelectedCampOrganizationId(DEMO_ORG_ID);
+    setSelectedCampOrganizationName(DEMO_ORG_NAME);
   }, [isAuthenticated, clearCamp]);
 
-  useEffect(() => {
-    if (!accessToken || !selectedCampNo || selectedCampOrganizationId != null || userLoading) return;
-
-    let cancelled = false;
-
-    organizationsApi
-      .listCampsForUser(accessToken, { role: user?.employee?.role ?? null })
-      .then(({ items }) => {
-        if (cancelled) return;
-        const camp = items.find((item) => item.camp_no === selectedCampNo);
-        if (!camp) return;
-
-        sessionStorage.setItem(CAMP_ORG_ID_KEY, String(camp.organization_id));
-        sessionStorage.setItem(CAMP_ORG_NAME_KEY, camp.organization_name);
-        setSelectedCampOrganizationId(camp.organization_id);
-        setSelectedCampOrganizationName(camp.organization_name);
-      })
-      .catch(() => undefined);
-
-    return () => {
-      cancelled = true;
-    };
-  }, [accessToken, selectedCampNo, selectedCampOrganizationId, user, userLoading]);
-
-  const selectCamp = useCallback(
-    async (campNo: number, organizationId?: number, organizationName?: string) => {
-      if (!accessToken) {
-        return { ok: false, error: 'Not authenticated' };
-      }
-
-      try {
-        await campDashboardApi.section(campNo, 'kpis', accessToken);
-        sessionStorage.setItem(CAMP_NO_KEY, String(campNo));
-        if (organizationId != null) {
-          sessionStorage.setItem(CAMP_ORG_ID_KEY, String(organizationId));
-          setSelectedCampOrganizationId(organizationId);
-        }
-        if (organizationName) {
-          sessionStorage.setItem(CAMP_ORG_NAME_KEY, organizationName);
-          setSelectedCampOrganizationName(organizationName);
-        }
-        setSelectedCampNo(campNo);
-        return { ok: true };
-      } catch (err) {
-        if (isAccessDeniedError(err)) {
-          return { ok: false, error: accessDeniedMessage(err) };
-        }
-        return {
-          ok: false,
-          error: err instanceof Error ? err.message : 'Unable to verify dashboard access',
-        };
-      }
-    },
-    [accessToken],
-  );
+  const selectCamp = useCallback(async () => {
+    storeDemoCamp();
+    setSelectedCampNo(DEMO_CAMP_NO);
+    setSelectedCampOrganizationId(DEMO_ORG_ID);
+    setSelectedCampOrganizationName(DEMO_ORG_NAME);
+    return { ok: true };
+  }, []);
 
   const value = useMemo(
     () => ({
+      selectedCampNo: isAuthenticated ? (selectedCampNo ?? DEMO_CAMP_NO) : null,
+      selectedCampOrganizationId: isAuthenticated
+        ? (selectedCampOrganizationId ?? DEMO_ORG_ID)
+        : null,
+      selectedCampOrganizationName: isAuthenticated
+        ? (selectedCampOrganizationName ?? DEMO_ORG_NAME)
+        : null,
+      selectCamp,
+      clearCamp,
+    }),
+    [
+      isAuthenticated,
       selectedCampNo,
       selectedCampOrganizationId,
       selectedCampOrganizationName,
       selectCamp,
       clearCamp,
-    }),
-    [selectedCampNo, selectedCampOrganizationId, selectedCampOrganizationName, selectCamp, clearCamp],
+    ],
   );
 
   return <CampContext.Provider value={value}>{children}</CampContext.Provider>;

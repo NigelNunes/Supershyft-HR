@@ -23,5 +23,4 @@ export function getDepartmentDetail(id: string): DepartmentDetail | null {
   return buildDepartmentDetail(id, CAMP_PARTICIPANTS);
 }
 
-export const DEMO_PHONE = '0000000000';
-export const DEMO_OTP = '000000';
+export { DEMO_PHONE, DEMO_OTP } from '../config/demo';

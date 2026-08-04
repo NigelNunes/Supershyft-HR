@@ -38,7 +38,7 @@ import {
 } from './participantPool';
 import { DISEASES } from './diseases';
 import {
-  buildTemporaryJourney,
+  buildAlignedJourney,
   temporaryAge,
 } from '../services/campParticipantsMappers';
 
@@ -629,8 +629,14 @@ export function buildDashboardData(participants: CampParticipant[] = CAMP_PARTIC
     department: p.department,
     gender: p.gender,
     age: temporaryAge(p.id),
-    journey: buildTemporaryJourney(p.id),
+    journey: buildAlignedJourney(p.id, {
+      bloodTestDone: p.bloodTestDone,
+      doctorConsultation: p.doctorConsultation,
+    }),
   }));
+
+  const nutritionistConsults = Math.round(doctorConsults * 0.75);
+  const bioAiReports = employees.filter((e) => e.journey.bioAiReport === 'completed').length;
 
   const history: CampHistoryEntry[] = [
     {
@@ -662,16 +668,21 @@ export function buildDashboardData(participants: CampParticipant[] = CAMP_PARTIC
   return {
     org: { organizationId: 1, hasHistory: true, campYear: 2024 },
     hr: {
-      name: 'Neha Patel',
-      phone: '+91 98765 43210',
-      companyName: 'Ddecor',
+      name: 'Demo HR',
+      phone: '+91 00000 00000',
+      companyName: 'ABC',
       companyLogo: undefined,
     },
     kpis: {
       employeesEnrolled: DISPLAY_ENROLLED,
       totalBloodTest: scaleCount(bloodTests),
+      totalBioAiReports: scaleCount(bioAiReports),
+      bioAiPercent:
+        DISPLAY_ENROLLED > 0
+          ? Math.round((scaleCount(bioAiReports) / DISPLAY_ENROLLED) * 100)
+          : 0,
       doctorConsultation: scaleCount(doctorConsults),
-      nutritionistConsultation: scaleCount(Math.round(doctorConsults * 0.75)),
+      nutritionistConsultation: scaleCount(nutritionistConsults),
       highRiskGroup: scaleCount(highRisk),
     },
     participationByAge: buildParticipationByAge(participants),

@@ -32,8 +32,8 @@ function DepartmentDetailPageContent({
   return (
     <div className="dashboard-page">
       <div className="dept-detail-back">
-        <Link to="/departments" className="back-link">
-          <ArrowLeft size={16} /> Departments
+        <Link to="/" className="back-link">
+          <ArrowLeft size={16} /> Dashboard
         </Link>
       </div>
 

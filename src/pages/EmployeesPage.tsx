@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import { useCampParticipants } from '../hooks/useCampParticipants';
+import { useCampKpis } from '../hooks/useCampDashboard';
 import { useOrganization } from '../contexts/OrganizationContext';
 import type { EmployeeRecord, JourneyStepId, JourneyStepStatus } from '../types';
 import anthropometryIconUrl from '../assets/icons/journey-anthropometry.png';
@@ -171,6 +172,7 @@ function HeaderStepIcon({
 
 export function EmployeesPage() {
   const { employees, loading, error } = useCampParticipants();
+  const { data: kpis, loading: kpisLoading } = useCampKpis();
   const { departments } = useOrganization();
   const [query, setQuery] = useState('');
   const [department, setDepartment] = useState<string>('all');
@@ -207,23 +209,28 @@ export function EmployeesPage() {
   const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const summary = useMemo(() => {
-    const bloodDone = countByStatus(employees, 'bloodReport', 'completed');
-    const bloodPending =
-      countByStatus(employees, 'bloodReport', 'pending') +
-      countByStatus(employees, 'bloodReport', 'in_progress');
+    // Prefer shared dashboard KPIs so Doctor/Nutritionist (and other cards) match exactly.
+    const bloodDone = kpis?.totalBloodTest ?? countByStatus(employees, 'bloodReport', 'completed');
+    const bioDone =
+      kpis?.totalBioAiReports ?? countByStatus(employees, 'bioAiReport', 'completed');
+    const consultDoctor =
+      kpis?.doctorConsultation ?? countByStatus(employees, 'consultations', 'completed');
+    const consultNutritionist =
+      kpis?.nutritionistConsultation ?? Math.round(consultDoctor * 0.75);
+
     const qDone = countByStatus(employees, 'dietLifestyle', 'completed');
     const qPending =
       countByStatus(employees, 'dietLifestyle', 'pending') +
       countByStatus(employees, 'dietLifestyle', 'in_progress');
-    const bioDone = countByStatus(employees, 'bioAiReport', 'completed');
-    const bioPending =
-      countByStatus(employees, 'bioAiReport', 'pending') +
-      countByStatus(employees, 'bioAiReport', 'in_progress');
-    const consultDone = countByStatus(employees, 'consultations', 'completed');
-    const consultPending =
-      countByStatus(employees, 'consultations', 'pending') +
-      countByStatus(employees, 'consultations', 'in_progress');
-    const nutritionist = Math.round(consultDone * 0.38);
+
+    const enrolled = kpis?.employeesEnrolled ?? employees.length;
+    const bloodPending = Math.max(
+      0,
+      enrolled - bloodDone,
+    );
+    const bioPending = Math.max(0, enrolled - bioDone);
+    const consultPending = Math.max(0, enrolled - consultDoctor);
+
     return {
       bloodDone,
       bloodPending,
@@ -231,11 +238,13 @@ export function EmployeesPage() {
       qPending,
       bioDone,
       bioPending,
-      consultDoctor: consultDone,
-      consultNutritionist: nutritionist,
+      consultDoctor,
+      consultNutritionist,
       consultPending,
     };
-  }, [employees]);
+  }, [employees, kpis]);
+
+  const summaryLoading = loading || kpisLoading;
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -410,12 +419,12 @@ export function EmployeesPage() {
               </span>
             </div>
             <div className="emp-summary-card__value">
-              <span className="emp-summary-card__number">{loading ? '…' : summary.bloodDone}</span>
+              <span className="emp-summary-card__number">{summaryLoading ? '…' : summary.bloodDone}</span>
               <span className="emp-summary-card__unit">Completed</span>
             </div>
             <div className="emp-summary-card__foot">
               <span className="emp-summary-card__pending">
-                {loading ? '…' : `${summary.bloodPending} Pending`}
+                {summaryLoading ? '…' : `${summary.bloodPending} Pending`}
               </span>
               <button
                 type="button"
@@ -435,12 +444,12 @@ export function EmployeesPage() {
               </span>
             </div>
             <div className="emp-summary-card__value">
-              <span className="emp-summary-card__number">{loading ? '…' : summary.qDone}</span>
+              <span className="emp-summary-card__number">{summaryLoading ? '…' : summary.qDone}</span>
               <span className="emp-summary-card__unit">Submitted</span>
             </div>
             <div className="emp-summary-card__foot">
               <span className="emp-summary-card__pending">
-                {loading ? '…' : `${summary.qPending} Pending`}
+                {summaryLoading ? '…' : `${summary.qPending} Pending`}
               </span>
               <button
                 type="button"
@@ -460,12 +469,12 @@ export function EmployeesPage() {
               </span>
             </div>
             <div className="emp-summary-card__value">
-              <span className="emp-summary-card__number">{loading ? '…' : summary.bioDone}</span>
+              <span className="emp-summary-card__number">{summaryLoading ? '…' : summary.bioDone}</span>
               <span className="emp-summary-card__unit">Ready</span>
             </div>
             <div className="emp-summary-card__foot">
               <span className="emp-summary-card__pending">
-                {loading ? '…' : `${summary.bioPending} Pending`}
+                {summaryLoading ? '…' : `${summary.bioPending} Pending`}
               </span>
               <button
                 type="button"
@@ -487,7 +496,7 @@ export function EmployeesPage() {
             <div className="emp-summary-card__value emp-summary-card__value--consult">
               <span className="emp-summary-card__consult-label">Doctor / Nutritionist</span>
               <span className="emp-summary-card__number">
-                {loading
+                {summaryLoading
                   ? '…'
                   : `${summary.consultDoctor} / ${summary.consultNutritionist}`}
               </span>
@@ -495,7 +504,7 @@ export function EmployeesPage() {
             </div>
             <div className="emp-summary-card__foot">
               <span className="emp-summary-card__pending">
-                {loading ? '…' : `${summary.consultPending} Pending`}
+                {summaryLoading ? '…' : `${summary.consultPending} Pending`}
               </span>
               <button
                 type="button"

@@ -66,6 +66,54 @@ export function buildTemporaryJourney(seed: string): EmployeeRecord['journey'] {
   return journey;
 }
 
+/**
+ * Demo journey aligned to participant flags so employee-table counts
+ * match dashboard KPIs (blood tests / doctor consultations / bio-AI).
+ */
+export function buildAlignedJourney(
+  seed: string,
+  flags: { bloodTestDone: boolean; doctorConsultation: boolean },
+): EmployeeRecord['journey'] {
+  const journey = buildTemporaryJourney(seed);
+
+  if (flags.bloodTestDone) {
+    journey.anthropometry = 'completed';
+    journey.vitals = 'completed';
+    journey.dietLifestyle = 'completed';
+    journey.bloodReport = 'completed';
+    if (hashUnit(`${seed}:bloodReportAi`) < 0.85) {
+      journey.bloodReportAi = 'completed';
+    } else {
+      journey.bloodReportAi = 'in_progress';
+    }
+  } else {
+    journey.bloodReport = 'pending';
+    journey.bloodReportAi = 'pending';
+    journey.bioAiReport = 'pending';
+    journey.bioAiShared = 'pending';
+    journey.consultations = 'pending';
+    return journey;
+  }
+
+  if (flags.doctorConsultation) {
+    journey.bioAiReport = 'completed';
+    journey.bioAiShared = hashUnit(`${seed}:bioAiShared`) < 0.7 ? 'completed' : 'in_progress';
+    journey.consultations = 'completed';
+  } else {
+    // Blood done but no doctor consult yet — bio-AI may be ready, consult pending.
+    if (hashUnit(`${seed}:bioAiReport`) < 0.55) {
+      journey.bioAiReport = 'completed';
+      journey.bioAiShared = hashUnit(`${seed}:bioAiShared`) < 0.4 ? 'completed' : 'pending';
+    } else {
+      journey.bioAiReport = 'in_progress';
+      journey.bioAiShared = 'pending';
+    }
+    journey.consultations = 'pending';
+  }
+
+  return journey;
+}
+
 export function temporaryAge(seed: string): number {
   return 24 + Math.floor(hashUnit(`${seed}:age`) * 36);
 }

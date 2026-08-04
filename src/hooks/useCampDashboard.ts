@@ -1,47 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCamp } from '../contexts/CampContext';
-import { campDashboardApi } from '../services/api';
-import type {
-  ApiCampDashboardGenderDistributionPair,
-  ApiCampDashboardKpis,
-  ApiCampDashboardOverallRiskScore,
-  ApiCampDashboardOxidativeStress,
-  ApiCampDashboardParticipationByAge,
-  ApiCampDashboardDiseaseGenderSection,
-  ApiCampDashboardCompanyAverageScores,
-  ApiCampDashboardBloodAndLabIntelligence,
-  ApiCampDashboardRanking,
-  ApiPositiveWins,
-  CampDashboardSection,
-} from '../services/apiTypes';
 import {
-  mapCampKpis,
-  mapCampRiskLifestyleByGender,
-  mapCampPositiveWins,
-  mapCampCompanyAverageScores,
-  mapCampOverallRiskScore,
-  mapCampOxidativeStress,
-  mapCampParticipationByAge,
-  mapCampPhysicalActivity,
-  mapCampSleep,
-  mapCampBloodAndLabIntelligence,
-  mapCampRanking,
-} from '../services/campDashboardMappers';
-import type {
-  CampOxidativeStressView,
-  CampRiskLifestyleView,
-} from '../services/campDashboardMappers';
-import type {
-  GenderDistributionPair,
-  KpiSummary,
-  OverallRiskScoreBucket,
-  ParticipationByAge,
-  PositiveWins,
-  RankingSummary,
-  CompanyAverageScores,
-  BloodParameterPanel,
-} from '../types';
+  demoBloodPanels,
+  demoCompanyScores,
+  demoKpis,
+  demoOverallRiskScore,
+  demoOxidativeStress,
+  demoParticipationByAge,
+  demoPhysicalActivity,
+  demoPositiveWins,
+  demoRanking,
+  demoRiskLifestyle,
+  demoSleep,
+} from '../data/demoCampSections';
 
 interface FetchState<T> {
   data: T | null;
@@ -49,15 +21,13 @@ interface FetchState<T> {
   error: string | null;
 }
 
-function useCampSection<TApi, TMapped>(
-  section: CampDashboardSection,
-  map: (api: TApi) => TMapped,
-): FetchState<TMapped> {
+/** Pure offline demo — never calls the camp dashboard API. */
+function useDemoSection<T>(getData: () => T): FetchState<T> {
   const { accessToken } = useAuth();
   const { selectedCampNo } = useCamp();
-  const [state, setState] = useState<FetchState<TMapped>>({
+  const [state, setState] = useState<FetchState<T>>({
     data: null,
-    loading: false,
+    loading: true,
     error: null,
   });
 
@@ -66,95 +36,52 @@ function useCampSection<TApi, TMapped>(
       setState({ data: null, loading: false, error: 'Not authenticated' });
       return;
     }
-
-    let cancelled = false;
-    setState((prev) => ({ ...prev, loading: true, error: null }));
-
-    campDashboardApi
-      .section<TApi>(selectedCampNo, section, accessToken)
-      .then((res) => {
-        if (cancelled) return;
-        setState({ data: map(res.data), loading: false, error: null });
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        const message = err instanceof Error ? err.message : 'Request failed';
-        setState({ data: null, loading: false, error: message });
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [section, accessToken, selectedCampNo]);
+    setState({ data: getData(), loading: false, error: null });
+  }, [accessToken, selectedCampNo, getData]);
 
   return state;
 }
 
 export function useCampKpis() {
-  return useCampSection<ApiCampDashboardKpis, KpiSummary>('kpis', mapCampKpis);
+  return useDemoSection(demoKpis);
 }
 
 export function useCampParticipationByAge() {
-  return useCampSection<ApiCampDashboardParticipationByAge, ParticipationByAge[]>(
-    'participation_by_age',
-    mapCampParticipationByAge,
-  );
+  return useDemoSection(demoParticipationByAge);
 }
 
 export function useCampOverallRiskScore() {
-  return useCampSection<ApiCampDashboardOverallRiskScore, OverallRiskScoreBucket[]>(
-    'overall_risk_score',
-    mapCampOverallRiskScore,
-  );
+  return useDemoSection(demoOverallRiskScore);
 }
 
 export function useCampPhysicalActivity() {
-  return useCampSection<ApiCampDashboardGenderDistributionPair, GenderDistributionPair>(
-    'distribution_by_physical_activity_frequency',
-    mapCampPhysicalActivity,
-  );
+  return useDemoSection(demoPhysicalActivity);
 }
 
 export function useCampSleep() {
-  return useCampSection<ApiCampDashboardGenderDistributionPair, GenderDistributionPair>(
-    'distribution_by_sleeping_hours',
-    mapCampSleep,
-  );
+  return useDemoSection(demoSleep);
 }
 
 export function useCampOxidativeStress() {
-  return useCampSection<ApiCampDashboardOxidativeStress, CampOxidativeStressView>(
-    'distribution_by_oxidative_stress',
-    mapCampOxidativeStress,
-  );
+  return useDemoSection(demoOxidativeStress);
 }
 
-/** Risk & lifestyle: top 3 diseases + gender deep-dive distributions. */
 export function useCampRiskLifestyleByGender() {
-  return useCampSection<ApiCampDashboardDiseaseGenderSection, CampRiskLifestyleView>(
-    'distribution_by_gender_by_metabolic_syndrome',
-    mapCampRiskLifestyleByGender,
-  );
+  return useDemoSection(demoRiskLifestyle);
 }
 
 export function useCampPositiveWins() {
-  return useCampSection<ApiPositiveWins, PositiveWins>('positive_wins', mapCampPositiveWins);
+  return useDemoSection(demoPositiveWins);
 }
 
 export function useCampCompanyAverageScores() {
-  return useCampSection<ApiCampDashboardCompanyAverageScores, CompanyAverageScores>(
-    'company_average_scores',
-    mapCampCompanyAverageScores,
-  );
+  return useDemoSection(demoCompanyScores);
 }
 
 export function useCampBloodAndLabIntelligence() {
-  return useCampSection<ApiCampDashboardBloodAndLabIntelligence, BloodParameterPanel[]>(
-    'blood_and_lab_intelligence',
-    mapCampBloodAndLabIntelligence,
-  );
+  return useDemoSection(demoBloodPanels);
 }
 
 export function useCampRanking() {
-  return useCampSection<ApiCampDashboardRanking, RankingSummary | null>('ranking', mapCampRanking);
+  return useDemoSection(demoRanking);
 }

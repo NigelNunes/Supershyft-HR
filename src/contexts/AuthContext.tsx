@@ -1,5 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { authApi, usersApi } from '../services/api';
+import {
+  DEMO_MODE,
+  DEMO_PHONE,
+  DEMO_REFRESH_TOKEN,
+  DEMO_TOKEN,
+  isDemoCredentials,
+} from '../config/demo';
 import type { ApiCurrentUser } from '../services/apiTypes';
 
 interface AuthContextValue {
@@ -7,6 +13,7 @@ interface AuthContextValue {
   accessToken: string | null;
   user: ApiCurrentUser | null;
   userLoading: boolean;
+  isDemoSession: boolean;
   login: (phone: string, otp: string) => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
 }
@@ -15,55 +22,38 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 const AUTH_KEY = 'hr-dashboard-auth';
 const TOKEN_KEY = 'hr-dashboard-token';
 const REFRESH_TOKEN_KEY = 'hr-dashboard-refresh-token';
-
-function readStoredToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return sessionStorage.getItem(TOKEN_KEY);
-}
-
-function readStoredRefreshToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return sessionStorage.getItem(REFRESH_TOKEN_KEY);
-}
-
-function storeTokens(accessToken: string, refreshToken: string) {
-  sessionStorage.setItem(TOKEN_KEY, accessToken);
-  sessionStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-}
+const DEMO_SESSION_KEY = 'hr-dashboard-demo-session';
 
 function clearStoredAuth() {
   sessionStorage.removeItem(AUTH_KEY);
   sessionStorage.removeItem(TOKEN_KEY);
   sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+  sessionStorage.removeItem(DEMO_SESSION_KEY);
 }
+
+const DEMO_USER: ApiCurrentUser = {
+  user_id: 1,
+  first_name: 'Demo',
+  last_name: 'HR',
+  phone: DEMO_PHONE,
+  email: 'hr@abc.demo',
+  employee: {
+    employee_id: 1,
+    role: 'hr_admin',
+  },
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     if (typeof window === 'undefined') return false;
-    return sessionStorage.getItem(AUTH_KEY) === '1';
+    return DEMO_MODE && sessionStorage.getItem(AUTH_KEY) === '1';
   });
-  const [accessToken, setAccessToken] = useState<string | null>(() => readStoredToken());
+  const [accessToken, setAccessToken] = useState<string | null>(() => {
+    if (typeof window === 'undefined' || !DEMO_MODE) return null;
+    return sessionStorage.getItem(TOKEN_KEY) === DEMO_TOKEN ? DEMO_TOKEN : null;
+  });
   const [user, setUser] = useState<ApiCurrentUser | null>(null);
   const [userLoading, setUserLoading] = useState(false);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setAccessToken(null);
-      setUser(null);
-      setUserLoading(false);
-      return;
-    }
-    const stored = readStoredToken();
-    if (stored) {
-      setAccessToken(stored);
-      return;
-    }
-    const devToken = import.meta.env.VITE_API_ACCESS_TOKEN as string | undefined;
-    if (devToken) {
-      sessionStorage.setItem(TOKEN_KEY, devToken);
-      setAccessToken(devToken);
-    }
-  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!isAuthenticated || !accessToken) {
@@ -71,61 +61,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserLoading(false);
       return;
     }
-
-    let cancelled = false;
-    setUserLoading(true);
-
-    usersApi
-      .me(accessToken)
-      .then((profile) => {
-        if (!cancelled) {
-          setUser(profile);
-          setUserLoading(false);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setUser(null);
-          setUserLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
+    setUser(DEMO_USER);
+    setUserLoading(false);
   }, [isAuthenticated, accessToken]);
 
   const login = useCallback(async (phone: string, otp: string) => {
-    try {
-      const { tokens } = await authApi.verifyOtp(phone.replace(/\D/g, ''), otp);
-
-      sessionStorage.setItem(AUTH_KEY, '1');
-      storeTokens(tokens.access_token, tokens.refresh_token);
-      setAccessToken(tokens.access_token);
-      setIsAuthenticated(true);
-      return { ok: true };
-    } catch (err) {
+    if (!isDemoCredentials(phone, otp)) {
       return {
         ok: false,
-        error: err instanceof Error ? err.message : 'Verification failed',
+        error: `Use demo credentials: ${DEMO_PHONE} / 0000`,
       };
     }
+
+    sessionStorage.setItem(AUTH_KEY, '1');
+    sessionStorage.setItem(DEMO_SESSION_KEY, '1');
+    sessionStorage.setItem(TOKEN_KEY, DEMO_TOKEN);
+    sessionStorage.setItem(REFRESH_TOKEN_KEY, DEMO_REFRESH_TOKEN);
+    setAccessToken(DEMO_TOKEN);
+    setUser(DEMO_USER);
+    setIsAuthenticated(true);
+    return { ok: true };
   }, []);
 
   const logout = useCallback(() => {
-    const refreshToken = readStoredRefreshToken();
     clearStoredAuth();
     setAccessToken(null);
     setUser(null);
     setUserLoading(false);
     setIsAuthenticated(false);
-    if (refreshToken) {
-      void authApi.logout(refreshToken).catch(() => undefined);
-    }
   }, []);
 
   const value = useMemo(
-    () => ({ isAuthenticated, accessToken, user, userLoading, login, logout }),
+    () => ({
+      isAuthenticated,
+      accessToken,
+      user,
+      userLoading,
+      isDemoSession: DEMO_MODE && isAuthenticated,
+      login,
+      logout,
+    }),
     [isAuthenticated, accessToken, user, userLoading, login, logout],
   );
 

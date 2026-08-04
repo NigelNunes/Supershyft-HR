@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { LoginLayout } from '../components/auth/LoginLayout';
+import { DEMO_PHONE, isDemoPhone } from '../config/demo';
 import { useAuth } from '../contexts/AuthContext';
 import { useCamp } from '../contexts/CampContext';
-import { authApi } from '../services/api';
 import './LoginPage.css';
 
 export function LoginPage() {
@@ -15,7 +15,7 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   if (isAuthenticated) {
-    return <Navigate to={selectedCampNo ? '/' : '/login/select-camp'} replace />;
+    return <Navigate to={selectedCampNo ? '/' : '/'} replace />;
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -25,16 +25,14 @@ export function LoginPage() {
       setError('Enter a valid 10-digit mobile number.');
       return;
     }
+    if (!isDemoPhone(normalized)) {
+      setError(`Demo login only. Use ${DEMO_PHONE}`);
+      return;
+    }
     setLoading(true);
     setError('');
-    try {
-      await authApi.sendOtp(normalized);
-      navigate('/login/verify', { state: { phone: normalized } });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send OTP');
-    } finally {
-      setLoading(false);
-    }
+    navigate('/login/verify', { state: { phone: normalized } });
+    setLoading(false);
   };
 
   return (
@@ -52,7 +50,7 @@ export function LoginPage() {
               setPhone(digits);
               setError('');
             }}
-            placeholder="10-digit mobile"
+            placeholder={DEMO_PHONE}
             autoComplete="tel"
             maxLength={10}
             required
@@ -60,7 +58,7 @@ export function LoginPage() {
         </label>
         {error && <p className="login-form__error" role="alert">{error}</p>}
         <button type="submit" disabled={loading}>
-          {loading ? 'Sending…' : 'Send OTP'}
+          {loading ? 'Continuing…' : 'Continue'}
         </button>
       </form>
     </LoginLayout>

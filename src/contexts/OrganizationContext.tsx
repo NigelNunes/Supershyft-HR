@@ -1,18 +1,10 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react';
-import { organizationsApi } from '../services/api';
+import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import abcLogo from '../assets/abc-logo.svg';
+import { DEMO_MODE, DEMO_ORG_ID, DEMO_ORG_NAME } from '../config/demo';
+import { DEPARTMENTS } from '../data/participantPool';
 import type { ApiMyOrganization, ApiOrganizationDepartment } from '../services/apiTypes';
 import { useAuth } from './AuthContext';
 import { useCamp } from './CampContext';
-
-const API_BASE =
-  import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '';
 
 interface OrganizationContextValue {
   activeOrganization: ApiMyOrganization | null;
@@ -24,14 +16,6 @@ interface OrganizationContextValue {
 }
 
 const OrganizationContext = createContext<OrganizationContextValue | null>(null);
-
-export function resolveOrganizationLogoUrl(logo: string | null | undefined): string | null {
-  const trimmed = logo?.trim();
-  if (!trimmed) return null;
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
-  if (!API_BASE) return trimmed;
-  return `${API_BASE.replace(/\/$/, '')}/${trimmed.replace(/^\//, '')}`;
-}
 
 function slugifyDepartmentName(name: string): string {
   return name
@@ -71,58 +55,60 @@ export function normalizeOrganizationDepartments(
   return result;
 }
 
+export function resolveOrganizationLogoUrl(logo: string | null | undefined): string | null {
+  const trimmed = logo?.trim();
+  if (!trimmed) return null;
+  if (
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('/')
+  ) {
+    return trimmed;
+  }
+  return trimmed;
+}
+
+const DEMO_ORGANIZATION: ApiMyOrganization = {
+  organization_id: DEMO_ORG_ID,
+  name: DEMO_ORG_NAME,
+  organization_type: 'corporate',
+  logo: abcLogo,
+  city: 'Mumbai',
+  state: 'Maharashtra',
+  country: 'India',
+  departments: DEPARTMENTS.map((department) => ({
+    department,
+    slug: slugifyDepartmentName(department),
+  })),
+  status: 'active',
+};
+
 export function OrganizationProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated, accessToken } = useAuth();
-  const { selectedCampOrganizationId, selectedCampOrganizationName } = useCamp();
-  const [activeOrganization, setActiveOrganization] = useState<ApiMyOrganization | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!isAuthenticated || !accessToken || selectedCampOrganizationId == null) {
-      setActiveOrganization(null);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
-    const organizationId = selectedCampOrganizationId;
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-
-    organizationsApi
-      .getForSelectedCamp(organizationId, accessToken)
-      .then((organization) => {
-        if (cancelled) return;
-        setActiveOrganization(organization);
-        setLoading(false);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setActiveOrganization(null);
-        setError(err instanceof Error ? err.message : 'Failed to load organization');
-        setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isAuthenticated, accessToken, selectedCampOrganizationId]);
+  const { isAuthenticated } = useAuth();
+  const { selectedCampOrganizationName } = useCamp();
 
   const value = useMemo<OrganizationContextValue>(() => {
-    const organizationName =
-      activeOrganization?.name ?? selectedCampOrganizationName ?? 'Organization';
+    if (!DEMO_MODE || !isAuthenticated) {
+      return {
+        activeOrganization: null,
+        organizationName: selectedCampOrganizationName ?? 'Organization',
+        organizationLogo: null,
+        departments: [],
+        loading: false,
+        error: null,
+      };
+    }
 
     return {
-      activeOrganization,
-      organizationName,
-      organizationLogo: resolveOrganizationLogoUrl(activeOrganization?.logo),
-      departments: normalizeOrganizationDepartments(activeOrganization?.departments),
-      loading,
-      error,
+      activeOrganization: DEMO_ORGANIZATION,
+      organizationName: DEMO_ORG_NAME,
+      organizationLogo: abcLogo,
+      departments: normalizeOrganizationDepartments(DEMO_ORGANIZATION.departments),
+      loading: false,
+      error: null,
     };
-  }, [activeOrganization, selectedCampOrganizationName, loading, error]);
+  }, [isAuthenticated, selectedCampOrganizationName]);
 
   return <OrganizationContext.Provider value={value}>{children}</OrganizationContext.Provider>;
 }

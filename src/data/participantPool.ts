@@ -258,31 +258,14 @@ function buildParticipant(index: number): CampParticipant {
             ? 'high'
             : 'veryHigh';
 
-  const maleNames = [
-    ['Arjun', 'Mehta'],
-    ['Rahul', 'Kapoor'],
-    ['Vikram', 'Singh'],
-    ['Karan', 'Desai'],
-    ['Rohan', 'Gupta'],
-    ['Aditya', 'Nair'],
-  ];
-  const femaleNames = [
-    ['Priya', 'Sharma'],
-    ['Ananya', 'Iyer'],
-    ['Neha', 'Patel'],
-    ['Sneha', 'Reddy'],
-    ['Kavya', 'Joshi'],
-    ['Divya', 'Menon'],
-  ];
-  const namePool = gender === 'Male' ? maleNames : femaleNames;
-  const [first, last] = namePool[index % namePool.length];
-  const suffix = index >= namePool.length ? ` ${index}` : '';
+  const employeeNo = String(index + 1).padStart(3, '0');
+  const displayName = `employee${employeeNo}`;
 
   return {
-    id: `emp-${index + 1}`,
-    name: `${first} ${last}${suffix}`,
+    id: `emp-${employeeNo}`,
+    name: displayName,
     phone: `98${String(10000000 + index * 111111).slice(0, 8)}`,
-    email: `${first.toLowerCase()}.${last.toLowerCase()}${index}@company.com`,
+    email: `${displayName}@abc.demo`,
     bloodGroup: pick(['O+', 'A+', 'B+', 'AB+', 'O-', 'B-'], rand),
     department: dept,
     gender,
@@ -319,10 +302,10 @@ function buildParticipant(index: number): CampParticipant {
   };
 }
 
-/** Representative enrolled camp cohort (scaled to org KPIs in aggregateHrDashboard). */
+/** Representative enrolled camp cohort (demo KPIs use this length directly — SCALE = 1). */
 export const CAMP_PARTICIPANTS: CampParticipant[] = Array.from({ length: 362 }, (_, i) =>
   buildParticipant(i),
 );
 
-export const ORG_HEADCOUNT = 1240;
-export const DISPLAY_ENROLLED = 1086;
+export const DISPLAY_ENROLLED = CAMP_PARTICIPANTS.length;
+export const ORG_HEADCOUNT = Math.round(DISPLAY_ENROLLED / 0.875);
