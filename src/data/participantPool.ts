@@ -19,18 +19,21 @@ export const DEPARTMENTS = [
   'Supply Chain',
 ] as const;
 
-/** Demo headcounts — varied by typical corp mix; must sum to cohort size (362). */
+/**
+ * Demo headcounts — varied by typical corp mix.
+ * Must sum to the canonical 2026 enrolled total (1120) so dept KPIs match the dashboard.
+ */
 export const DEPARTMENT_HEADCOUNTS: Record<(typeof DEPARTMENTS)[number], number> = {
-  Technology: 72,
-  'R&D': 48,
-  Sales: 55,
-  Operations: 58,
-  Finance: 28,
-  HR: 18,
-  Marketing: 32,
-  Legal: 14,
-  'Customer Success': 22,
-  'Supply Chain': 15,
+  Technology: 224,
+  'R&D': 148,
+  Sales: 170,
+  Operations: 179,
+  Finance: 87,
+  HR: 56,
+  Marketing: 99,
+  Legal: 43,
+  'Customer Success': 68,
+  'Supply Chain': 46,
 };
 
 export function departmentSlug(name: string): string {
@@ -107,6 +110,8 @@ export interface CampParticipant {
   oxidativeBand: 'low' | 'moderate' | 'high' | 'veryHigh';
   bloodTestDone: boolean;
   doctorConsultation: boolean;
+  /** Explicit bio-AI completion — calibrated to match dashboard bio-AI KPI. */
+  bioAiDone: boolean;
 }
 
 function seeded(seed: number) {
@@ -218,11 +223,40 @@ export function sleepBucketFromApi(label: string | null | undefined): SleepBucke
   return '5-7';
 }
 
+/** Canonical 2026 age-band quotas — must match DUMMY_ALL_YEARS_AGE_PARTICIPATION. */
+const AGE_BAND_QUOTAS_2026: { group: (typeof AGE_GROUPS)[number]; count: number; min: number; max: number }[] = [
+  { group: '18–25', count: 134, min: 18, max: 25 },
+  { group: '26–35', count: 246, min: 26, max: 35 },
+  { group: '36–45', count: 381, min: 36, max: 45 },
+  { group: '46–55', count: 224, min: 46, max: 55 },
+  { group: '55+', count: 135, min: 56, max: 64 },
+];
+
+/** KPI targets aligned with YEAR_KPI_CORE / getDummyYearKpis(2026). */
+export const COHORT_2026_TARGETS = {
+  enrolled: 1120,
+  male: 605,
+  female: 515,
+  bloodTests: 1053,
+  bioAiReports: 952,
+  doctorConsultations: 538,
+  /** Overall-risk "High risk" band — matches KPI highRiskGroup. */
+  overallHighRisk: 56,
+  overallIncreased: 224,
+  overallLow: 560,
+  overallOptimal: 280,
+  /** Metabolic age gap bands (good / attention / high). */
+  metabolicGood: 504,
+  metabolicAttention: 448,
+  metabolicHigh: 168,
+} as const;
+
 function buildParticipant(index: number): CampParticipant {
   const rand = seeded(1000 + index * 53);
   const dept = DEPARTMENT_ASSIGNMENTS[index] ?? DEPARTMENTS[index % DEPARTMENTS.length];
   const gender = genderForIndex(index);
-  const age = Math.round(22 + rand() * 33);
+  // Placeholder age — overwritten by calibrateCohortTo2026.
+  const age = Math.round(28 + rand() * 25);
   const chronologicalAge = age;
   const deptRisk = dept === 'Sales' || dept === 'R&D' ? 'elevated' : dept === 'HR' || dept === 'Finance' ? 'healthy' : 'mixed';
   const profile = rand() < 0.22 ? 'elevated' : rand() < 0.55 ? 'mixed' : deptRisk === 'elevated' ? 'mixed' : 'healthy';
@@ -326,13 +360,126 @@ function buildParticipant(index: number): CampParticipant {
     oxidativeBand,
     bloodTestDone: rand() > 0.06,
     doctorConsultation: gapYears >= 3 ? rand() > 0.35 : rand() > 0.78,
+    bioAiDone: false,
   };
 }
 
-/** Representative enrolled camp cohort (demo KPIs use this length directly — SCALE = 1). */
-export const CAMP_PARTICIPANTS: CampParticipant[] = Array.from(
-  { length: DEPARTMENT_ASSIGNMENTS.length },
-  (_, i) => buildParticipant(i),
+function shuffleIndices(length: number, seed: number): number[] {
+  const rand = seeded(seed);
+  const idx = Array.from({ length }, (_, i) => i);
+  for (let i = idx.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rand() * (i + 1));
+    [idx[i], idx[j]] = [idx[j], idx[i]];
+  }
+  return idx;
+}
+
+/**
+ * Forces pool aggregates to match dashboard 2026 KPIs / charts exactly
+ * (enrolled, gender, age bands, blood, doctor, metabolic, overall risk).
+ */
+function calibrateCohortTo2026(raw: CampParticipant[]): CampParticipant[] {
+  const participants = raw.map((p) => ({ ...p, overview: { ...p.overview }, healthSpan: { ...p.healthSpan } }));
+  const n = participants.length;
+  const t = COHORT_2026_TARGETS;
+  if (n !== t.enrolled) {
+    throw new Error(`Cohort size ${n} !== ${t.enrolled}; check DEPARTMENT_HEADCOUNTS`);
+  }
+
+  // Ages — exact band quotas
+  const ages: number[] = [];
+  const ageRand = seeded(42_001);
+  for (const band of AGE_BAND_QUOTAS_2026) {
+    for (let i = 0; i < band.count; i += 1) {
+      ages.push(band.min + Math.floor(ageRand() * (band.max - band.min + 1)));
+    }
+  }
+  const ageOrder = shuffleIndices(n, 42_002);
+  ageOrder.forEach((pi, ai) => {
+    const age = ages[ai]!;
+    participants[pi]!.age = age;
+    participants[pi]!.chronologicalAge = age;
+    participants[pi]!.ageGroup = ageToGroup(age);
+  });
+
+  // Gender — exact 605 / 515
+  const genderOrder = shuffleIndices(n, 42_003);
+  genderOrder.forEach((pi, gi) => {
+    participants[pi]!.gender = gi < t.male ? 'Male' : 'Female';
+  });
+
+  // Blood + doctor + bio-AI flags (doctor ⊆ blood ⊆ bio requires blood)
+  participants.forEach((p) => {
+    p.bloodTestDone = false;
+    p.doctorConsultation = false;
+    p.bioAiDone = false;
+  });
+  const flagOrder = shuffleIndices(n, 42_004);
+  for (let i = 0; i < t.bloodTests; i += 1) {
+    participants[flagOrder[i]!]!.bloodTestDone = true;
+  }
+  for (let i = 0; i < t.doctorConsultations; i += 1) {
+    participants[flagOrder[i]!]!.doctorConsultation = true;
+    participants[flagOrder[i]!]!.bloodTestDone = true;
+  }
+  for (let i = 0; i < t.bioAiReports; i += 1) {
+    participants[flagOrder[i]!]!.bioAiDone = true;
+    participants[flagOrder[i]!]!.bloodTestDone = true;
+  }
+
+  // Metabolic gap bands → good / attention / highRisk chart
+  const metOrder = shuffleIndices(n, 42_005);
+  metOrder.forEach((pi, mi) => {
+    const p = participants[pi]!;
+    let gap: number;
+    if (mi < t.metabolicHigh) gap = 3.2 + (mi % 20) * 0.12;
+    else if (mi < t.metabolicHigh + t.metabolicAttention) gap = 2.05 + (mi % 15) * 0.05;
+    else gap = (mi % 18) * 0.1;
+    p.overview = {
+      ...p.overview,
+      metabolic_age: Math.round((p.chronologicalAge + gap) * 10) / 10,
+    };
+  });
+
+  // Overall risk bands via disease score calibration (matches overall-risk chart + highRiskGroup)
+  const riskOrder = shuffleIndices(n, 42_006);
+  const bandTargets: { band: 'Optimal' | 'Low risk' | 'Increased Risk' | 'High risk'; count: number; score: number }[] = [
+    { band: 'High risk', count: t.overallHighRisk, score: 72 },
+    { band: 'Increased Risk', count: t.overallIncreased, score: 50 },
+    { band: 'Low risk', count: t.overallLow, score: 34 },
+    { band: 'Optimal', count: t.overallOptimal, score: 18 },
+  ];
+  let cursor = 0;
+  for (const target of bandTargets) {
+    for (let i = 0; i < target.count; i += 1) {
+      const p = participants[riskOrder[cursor]!]!;
+      cursor += 1;
+      p.overview = {
+        ...p.overview,
+        risk_analysis: p.overview.risk_analysis.map((d) => ({
+          ...d,
+          risk_score_scaled: target.score,
+          risk_status:
+            target.score >= 68 ? 'High' : target.score >= 48 ? 'Increased' : target.score >= 30 ? 'Moderate' : 'Healthy',
+        })),
+      };
+      // Keep lifestyle scores mid so composite ≈ diseaseAvg*0.5 + gap*0.3*22 + mid*0.2
+      const mid = target.band === 'Optimal' ? 4.2 : target.band === 'Low risk' ? 3.5 : target.band === 'Increased Risk' ? 2.8 : 2.2;
+      p.healthSpan = {
+        ...p.healthSpan,
+        nutrition_score: mid,
+        fitness_score: mid,
+        lifestyle_score: mid,
+      };
+    }
+  }
+
+  return participants;
+}
+
+/** Representative 2026 enrolled camp cohort — KPIs/charts/employees all read from this. */
+export const CAMP_PARTICIPANTS: CampParticipant[] = calibrateCohortTo2026(
+  Array.from({ length: DEPARTMENT_ASSIGNMENTS.length }, (_, i) => buildParticipant(i)),
 );
 
 export const DISPLAY_ENROLLED = CAMP_PARTICIPANTS.length;

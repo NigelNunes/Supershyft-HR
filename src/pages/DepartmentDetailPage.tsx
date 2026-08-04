@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { getDepartmentDetail } from '../data/mockDashboard';
+import { DISPLAY_ENROLLED } from '../data/participantPool';
 import {
   getDummyYearCompanyScores,
   getDummyYearMetabolicAge,
@@ -26,7 +27,6 @@ import './DepartmentDetailPage.css';
 
 const EMPTY_GENDER_DISTRIBUTION: GenderDistributionPair = { male: [], female: [] };
 
-/** Scale company-year enrolled down to this department's share of the org. */
 const YEAR_ENROLLED = { 2024: 620, 2025: 900, 2026: 1120 } as const;
 
 function DepartmentDetailPageContent({
@@ -43,37 +43,38 @@ function DepartmentDetailPageContent({
 
   const yearView = useMemo(() => {
     if (!campYear) return null;
-    const baseEnrolled = YEAR_ENROLLED[2026];
-    const yearEnrolled = YEAR_ENROLLED[campYear];
-    const deptShare = detail.kpis.employeesEnrolled / baseEnrolled;
-    const scale = (n: number) => Math.max(0, Math.round(n * deptShare * (yearEnrolled / baseEnrolled)));
+    // Share of org (for chart slices) + year ratio (for KPI headcounts).
+    const deptShare = detail.kpis.employeesEnrolled / DISPLAY_ENROLLED;
+    const yearRatio = YEAR_ENROLLED[campYear] / YEAR_ENROLLED[2026];
+    const scaleKpi = (n: number) => Math.max(0, Math.round(n * yearRatio));
+    const scaleChart = (n: number) => Math.max(0, Math.round(n * deptShare));
 
     const companyKpisYear = {
-      employeesEnrolled: scale(detail.kpis.employeesEnrolled),
-      maleEnrolled: scale(detail.kpis.maleEnrolled ?? 0),
-      femaleEnrolled: scale(detail.kpis.femaleEnrolled ?? 0),
-      totalBloodTest: scale(detail.kpis.totalBloodTest),
+      employeesEnrolled: scaleKpi(detail.kpis.employeesEnrolled),
+      maleEnrolled: scaleKpi(detail.kpis.maleEnrolled ?? 0),
+      femaleEnrolled: scaleKpi(detail.kpis.femaleEnrolled ?? 0),
+      totalBloodTest: scaleKpi(detail.kpis.totalBloodTest),
       bloodTestPercent: detail.kpis.bloodTestPercent,
-      totalBioAiReports: scale(detail.kpis.totalBioAiReports ?? 0),
+      totalBioAiReports: scaleKpi(detail.kpis.totalBioAiReports ?? 0),
       bioAiPercent: detail.kpis.bioAiPercent,
-      doctorConsultation: scale(detail.kpis.doctorConsultation),
-      nutritionistConsultation: scale(detail.kpis.nutritionistConsultation),
-      highRiskGroup: scale(detail.kpis.highRiskGroup),
+      doctorConsultation: scaleKpi(detail.kpis.doctorConsultation),
+      nutritionistConsultation: scaleKpi(detail.kpis.nutritionistConsultation),
+      highRiskGroup: scaleKpi(detail.kpis.highRiskGroup),
     } satisfies KpiSummary;
 
     const participation = getDummyYearParticipationByAge(campYear).map((row) => ({
       ...row,
-      enrolled: scale(row.enrolled),
+      enrolled: scaleChart(row.enrolled),
     }));
 
     const overallRisk = getDummyYearOverallRisk(campYear).map((row) => ({
       ...row,
-      count: scale(row.count),
+      count: scaleChart(row.count),
     }));
 
     const metabolic = getDummyYearMetabolicAge(campYear).map((row) => ({
       ...row,
-      count: scale(row.count),
+      count: scaleChart(row.count),
     }));
 
     const physical = getDummyYearPhysicalActivity(campYear);
@@ -120,7 +121,7 @@ function DepartmentDetailPageContent({
             kpis={kpis}
             ranking={null}
             showRanking={false}
-            selectedYear={selectedYear}
+            selectedYear={selectedYear === 'all' ? '2026' : selectedYear}
           />
           <MetabolicAgeDistributionCard
             categories={yearView?.metabolic ?? detail.metabolicAgeCategories}

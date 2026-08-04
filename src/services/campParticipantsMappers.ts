@@ -72,7 +72,7 @@ export function buildTemporaryJourney(seed: string): EmployeeRecord['journey'] {
  */
 export function buildAlignedJourney(
   seed: string,
-  flags: { bloodTestDone: boolean; doctorConsultation: boolean },
+  flags: { bloodTestDone: boolean; doctorConsultation: boolean; bioAiDone?: boolean },
 ): EmployeeRecord['journey'] {
   const journey = buildTemporaryJourney(seed);
 
@@ -95,21 +95,25 @@ export function buildAlignedJourney(
     return journey;
   }
 
-  if (flags.doctorConsultation) {
+  const bioAiExplicit = flags.bioAiDone;
+  if (bioAiExplicit === true) {
     journey.bioAiReport = 'completed';
     journey.bioAiShared = hashUnit(`${seed}:bioAiShared`) < 0.7 ? 'completed' : 'in_progress';
-    journey.consultations = 'completed';
+  } else if (bioAiExplicit === false) {
+    journey.bioAiReport = 'in_progress';
+    journey.bioAiShared = 'pending';
+  } else if (flags.doctorConsultation) {
+    journey.bioAiReport = 'completed';
+    journey.bioAiShared = hashUnit(`${seed}:bioAiShared`) < 0.7 ? 'completed' : 'in_progress';
+  } else if (hashUnit(`${seed}:bioAiReport`) < 0.55) {
+    journey.bioAiReport = 'completed';
+    journey.bioAiShared = hashUnit(`${seed}:bioAiShared`) < 0.4 ? 'completed' : 'pending';
   } else {
-    // Blood done but no doctor consult yet — bio-AI may be ready, consult pending.
-    if (hashUnit(`${seed}:bioAiReport`) < 0.55) {
-      journey.bioAiReport = 'completed';
-      journey.bioAiShared = hashUnit(`${seed}:bioAiShared`) < 0.4 ? 'completed' : 'pending';
-    } else {
-      journey.bioAiReport = 'in_progress';
-      journey.bioAiShared = 'pending';
-    }
-    journey.consultations = 'pending';
+    journey.bioAiReport = 'in_progress';
+    journey.bioAiShared = 'pending';
   }
+
+  journey.consultations = flags.doctorConsultation ? 'completed' : 'pending';
 
   return journey;
 }

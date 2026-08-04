@@ -15,8 +15,10 @@ import {
   X,
 } from 'lucide-react';
 import { useCampParticipants } from '../hooks/useCampParticipants';
-import { useCampKpis } from '../hooks/useCampDashboard';
 import { useOrganization } from '../contexts/OrganizationContext';
+import { getDummyYearKpis } from '../data/dummyAllYearsMetrics';
+import { getDepartmentDetail } from '../data/mockDashboard';
+import { departmentSlug } from '../data/participantPool';
 import type { EmployeeRecord, JourneyStepId, JourneyStepStatus } from '../types';
 import anthropometryIconUrl from '../assets/icons/journey-anthropometry.png';
 import vitalsIconUrl from '../assets/icons/journey-vitals.png';
@@ -172,7 +174,6 @@ function HeaderStepIcon({
 
 export function EmployeesPage() {
   const { employees, loading, error } = useCampParticipants();
-  const { data: kpis, loading: kpisLoading } = useCampKpis();
   const { departments } = useOrganization();
   const [query, setQuery] = useState('');
   const [department, setDepartment] = useState<string>('all');
@@ -189,6 +190,17 @@ export function EmployeesPage() {
     const fromEmployees = [...new Set(employees.map((e) => e.department).filter((d) => d && d !== '—'))];
     return [...new Set([...fromOrg, ...fromEmployees])].sort((a, b) => a.localeCompare(b));
   }, [departments, employees]);
+
+  /** Department scope for KPI cards (ignores search / step filters). */
+  const departmentEmployees = useMemo(() => {
+    if (department === 'all') return employees;
+    return employees.filter((e) => e.department === department);
+  }, [employees, department]);
+
+  const scopedKpis = useMemo(() => {
+    if (department === 'all') return getDummyYearKpis(2026);
+    return getDepartmentDetail(departmentSlug(department))?.kpis ?? null;
+  }, [department]);
 
   const filtered = useMemo(() => {
     return employees.filter((employee) => {
@@ -209,25 +221,24 @@ export function EmployeesPage() {
   const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const summary = useMemo(() => {
-    // Prefer shared dashboard KPIs so Doctor/Nutritionist (and other cards) match exactly.
-    const bloodDone = kpis?.totalBloodTest ?? countByStatus(employees, 'bloodReport', 'completed');
+    const bloodDone =
+      scopedKpis?.totalBloodTest ?? countByStatus(departmentEmployees, 'bloodReport', 'completed');
     const bioDone =
-      kpis?.totalBioAiReports ?? countByStatus(employees, 'bioAiReport', 'completed');
+      scopedKpis?.totalBioAiReports ??
+      countByStatus(departmentEmployees, 'bioAiReport', 'completed');
     const consultDoctor =
-      kpis?.doctorConsultation ?? countByStatus(employees, 'consultations', 'completed');
+      scopedKpis?.doctorConsultation ??
+      countByStatus(departmentEmployees, 'consultations', 'completed');
     const consultNutritionist =
-      kpis?.nutritionistConsultation ?? Math.round(consultDoctor * 0.75);
+      scopedKpis?.nutritionistConsultation ?? Math.round(consultDoctor * 0.75);
 
-    const qDone = countByStatus(employees, 'dietLifestyle', 'completed');
+    const qDone = countByStatus(departmentEmployees, 'dietLifestyle', 'completed');
     const qPending =
-      countByStatus(employees, 'dietLifestyle', 'pending') +
-      countByStatus(employees, 'dietLifestyle', 'in_progress');
+      countByStatus(departmentEmployees, 'dietLifestyle', 'pending') +
+      countByStatus(departmentEmployees, 'dietLifestyle', 'in_progress');
 
-    const enrolled = kpis?.employeesEnrolled ?? employees.length;
-    const bloodPending = Math.max(
-      0,
-      enrolled - bloodDone,
-    );
+    const enrolled = scopedKpis?.employeesEnrolled ?? departmentEmployees.length;
+    const bloodPending = Math.max(0, enrolled - bloodDone);
     const bioPending = Math.max(0, enrolled - bioDone);
     const consultPending = Math.max(0, enrolled - consultDoctor);
 
@@ -242,9 +253,9 @@ export function EmployeesPage() {
       consultNutritionist,
       consultPending,
     };
-  }, [employees, kpis]);
+  }, [departmentEmployees, scopedKpis]);
 
-  const summaryLoading = loading || kpisLoading;
+  const summaryLoading = loading;
 
   const handleRefresh = () => {
     setRefreshing(true);

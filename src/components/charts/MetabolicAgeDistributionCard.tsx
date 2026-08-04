@@ -15,11 +15,11 @@ export interface MetabolicAgeCategory {
   percent: number;
 }
 
-/** Temporary dummy data until metabolic-age API is wired. */
+/** Fallback = 2026 metabolic mix (matches getDummyYearMetabolicAge(2026)). */
 export const DUMMY_METABOLIC_AGE_CATEGORIES: MetabolicAgeCategory[] = [
-  { key: 'good', label: 'GOOD', count: 132, percent: 68 },
-  { key: 'attention', label: 'NEEDS ATTENTION', count: 69, percent: 27 },
-  { key: 'highRisk', label: 'HIGH RISK', count: 23, percent: 15 },
+  { key: 'good', label: 'GOOD', count: 504, percent: 45 },
+  { key: 'attention', label: 'NEEDS ATTENTION', count: 448, percent: 40 },
+  { key: 'highRisk', label: 'HIGH RISK', count: 168, percent: 15 },
 ];
 
 interface MetabolicAgeDistributionCardProps {

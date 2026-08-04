@@ -40,7 +40,6 @@ import {
 import { DISEASES } from './diseases';
 import {
   buildAlignedJourney,
-  temporaryAge,
 } from '../services/campParticipantsMappers';
 
 const GENDER_KEYS = ['Male', 'Female'];
@@ -62,6 +61,10 @@ function isHighMetabolicRisk(p: CampParticipant): boolean {
   return metabolicGapYears(p) >= 3;
 }
 
+function isOverallHighRisk(p: CampParticipant): boolean {
+  return overallRiskBandFromScore(compositeRiskScore(p)) === 'High risk';
+}
+
 function avg(nums: number[]): number {
   if (!nums.length) return 0;
   return nums.reduce((a, b) => a + b, 0) / nums.length;
@@ -80,18 +83,8 @@ function overallRiskBandFromScore(score: number): OverallRiskScoreBucket['band']
 }
 
 function compositeRiskScore(p: CampParticipant): number {
-  const diseases = p.overview.risk_analysis;
-  const diseaseAvg = avg(diseases.map((d) => d.risk_score_scaled));
-  const gap = metabolicGapYears(p);
-  const gapScore = Math.min(100, gap * 22);
-  const hs = p.healthSpan;
-  const spanAvg =
-    avg(
-      [hs.nutrition_score, hs.fitness_score, hs.lifestyle_score].filter(
-        (v): v is number => v != null,
-      ).map((s) => (5 - s) * 20),
-    ) || 40;
-  return diseaseAvg * 0.5 + gapScore * 0.3 + spanAvg * 0.2;
+  // Disease-led score so overall-risk bands can be calibrated independently of metabolic gap.
+  return avg(p.overview.risk_analysis.map((d) => d.risk_score_scaled));
 }
 
 function buildMetabolicAge(participants: CampParticipant[]): MetabolicAgeSummary {
@@ -612,7 +605,7 @@ export function buildDashboardData(participants: CampParticipant[] = CAMP_PARTIC
   const enrolled = participants.length;
   const bloodTests = participants.filter((p) => p.bloodTestDone).length;
   const doctorConsults = participants.filter((p) => p.doctorConsultation).length;
-  const highRisk = participants.filter(isHighMetabolicRisk).length;
+  const highRisk = participants.filter(isOverallHighRisk).length;
 
   const companyScores = buildCompanyScores(participants);
 
@@ -627,10 +620,11 @@ export function buildDashboardData(participants: CampParticipant[] = CAMP_PARTIC
     bloodGroup: p.bloodGroup,
     department: p.department,
     gender: p.gender,
-    age: temporaryAge(p.id),
+    age: p.age,
     journey: buildAlignedJourney(p.id, {
       bloodTestDone: p.bloodTestDone,
       doctorConsultation: p.doctorConsultation,
+      bioAiDone: p.bioAiDone,
     }),
   }));
 
@@ -640,32 +634,35 @@ export function buildDashboardData(participants: CampParticipant[] = CAMP_PARTIC
   const history: CampHistoryEntry[] = [
     {
       id: 'h1',
-      year: 2024,
-      label: 'Annual Wellness Camp 2024',
+      year: 2026,
+      label: 'Annual Wellness Camp 2026',
       participants: DISPLAY_ENROLLED,
       highRiskPercent: percent(highRisk, enrolled),
       enrolledPercent: Math.round((DISPLAY_ENROLLED / ORG_HEADCOUNT) * 100),
     },
     {
       id: 'h2',
-      year: 2023,
-      label: 'Annual Wellness Camp 2023',
-      participants: 942,
-      highRiskPercent: 28,
-      enrolledPercent: 76,
+      year: 2025,
+      label: 'Annual Wellness Camp 2025',
+      participants: 900,
+      highRiskPercent: 10,
+      enrolledPercent: 78,
     },
     {
       id: 'h3',
-      year: 2022,
-      label: 'Pilot Health Camp 2022',
-      participants: 410,
-      highRiskPercent: 31,
-      enrolledPercent: 62,
+      year: 2024,
+      label: 'Annual Wellness Camp 2024',
+      participants: 620,
+      highRiskPercent: 15,
+      enrolledPercent: 72,
     },
   ];
 
+  const maleEnrolled = participants.filter((p) => p.gender === 'Male').length;
+  const femaleEnrolled = participants.filter((p) => p.gender === 'Female').length;
+
   return {
-    org: { organizationId: 1, hasHistory: true, campYear: 2024 },
+    org: { organizationId: 1, hasHistory: true, campYear: 2026 },
     hr: {
       name: 'Demo HR',
       phone: '+91 00000 00000',
@@ -674,7 +671,13 @@ export function buildDashboardData(participants: CampParticipant[] = CAMP_PARTIC
     },
     kpis: {
       employeesEnrolled: DISPLAY_ENROLLED,
+      maleEnrolled,
+      femaleEnrolled,
       totalBloodTest: scaleCount(bloodTests),
+      bloodTestPercent:
+        DISPLAY_ENROLLED > 0
+          ? Math.round((scaleCount(bloodTests) / DISPLAY_ENROLLED) * 100)
+          : 0,
       totalBioAiReports: scaleCount(bioAiReports),
       bioAiPercent:
         DISPLAY_ENROLLED > 0
@@ -821,18 +824,7 @@ export function buildDepartmentDetail(
 
   const bloodTests = inDept.filter((p) => p.bloodTestDone).length;
   const doctorConsults = inDept.filter((p) => p.doctorConsultation).length;
-  /** Matches buildAlignedJourney bio-AI completion rules. */
-  const bioAi = inDept.filter((p) => {
-    if (!p.bloodTestDone) return false;
-    if (p.doctorConsultation) return true;
-    let h = 2166136261;
-    const seed = `${p.id}:bioAiReport`;
-    for (let i = 0; i < seed.length; i += 1) {
-      h ^= seed.charCodeAt(i);
-      h = Math.imul(h, 16777619);
-    }
-    return (h >>> 0) / 4294967295 < 0.55;
-  }).length;
+  const bioAi = inDept.filter((p) => p.bioAiDone).length;
 
   let metGood = 0;
   let metAttention = 0;
@@ -870,7 +862,7 @@ export function buildDepartmentDetail(
     bioAiPercent: percent(bioAi, inDept.length),
     doctorConsultation: doctorScaled,
     nutritionistConsultation: Math.round(doctorScaled * 0.75),
-    highRiskGroup: scaleDept(inDept.filter(isHighMetabolicRisk).length),
+    highRiskGroup: scaleDept(inDept.filter(isOverallHighRisk).length),
   };
 
   return {

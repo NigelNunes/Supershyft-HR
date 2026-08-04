@@ -436,13 +436,42 @@ function shiftSeries(
 ): AllYearsDiseaseGenderSeries {
   const clamp = (n: number) => Math.max(1, Math.min(90, Math.round(n)));
   const shift = (values: readonly [number, number, number], d: number) =>
-    [clamp(values[0] + d), clamp(values[1] + d), clamp(values[2] + d)] as const;
-  return {
+    [clamp(values[0] + d), clamp(values[1] + d), clamp(values[2] + d)] as [
+      number,
+      number,
+      number,
+    ];
+
+  const raw = {
     Healthy: shift(series.Healthy, delta),
     Increased: shift(series.Increased, -Math.round(delta / 2)),
     High: shift(series.High, -Math.round(delta / 3)),
     'Very High': shift(series['Very High'], -Math.round(delta / 4)),
   };
+
+  // Renormalize each year column so Healthy+Increased+High+Very High = 100.
+  const bands = ['Healthy', 'Increased', 'High', 'Very High'] as const;
+  const normalized = {
+    Healthy: [0, 0, 0] as [number, number, number],
+    Increased: [0, 0, 0] as [number, number, number],
+    High: [0, 0, 0] as [number, number, number],
+    'Very High': [0, 0, 0] as [number, number, number],
+  };
+  for (let yi = 0; yi < 3; yi += 1) {
+    const vals = bands.map((b) => raw[b][yi]);
+    const sum = vals.reduce((a, b) => a + b, 0) || 1;
+    let allocated = 0;
+    bands.forEach((b, bi) => {
+      if (bi === bands.length - 1) {
+        normalized[b][yi] = Math.max(1, 100 - allocated);
+      } else {
+        const n = Math.max(1, Math.round((vals[bi]! / sum) * 100));
+        normalized[b][yi] = n;
+        allocated += n;
+      }
+    });
+  }
+  return normalized;
 }
 
 export const DUMMY_ALL_YEARS_DISEASE_YEARS = [2024, 2025, 2026] as const;
@@ -500,56 +529,56 @@ export const DUMMY_ALL_YEARS_DISEASE_DEEP_DIVE: AllYearsDiseaseDeepDiveRow[] = [
 
 /**
  * TEMPORARY — Blood & lab in-range dots by year (All Years Camp Report).
- * 10 dots per year (2×5), lit from the bottom. Years match Figma: 2023–2025.
+ * 10 dots per year (2×5), lit from the bottom. Years: 2024–2026 (aligned with rest of app).
  */
 export const DUMMY_ALL_YEARS_BLOOD_PANELS = [
   {
     id: 'b12',
     name: 'Vitamin B12',
     years: [
-      { year: 2023, lit: 5 },
-      { year: 2024, lit: 7 },
-      { year: 2025, lit: 8 },
+      { year: 2024, lit: 5 },
+      { year: 2025, lit: 7 },
+      { year: 2026, lit: 8 },
     ],
     deltaPercent: 7,
   },
   {
     id: 'd3',
-    name: 'Vitamin D3',
+    name: 'Vitamin D',
     years: [
-      { year: 2023, lit: 5 },
       { year: 2024, lit: 5 },
-      { year: 2025, lit: 4 },
+      { year: 2025, lit: 5 },
+      { year: 2026, lit: 4 },
     ],
     deltaPercent: -6,
   },
   {
-    id: 'diabetes',
-    name: 'Diabetes',
+    id: 'hba1c',
+    name: 'HbA1c',
     years: [
-      { year: 2023, lit: 5 },
-      { year: 2024, lit: 7 },
-      { year: 2025, lit: 8 },
-    ],
-    deltaPercent: 7,
-  },
-  {
-    id: 'lipid',
-    name: 'Lipid',
-    years: [
-      { year: 2023, lit: 5 },
-      { year: 2024, lit: 7 },
-      { year: 2025, lit: 8 },
-    ],
-    deltaPercent: 7,
-  },
-  {
-    id: 'inflammatory',
-    name: 'Inflammatory',
-    years: [
-      { year: 2023, lit: 5 },
       { year: 2024, lit: 5 },
-      { year: 2025, lit: 4 },
+      { year: 2025, lit: 7 },
+      { year: 2026, lit: 8 },
+    ],
+    deltaPercent: 7,
+  },
+  {
+    id: 'ldl',
+    name: 'LDL Cholesterol',
+    years: [
+      { year: 2024, lit: 5 },
+      { year: 2025, lit: 7 },
+      { year: 2026, lit: 8 },
+    ],
+    deltaPercent: 7,
+  },
+  {
+    id: 'tsh',
+    name: 'TSH',
+    years: [
+      { year: 2024, lit: 5 },
+      { year: 2025, lit: 5 },
+      { year: 2026, lit: 4 },
     ],
     deltaPercent: -6,
   },
@@ -591,11 +620,18 @@ function lifestyleToPair(
 ): { label: string; percent: number; count: number }[] {
   const row = rows.find((r) => r.year === year);
   if (!row) return [];
-  return row.slices.map((slice) => ({
+  const slices = row.slices.map((slice) => ({
     label: slice.label,
     percent: slice.percent,
     count: Math.round((slice.percent / 100) * enrolled),
   }));
+  // Fix rounding drift so slice counts sum to enrolled.
+  const drift = enrolled - slices.reduce((sum, s) => sum + s.count, 0);
+  if (drift !== 0 && slices.length > 0) {
+    const largest = slices.reduce((best, s, i) => (s.count > slices[best]!.count ? i : best), 0);
+    slices[largest]!.count += drift;
+  }
+  return slices;
 }
 
 /** Distinct dummy KPIs per camp year — identical to All Years metric card values. */
