@@ -37,6 +37,10 @@ import {
   type CampParticipant,
 } from './participantPool';
 import { DISEASES } from './diseases';
+import {
+  buildTemporaryJourney,
+  temporaryAge,
+} from '../services/campParticipantsMappers';
 
 const GENDER_KEYS = ['Male', 'Female'];
 const AGE_GROUPS = ['18–25', '26–35', '36–45', '46–55', '55+'] as const;
@@ -624,6 +628,8 @@ export function buildDashboardData(participants: CampParticipant[] = CAMP_PARTIC
     bloodGroup: p.bloodGroup,
     department: p.department,
     gender: p.gender,
+    age: temporaryAge(p.id),
+    journey: buildTemporaryJourney(p.id),
   }));
 
   const history: CampHistoryEntry[] = [

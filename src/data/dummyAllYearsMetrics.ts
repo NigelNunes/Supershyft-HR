@@ -297,6 +297,113 @@ export const DUMMY_ALL_YEARS_TOP_DISEASE_RISKS = [
 ] as const;
 
 /**
+ * TEMPORARY — Disease deep dive risk bands by year × gender (All Years Camp Report).
+ * Values are % shares for Healthy / Increased / High / Very High (sum ≈ 100 per year).
+ * Years ordered oldest → newest: 2024, 2025, 2026.
+ */
+export type AllYearsDiseaseRiskBand = 'Healthy' | 'Increased' | 'High' | 'Very High';
+
+export type AllYearsDiseaseGenderSeries = Record<
+  AllYearsDiseaseRiskBand,
+  readonly [number, number, number]
+>;
+
+export interface AllYearsDiseaseDeepDiveRow {
+  code: string;
+  name: string;
+  male: AllYearsDiseaseGenderSeries;
+  female: AllYearsDiseaseGenderSeries;
+}
+
+const baseBands = (
+  healthy: readonly [number, number, number],
+  increased: readonly [number, number, number],
+  high: readonly [number, number, number],
+  veryHigh: readonly [number, number, number],
+): AllYearsDiseaseGenderSeries => ({
+  Healthy: healthy,
+  Increased: increased,
+  High: high,
+  'Very High': veryHigh,
+});
+
+/** Figma sample series used as the Type 2 Diabetes / shared template. */
+const SAMPLE_SERIES = baseBands(
+  [62, 65, 68],
+  [22, 21, 19],
+  [11, 10, 9],
+  [5, 4, 4],
+);
+
+function shiftSeries(
+  series: AllYearsDiseaseGenderSeries,
+  delta: number,
+): AllYearsDiseaseGenderSeries {
+  const clamp = (n: number) => Math.max(1, Math.min(90, Math.round(n)));
+  const shift = (values: readonly [number, number, number], d: number) =>
+    [clamp(values[0] + d), clamp(values[1] + d), clamp(values[2] + d)] as const;
+  return {
+    Healthy: shift(series.Healthy, delta),
+    Increased: shift(series.Increased, -Math.round(delta / 2)),
+    High: shift(series.High, -Math.round(delta / 3)),
+    'Very High': shift(series['Very High'], -Math.round(delta / 4)),
+  };
+}
+
+export const DUMMY_ALL_YEARS_DISEASE_YEARS = [2024, 2025, 2026] as const;
+
+export const DUMMY_ALL_YEARS_DISEASE_DEEP_DIVE: AllYearsDiseaseDeepDiveRow[] = [
+  {
+    code: 'nafld',
+    name: 'NAFLD',
+    male: shiftSeries(SAMPLE_SERIES, -4),
+    female: shiftSeries(SAMPLE_SERIES, -2),
+  },
+  {
+    code: 'type_2_diabetes',
+    name: 'Type 2 Diabetes',
+    male: SAMPLE_SERIES,
+    female: SAMPLE_SERIES,
+  },
+  {
+    code: 'cardiac_health',
+    name: 'Cardiac Health',
+    male: shiftSeries(SAMPLE_SERIES, -1),
+    female: shiftSeries(SAMPLE_SERIES, 1),
+  },
+  {
+    code: 'hypertension',
+    name: 'Hypertension',
+    male: shiftSeries(SAMPLE_SERIES, -3),
+    female: shiftSeries(SAMPLE_SERIES, -1),
+  },
+  {
+    code: 'thyroid_health',
+    name: 'Thyroid Health',
+    male: shiftSeries(SAMPLE_SERIES, 2),
+    female: shiftSeries(SAMPLE_SERIES, 3),
+  },
+  {
+    code: 'obesity',
+    name: 'Obesity',
+    male: shiftSeries(SAMPLE_SERIES, -6),
+    female: shiftSeries(SAMPLE_SERIES, -5),
+  },
+  {
+    code: 'dyslipidemia',
+    name: 'Dyslipidemia',
+    male: shiftSeries(SAMPLE_SERIES, -8),
+    female: shiftSeries(SAMPLE_SERIES, -7),
+  },
+  {
+    code: 'pcos_pcod',
+    name: 'PCOS/PCOD',
+    male: shiftSeries(SAMPLE_SERIES, 4),
+    female: shiftSeries(SAMPLE_SERIES, -3),
+  },
+];
+
+/**
  * TEMPORARY — Blood & lab in-range dots by year (All Years Camp Report).
  * 10 dots per year (2×5), lit from the bottom. Years match Figma: 2023–2025.
  */

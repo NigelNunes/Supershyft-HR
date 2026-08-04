@@ -306,3 +306,362 @@
     width: 1.75rem;
   }
 }
+
+/* —— All Years —— */
+.disease-deep-dive-card--allyears {
+  min-height: 0;
+  gap: 1.5rem;
+}
+
+.ddd-allyears-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start;
+  gap: 1.5rem 2rem;
+  width: 100%;
+  padding: 0.5rem 0.5rem 1rem;
+  box-sizing: border-box;
+}
+
+.ddd-allyears-divider {
+  width: 1px;
+  align-self: stretch;
+  min-height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+.ddd-allyears-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.ddd-allyears-panel__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+  color: #d6d3d1;
+  font-family: 'DM Sans', var(--font);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+}
+
+.ddd-allyears-panel--male .ddd-allyears-panel__title {
+  color: #d6d3d1;
+}
+
+.ddd-allyears-panel--male .ddd-allyears-panel__title svg {
+  color: #3b82f6;
+}
+
+.ddd-allyears-panel--female .ddd-allyears-panel__title svg {
+  color: #ff589b;
+}
+
+.ddd-allyears-grid {
+  display: grid;
+  grid-template-columns: 3rem repeat(4, minmax(0, 1fr));
+  grid-template-rows: 1.5rem repeat(3, minmax(4.5rem, 5.5rem));
+  gap: 0.625rem 0.75rem;
+  align-items: stretch;
+  justify-items: stretch;
+  width: 100%;
+}
+
+.ddd-allyears-grid__corner {
+  width: 1px;
+  height: 1px;
+}
+
+.ddd-allyears-grid__band {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: 'DM Sans', var(--font);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1rem;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.ddd-allyears-panel--male .ddd-allyears-grid__band--healthy {
+  color: #93c5fd;
+}
+.ddd-allyears-panel--male .ddd-allyears-grid__band--increased {
+  color: #60a5fa;
+}
+.ddd-allyears-panel--male .ddd-allyears-grid__band--high,
+.ddd-allyears-panel--male .ddd-allyears-grid__band--very-high {
+  color: #2563eb;
+}
+
+.ddd-allyears-panel--female .ddd-allyears-grid__band--healthy {
+  color: #f0abfc;
+}
+.ddd-allyears-panel--female .ddd-allyears-grid__band--increased {
+  color: #e879f9;
+}
+.ddd-allyears-panel--female .ddd-allyears-grid__band--high,
+.ddd-allyears-panel--female .ddd-allyears-grid__band--very-high {
+  color: #d946ef;
+}
+
+.ddd-allyears-grid__year {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 0.25rem;
+  color: #d6d3d1;
+  font-family: 'DM Sans', var(--font);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1rem;
+  letter-spacing: -0.01em;
+}
+
+.ddd-allyears-grid__year--current {
+  color: #fff;
+  font-weight: 700;
+}
+
+.ddd-allyears-cell {
+  appearance: none;
+  border: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 4.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  border-radius: 1rem;
+  color: #d6d3d1;
+  font-family: 'DM Sans', var(--font);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.5rem;
+  cursor: pointer;
+  transition: outline-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ddd-allyears-panel--male .ddd-allyears-cell--healthy {
+  background: rgba(147, 197, 253, 0.2);
+  outline: 1px solid rgba(147, 197, 253, 0.3);
+  outline-offset: -1px;
+  font-weight: 600;
+}
+.ddd-allyears-panel--male .ddd-allyears-cell--increased {
+  background: rgba(96, 165, 250, 0.2);
+  outline: 1px solid rgba(96, 165, 250, 0.3);
+  outline-offset: -1px;
+}
+.ddd-allyears-panel--male .ddd-allyears-cell--high,
+.ddd-allyears-panel--male .ddd-allyears-cell--very-high {
+  background: rgba(37, 99, 235, 0.2);
+  outline: 1px solid rgba(37, 99, 235, 0.3);
+  outline-offset: -1px;
+}
+
+.ddd-allyears-panel--female .ddd-allyears-cell--healthy {
+  background: rgba(240, 171, 252, 0.2);
+  outline: 1px solid rgba(240, 171, 252, 0.3);
+  outline-offset: -1px;
+  font-weight: 600;
+}
+.ddd-allyears-panel--female .ddd-allyears-cell--increased {
+  background: rgba(232, 121, 249, 0.2);
+  outline: 1px solid rgba(232, 121, 249, 0.3);
+  outline-offset: -1px;
+}
+.ddd-allyears-panel--female .ddd-allyears-cell--high,
+.ddd-allyears-panel--female .ddd-allyears-cell--very-high {
+  background: rgba(217, 70, 239, 0.2);
+  outline: 1px solid rgba(217, 70, 239, 0.3);
+  outline-offset: -1px;
+}
+
+.ddd-allyears-panel--male .ddd-allyears-cell--active {
+  outline-color: rgba(147, 197, 253, 0.55);
+  box-shadow: 0 0 10px rgba(147, 188, 255, 0.35);
+}
+
+.ddd-allyears-panel--female .ddd-allyears-cell--active {
+  outline-color: rgba(240, 171, 252, 0.55);
+  box-shadow: 0 0 10px rgba(252, 102, 255, 0.3);
+}
+
+.ddd-allyears-popup {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  top: 6.5rem;
+  transform: translateX(-50%);
+  width: 18rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  border-radius: 1.5rem;
+  background: #111827;
+  outline: 1px solid rgba(255, 255, 255, 0.2);
+  outline-offset: -1px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+}
+
+.ddd-allyears-popup__timeline {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 3rem;
+  padding: 0 1rem;
+}
+
+.ddd-allyears-popup__rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-50%);
+}
+
+.ddd-allyears-popup--male .ddd-allyears-popup__rail--accent {
+  background: #93c5fd;
+}
+
+.ddd-allyears-popup--female .ddd-allyears-popup__rail--accent {
+  background: #f0abfc;
+}
+
+.ddd-allyears-popup__dot {
+  position: relative;
+  z-index: 1;
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 999px;
+  background: #93c5fd;
+}
+
+.ddd-allyears-popup--female .ddd-allyears-popup__dot {
+  background: #f0abfc;
+}
+
+.ddd-allyears-popup__dot--active {
+  width: 0.625rem;
+  height: 0.625rem;
+  outline: 4px solid rgba(147, 197, 253, 0.2);
+  outline-offset: 0;
+}
+
+.ddd-allyears-popup--female .ddd-allyears-popup__dot--active {
+  outline-color: rgba(240, 171, 252, 0.25);
+}
+
+.ddd-allyears-popup__years {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.25rem;
+}
+
+.ddd-allyears-popup__year {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+.ddd-allyears-popup__pct {
+  color: #d6d3d1;
+  font-family: 'DM Sans', var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 2rem;
+}
+
+.ddd-allyears-popup__year--active .ddd-allyears-popup__pct {
+  color: #fff;
+}
+
+.ddd-allyears-popup__label {
+  color: rgba(163, 163, 163, 0.3);
+  font-family: 'DM Sans', var(--font);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ddd-allyears-popup__insight {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: #d6d3d1;
+  font-family: 'DM Sans', var(--font);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.25rem;
+}
+
+.ddd-allyears-popup--male .ddd-allyears-popup__insight svg {
+  color: #93c5fd;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.ddd-allyears-popup--female .ddd-allyears-popup__insight svg {
+  color: #f0abfc;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.disease-deep-dive-card__insight--concern {
+  border-top: none;
+  padding-top: 1rem;
+}
+
+@media (max-width: 1100px) {
+  .ddd-allyears-body {
+    grid-template-columns: 1fr;
+    justify-items: stretch;
+    padding: 0.5rem 0 1rem;
+  }
+
+  .ddd-allyears-divider {
+    width: 100%;
+    height: 1px;
+    min-height: 0;
+  }
+
+  .ddd-allyears-popup {
+    left: 0;
+    transform: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .ddd-allyears-grid {
+    grid-template-columns: 2.5rem repeat(4, minmax(0, 1fr));
+    grid-template-rows: 1.25rem repeat(3, minmax(3.5rem, 4rem));
+    gap: 0.5rem;
+  }
+
+  .ddd-allyears-cell {
+    min-height: 3.5rem;
+    font-size: 0.75rem;
+  }
+}

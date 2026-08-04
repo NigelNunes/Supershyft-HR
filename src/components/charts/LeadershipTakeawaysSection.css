@@ -1,7 +1,163 @@
 .leadership-takeaways {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.leadership-takeaway-card {
+  --lt-accent: #10b981;
+  --lt-glow: rgba(16, 185, 129, 0.2);
+  --lt-icon-shadow: rgba(16, 185, 129, 0.15);
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 1.25rem;
+  min-height: 11rem;
+  padding: 1.5rem;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  background: #18181b;
+  outline: 1px solid rgba(255, 255, 255, 0.05);
+  outline-offset: -1px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+  box-sizing: border-box;
+}
+
+.leadership-takeaway-card__glow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: min(100%, 34rem);
+  height: 12rem;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 100% 100% at 0% 0%,
+    var(--lt-glow),
+    transparent 70%
+  );
+}
+
+.leadership-takeaway-card__main {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.leadership-takeaway-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--lt-accent) 10%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--lt-accent) 20%, transparent);
+  outline-offset: -1px;
+  box-shadow: 0 0 20px 0 var(--lt-icon-shadow);
+  color: var(--lt-accent);
+}
+
+.leadership-takeaway-card__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.leadership-takeaway-card__category {
+  margin: 0;
+  color: var(--lt-accent);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.leadership-takeaway-card__headline {
+  margin: 0;
+  padding-bottom: 0.5rem;
+  color: #fff;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 400;
+  line-height: 1.75rem;
+}
+
+.leadership-takeaway-card__bullets {
+  position: relative;
+  z-index: 1;
+  list-style: none;
+  margin: 0;
+  padding: 1.5rem 0 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.75rem;
+  flex: 0 1 auto;
+  min-width: 11rem;
+}
+
+.leadership-takeaway-card__bullets li {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: #9ca3af;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5rem;
+}
+
+.leadership-takeaway-card__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: #d4d4d8;
+  flex-shrink: 0;
+}
+
+.leadership-takeaway-card--workforce-health {
+  --lt-accent: #10b981;
+  --lt-glow: rgba(16, 185, 129, 0.2);
+  --lt-icon-shadow: rgba(16, 185, 129, 0.15);
+}
+
+.leadership-takeaway-card--lifestyle-priority {
+  --lt-accent: #3b82f6;
+  --lt-glow: rgba(59, 130, 246, 0.2);
+  --lt-icon-shadow: rgba(59, 130, 246, 0.15);
+}
+
+.leadership-takeaway-card--disease-focus {
+  --lt-accent: #a855f7;
+  --lt-glow: rgba(168, 85, 247, 0.2);
+  --lt-icon-shadow: rgba(168, 85, 247, 0.15);
+}
+
+.leadership-takeaway-card--strategic-next-step {
+  --lt-accent: #f59e0b;
+  --lt-glow: rgba(245, 158, 11, 0.2);
+  --lt-icon-shadow: rgba(245, 158, 11, 0.15);
+}
+
+.leadership-takeaways__loading {
+  grid-column: 1 / -1;
+  padding: 2rem;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  background: #18181b;
+  border-radius: 1.5rem;
+  outline: 1px solid rgba(255, 255, 255, 0.05);
+  outline-offset: -1px;
 }
 
 @media (max-width: 900px) {
@@ -10,118 +166,14 @@
   }
 }
 
-.leadership-takeaway-card {
-  position: relative;
-  overflow: hidden;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 0;
-  box-shadow: var(--shadow);
-  display: flex;
-  flex-direction: column;
-  min-height: 240px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
+@media (max-width: 640px) {
+  .leadership-takeaway-card {
+    flex-direction: column;
+    gap: 1rem;
+  }
 
-.leadership-takeaway-card::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 40%, transparent));
-  opacity: 0.85;
-}
-
-.leadership-takeaway-card:hover {
-  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
-  box-shadow: var(--shadow-lg);
-}
-
-.leadership-takeaway-card__header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 24px 22px 18px;
-  text-align: center;
-  background: radial-gradient(
-    ellipse 90% 80% at 50% 0%,
-    color-mix(in srgb, var(--accent) 10%, transparent),
-    transparent 70%
-  );
-}
-
-.leadership-takeaway-card__emoji {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  font-size: 1.75rem;
-  line-height: 1;
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--accent) 12%, var(--bg-elevated));
-  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
-  box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 6%, transparent);
-}
-
-.leadership-takeaway-card__category {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-.leadership-takeaway-card__content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 0 22px 22px;
-  text-align: left;
-}
-
-.leadership-takeaway-card__headline {
-  font-size: 1.0625rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.3;
-  color: var(--text);
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.leadership-takeaway-card__body {
-  font-size: 0.875rem;
-  line-height: 1.65;
-  color: var(--text-muted);
-}
-
-.leadership-takeaway-card--workforce-health::before {
-  background: linear-gradient(90deg, #34d399, color-mix(in srgb, #34d399 35%, transparent));
-}
-
-.leadership-takeaway-card--lifestyle-priority::before {
-  background: linear-gradient(90deg, #38bdf8, color-mix(in srgb, #38bdf8 35%, transparent));
-}
-
-.leadership-takeaway-card--disease-focus::before {
-  background: linear-gradient(90deg, #f472b6, color-mix(in srgb, #f472b6 35%, transparent));
-}
-
-.leadership-takeaway-card--strategic-next-step::before {
-  background: linear-gradient(90deg, #fbbf24, color-mix(in srgb, #fbbf24 35%, transparent));
-}
-
-.leadership-takeaways__loading {
-  grid-column: 1 / -1;
-  padding: 32px;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.875rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  .leadership-takeaway-card__bullets {
+    padding: 0;
+    min-width: 0;
+  }
 }

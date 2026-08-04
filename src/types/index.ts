@@ -135,6 +135,18 @@ export interface Intervention {
   icon: string;
 }
 
+export type JourneyStepStatus = 'completed' | 'in_progress' | 'pending';
+
+export type JourneyStepId =
+  | 'anthropometry'
+  | 'vitals'
+  | 'dietLifestyle'
+  | 'bloodReport'
+  | 'bloodReportAi'
+  | 'bioAiReport'
+  | 'bioAiShared'
+  | 'consultations';
+
 export interface EmployeeRecord {
   id: string;
   name: string;
@@ -143,6 +155,10 @@ export interface EmployeeRecord {
   bloodGroup: string;
   department: string;
   gender: 'Male' | 'Female' | 'Other';
+  /** Display age when available; otherwise derived for UI until API ships age. */
+  age?: number;
+  /** TEMPORARY journey progress until participant status API is wired. */
+  journey: Record<JourneyStepId, JourneyStepStatus>;
 }
 
 export interface DepartmentSummary {

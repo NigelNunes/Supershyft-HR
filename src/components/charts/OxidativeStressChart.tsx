@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { CHART_INFO } from '../../content/chartInfo';
 import { getOxidativeStressConcernInsight } from '../../content/chartInsights';
 import type { DepartmentSummary, OxidativeStressByDept } from '../../types';
 import { ChartCard } from '../ui/ChartCard';
-import { InsightFooter } from '../ui/InsightFooter';
 import { OxidativeStressPanelBody } from './OxidativeStressPanelBody';
 import { oxidativeElevatedPercent } from './oxidativeStressBands';
 import './OxidativeStressChart.css';
@@ -58,6 +58,7 @@ export function OxidativeStressChart({
 
   const company = useMemo(() => weightedCompanyRollup(data, headcounts), [data, headcounts]);
   const companyElevated = oxidativeElevatedPercent(company);
+  const insight = getOxidativeStressConcernInsight(companyElevated);
 
   const totalEmployees = useMemo(() => {
     if (totalHeadcount != null && totalHeadcount > 0) return totalHeadcount;
@@ -72,7 +73,13 @@ export function OxidativeStressChart({
       info={CHART_INFO.oxidativeStress}
       insight={
         !loading && data.length > 0 ? (
-          <InsightFooter {...getOxidativeStressConcernInsight(companyElevated)} />
+          <div className="oxidative-stress-insight">
+            <div className="oxidative-stress-insight__title">
+              <AlertTriangle size={20} strokeWidth={1.75} aria-hidden />
+              <span>{insight.tone === 'positive' ? 'Positive' : 'Concern'}</span>
+            </div>
+            <p className="oxidative-stress-insight__text">{insight.text}</p>
+          </div>
         ) : undefined
       }
       className="oxidative-stress-card"

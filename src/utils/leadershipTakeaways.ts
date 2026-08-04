@@ -9,7 +9,7 @@ export interface LeadershipTakeaway {
   id: string;
   title: string;
   headline: string;
-  body: string;
+  bullets: string[];
 }
 
 export interface LeadershipTakeawaysInput {
@@ -23,76 +23,76 @@ export interface LeadershipTakeawaysInput {
 const WORKFORCE_HEALTH_INSIGHTS = {
   excellent: {
     headline: 'Healthy Workforce',
-    body: 'The organization demonstrates a strong preventive health profile.',
+    bullets: ['Strong preventive profile', 'Sustain current programs', 'Watch early warning signs'],
   },
   moderate: {
     headline: 'Emerging Health Risks',
-    body: 'Preventive action taken today can significantly reduce future disease burden and healthcare costs.',
+    bullets: ['Moderate risk profile', 'Early action advised', 'Prevent future costs'],
   },
   high: {
     headline: 'Growing Disease Burden',
-    body: 'Chronic disease risks are becoming increasingly prevalent. Organization-wide lifestyle interventions should become a strategic wellbeing priority.',
+    bullets: ['Elevated risk prevalence', 'Org-wide lifestyle focus', 'Reduce chronic disease load'],
   },
   critical: {
     headline: 'Immediate Leadership Action Required',
-    body: 'Workforce health risks may begin affecting productivity, absenteeism, and healthcare expenditure.',
+    bullets: ['Critical risk exposure', 'Act on productivity impact', 'Contain healthcare spend'],
   },
 } as const;
 
 const LIFESTYLE_INSIGHTS = {
   physical: {
     headline: 'Movement Opportunity',
-    body: 'Increasing daily movement is likely to deliver the greatest improvement in workforce metabolic health. Consider fitness challenges, walking meetings, and activity incentives.',
+    bullets: ['Low daily activity', 'Increase active minutes', 'Improve metabolic health'],
   },
   sleep: {
     headline: 'Recovery Opportunity',
-    body: 'Sleep quality represents the largest opportunity for improvement. Recovery-focused wellbeing initiatives can enhance productivity and cognitive performance.',
+    bullets: ['Sleep quality gap', 'Prioritize recovery habits', 'Boost cognitive performance'],
   },
   bothPoor: {
     headline: 'Lifestyle Reset Needed',
-    body: 'Physical inactivity and poor sleep are the primary lifestyle drivers of health risk. Addressing these together will produce the greatest health impact.',
+    bullets: ['Inactivity and poor sleep', 'Address both drivers together', 'Maximize health impact'],
   },
   bothGood: {
     headline: 'Healthy Lifestyle Foundation',
-    body: 'Employees demonstrate strong movement and recovery habits. Continue reinforcing these behaviours while focusing support on higher-risk individuals.',
+    bullets: ['Strong movement habits', 'Solid recovery patterns', 'Support higher-risk cohorts'],
   },
 } as const;
 
 const DISEASE_FOCUS_INSIGHTS = {
   metabolic: {
     headline: 'Metabolic Health Priority',
-    body: 'Current health risks are largely lifestyle-driven and highly modifiable. Nutrition, exercise, and weight management programmes should be prioritized.',
+    bullets: ['Lifestyle-driven risks', 'Nutrition and exercise first', 'Weight management focus'],
   },
   cardiovascular: {
     headline: 'Heart Health Priority',
-    body: 'Blood pressure and cardiovascular risk factors warrant focused prevention through regular screening and stress management initiatives.',
+    bullets: ['BP and cardiac flags', 'Increase regular screening', 'Stress management programs'],
   },
   hormonal: {
     headline: 'Hormonal Health Opportunity',
-    body: 'Personalized screening and specialist support can improve employee wellbeing, energy levels, and long-term health outcomes.',
+    bullets: ['Personalized screening', 'Specialist support pathways', 'Improve long-term wellbeing'],
   },
   distributed: {
     headline: 'Preventive Healthcare Focus',
-    body: 'No single disease dominates the workforce profile, indicating broad preventive health initiatives will deliver the greatest organizational benefit.',
+    bullets: ['No dominant disease', 'Broad preventive approach', 'Workforce-wide impact'],
   },
 } as const;
 
 const STRATEGIC_INSIGHTS = {
   low: {
     headline: 'Maintain Momentum',
-    body: 'Continue annual health assessments while rewarding healthy behaviours to preserve workforce wellbeing.',
+    bullets: ['Keep annual assessments', 'Reward healthy behaviours', 'Protect current gains'],
   },
   moderate: {
     headline: 'Target High-Risk Employees',
-    body: 'Focus resources on employees within elevated risk bands through personalized coaching and medical follow-up.',
+    bullets: ['Identify high-risk groups', 'Prioritize personalized care', 'Monitor health progress'],
   },
   high: {
     headline: 'Scale Preventive Care',
-    body: 'Combine clinical support, nutrition, fitness programmes, and digital health engagement to reduce future disease burden.',
+    bullets: ['Expand clinical support', 'Pair fitness and nutrition', 'Drive digital engagement'],
   },
   critical: {
     headline: 'Build a Long-Term Health Strategy',
-    body: 'Integrate regular screenings, leadership engagement, wellness incentives, and outcome tracking into organizational health planning.',
+    bullets: ['Integrate regular screenings', 'Engage leadership visibly', 'Track outcomes over time'],
   },
 } as const;
 
@@ -211,9 +211,9 @@ function diseaseFocusBand(diseases: DiseaseRiskData[]): keyof typeof DISEASE_FOC
 function toTakeaway(
   id: string,
   title: string,
-  insight: { headline: string; body: string },
+  insight: { headline: string; bullets: readonly string[] },
 ): LeadershipTakeaway {
-  return { id, title, headline: insight.headline, body: insight.body };
+  return { id, title, headline: insight.headline, bullets: [...insight.bullets] };
 }
 
 export function buildLeadershipTakeaways(input: LeadershipTakeawaysInput): LeadershipTakeaway[] {
