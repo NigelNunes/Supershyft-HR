@@ -40,12 +40,12 @@ const JOURNEY_COLUMNS: {
   badge?: 'blood' | 'blood-ai' | 'bioai' | 'bioai-ai';
 }[] = [
   { id: 'anthropometry', label: 'Anthropometry', group: 'intake' },
-  { id: 'vitals', label: 'Vitals', group: 'intake' },
-  { id: 'dietLifestyle', label: 'Lifestyle Questionnaire', group: 'intake' },
+  { id: 'vitals', label: 'Vital', group: 'intake' },
+  { id: 'dietLifestyle', label: 'Lifestyle', group: 'intake' },
   { id: 'bloodReport', label: 'Blood Report', group: 'blood', badge: 'blood' },
-  { id: 'bloodReportAi', label: 'Blood Report (AI)', group: 'blood', badge: 'blood-ai' },
-  { id: 'bioAiReport', label: 'Bio-AI Report', group: 'bioai', badge: 'bioai' },
-  { id: 'bioAiShared', label: 'Bio-AI Shared', group: 'bioai', badge: 'bioai-ai' },
+  { id: 'bloodReportAi', label: 'Blood Report Sent', group: 'blood', badge: 'blood-ai' },
+  { id: 'bioAiReport', label: 'Bio-Ai Report', group: 'bioai', badge: 'bioai' },
+  { id: 'bioAiShared', label: 'Bio-Ai Report Sent', group: 'bioai', badge: 'bioai-ai' },
   { id: 'consultations', label: 'Consultations', group: 'consult' },
 ];
 

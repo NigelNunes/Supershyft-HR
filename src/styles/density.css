@@ -2,7 +2,7 @@
  * Laptop density for Windows DPI scaling.
  * Windows 1080p at 125–150% reports a shorter CSS viewport than typical MacBooks,
  * so the same rem/px UI feels oversized and clipped. Large / tall Mac viewports
- * keep the default look (do not use a broad max-width: 1440 breakpoint alone).
+ * keep the default look; page content always fills available main-area width.
  */
 
 html {

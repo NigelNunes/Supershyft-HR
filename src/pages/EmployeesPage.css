@@ -1,8 +1,3 @@
-/* Use full main-area width on this page (skip shared 1440px cap). */
-.page-content:has(.employees-page) {
-  max-width: none;
-}
-
 .employees-page {
   --emp-glass: rgba(17, 24, 39, 0.6);
   --emp-outline: rgba(255, 255, 255, 0.05);
