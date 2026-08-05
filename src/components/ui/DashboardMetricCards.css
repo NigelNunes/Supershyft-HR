@@ -40,6 +40,7 @@
   flex-direction: column;
   justify-content: center;
   gap: 14px;
+  overflow: visible;
 }
 
 .metric-card__rank-row {
@@ -48,6 +49,7 @@
   justify-content: space-between;
   gap: 12px;
   width: 100%;
+  min-width: 0;
 }
 
 .metric-card__rank-text {
@@ -55,6 +57,7 @@
   flex-direction: column;
   gap: 6px;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .metric-card__rank-title {
@@ -103,18 +106,26 @@
 
 .metric-rank-spark {
   position: relative;
-  width: 96px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5px;
+  width: min(96px, 38%);
+  max-width: 96px;
   height: 64px;
-  flex-shrink: 0;
-  overflow: hidden;
+  flex-shrink: 1;
+  min-width: 56px;
+  overflow: visible;
+  box-sizing: border-box;
+  padding-bottom: 3px;
 }
 
 .metric-rank-spark__bar {
-  position: absolute;
-  bottom: 3px;
-  width: 1px;
+  flex: 1 1 0;
+  min-width: 1px;
+  max-width: 2px;
   border-radius: 0.5px;
-  transform: translateX(-50%);
+  align-self: flex-end;
 }
 
 .metric-rank-spark--green .metric-rank-spark__bar {
@@ -124,7 +135,7 @@
 }
 
 .metric-rank-spark--green .metric-rank-spark__bar--active {
-  width: 1.5px;
+  max-width: 2.5px;
   background: #22c55e;
   outline: 1px solid #22c55e;
   outline-offset: -0.5px;
@@ -138,7 +149,7 @@
 }
 
 .metric-rank-spark--blue .metric-rank-spark__bar--active {
-  width: 1.5px;
+  max-width: 2.5px;
   background: #3b82f6;
   outline: 1px solid #3b82f6;
   outline-offset: -0.5px;
@@ -384,10 +395,24 @@
   .metric-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .metric-card--rank {
+    padding: 14px 16px;
+  }
+
+  .metric-rank-spark {
+    width: min(88px, 42%);
+    height: 52px;
+  }
 }
 
 @media (max-width: 520px) {
   .metric-cards {
     grid-template-columns: 1fr;
+  }
+
+  .metric-rank-spark {
+    width: min(96px, 40%);
+    height: 56px;
   }
 }

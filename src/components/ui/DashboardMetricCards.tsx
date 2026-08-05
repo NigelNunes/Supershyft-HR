@@ -34,13 +34,12 @@ function displayPercentOfEnrolled(
   return `${Math.round((count / enrolled) * 100)}% of enrolled`;
 }
 
-/** Even left spacing + uniformly ascending heights (left → right). */
+/**
+ * Uniformly ascending heights (left → right), expressed as a percentage of the
+ * sparkline box so the bars scale with the card instead of being clipped.
+ */
 const RANK_SPARK_BAR_COUNT = 36;
-const RANK_SPARK_HEIGHTS = uniformAscendingHeights(RANK_SPARK_BAR_COUNT, 2, 56);
-const RANK_SPARK_BARS: { left: number; height: number }[] = RANK_SPARK_HEIGHTS.map((height, i) => ({
-  left: 1.78 + i * ((95.53 - 1.78) / (RANK_SPARK_BAR_COUNT - 1)),
-  height,
-}));
+const RANK_SPARK_HEIGHTS = uniformAscendingHeights(RANK_SPARK_BAR_COUNT, 4, 100);
 
 function RankSparkline({
   variant,
@@ -51,14 +50,11 @@ function RankSparkline({
 }) {
   return (
     <div className={`metric-rank-spark metric-rank-spark--${variant}`} aria-hidden>
-      {RANK_SPARK_BARS.map((bar, i) => (
+      {RANK_SPARK_HEIGHTS.map((height, i) => (
         <span
-          key={bar.left}
+          key={i}
           className={`metric-rank-spark__bar${i === highlightIndex ? ' metric-rank-spark__bar--active' : ''}`}
-          style={{
-            left: `${bar.left}px`,
-            height: `${Math.max(bar.height, 0.5)}px`,
-          }}
+          style={{ height: `${height}%` }}
         />
       ))}
     </div>
@@ -280,11 +276,11 @@ function SingleYearMetricCards({
   const nationalHighlight =
     nationalRank == null || rankingLoading
       ? -1
-      : highlightIndexForRank(nationalRank, d.nationalAmong, RANK_SPARK_BARS.length);
+      : highlightIndexForRank(nationalRank, d.nationalAmong, RANK_SPARK_BAR_COUNT);
   const industryHighlight =
     industryRank == null || rankingLoading
       ? -1
-      : highlightIndexForRank(industryRank, d.industryAmong, RANK_SPARK_BARS.length);
+      : highlightIndexForRank(industryRank, d.industryAmong, RANK_SPARK_BAR_COUNT);
 
   return (
     <div className={`metric-cards${showRanking ? '' : ' metric-cards--no-rank'}`}>
