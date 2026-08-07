@@ -330,9 +330,9 @@
 .metric-card__allyears-value {
   color: #ffffff;
   font-family: var(--font);
-  font-size: 1rem;
+  font-size: 18px;
   font-weight: 700;
-  line-height: 1.25rem;
+  line-height: 28px;
 }
 
 .metric-card__allyears-value--muted {

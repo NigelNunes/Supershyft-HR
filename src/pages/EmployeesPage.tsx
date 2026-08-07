@@ -113,28 +113,11 @@ function matchesEmployeeName(name: string, query: string): boolean {
   return tokens.every((token) => normalizedName.includes(token));
 }
 
-function countByStatus(
-  employees: EmployeeRecord[],
-  step: JourneyStepId,
-  status: JourneyStepStatus,
-): number {
-  return employees.filter((e) => e.journey[step] === status).length;
-}
-
 function StatusIcon({ status }: { status: JourneyStepStatus }) {
   if (status === 'completed') {
     return <Check className="emp-status emp-status--done" size={18} strokeWidth={2.5} aria-label="Completed" />;
   }
-  if (status === 'in_progress') {
-    return (
-      <RefreshCw
-        className="emp-status emp-status--progress"
-        size={18}
-        strokeWidth={2.25}
-        aria-label="In progress"
-      />
-    );
-  }
+  // Treat in_progress as pending — only tick / cross in the journey grid
   return <X className="emp-status emp-status--pending" size={18} strokeWidth={2.5} aria-label="Pending" />;
 }
 
@@ -206,36 +189,18 @@ export function EmployeesPage() {
   const safePage = Math.min(page, totalPages);
   const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
-  const summary = useMemo(() => {
-    const bloodDone = countByStatus(employees, 'bloodReport', 'completed');
-    const bloodPending =
-      countByStatus(employees, 'bloodReport', 'pending') +
-      countByStatus(employees, 'bloodReport', 'in_progress');
-    const qDone = countByStatus(employees, 'dietLifestyle', 'completed');
-    const qPending =
-      countByStatus(employees, 'dietLifestyle', 'pending') +
-      countByStatus(employees, 'dietLifestyle', 'in_progress');
-    const bioDone = countByStatus(employees, 'bioAiReport', 'completed');
-    const bioPending =
-      countByStatus(employees, 'bioAiReport', 'pending') +
-      countByStatus(employees, 'bioAiReport', 'in_progress');
-    const consultDone = countByStatus(employees, 'consultations', 'completed');
-    const consultPending =
-      countByStatus(employees, 'consultations', 'pending') +
-      countByStatus(employees, 'consultations', 'in_progress');
-    const nutritionist = Math.round(consultDone * 0.38);
-    return {
-      bloodDone,
-      bloodPending,
-      qDone,
-      qPending,
-      bioDone,
-      bioPending,
-      consultDoctor: consultDone,
-      consultNutritionist: nutritionist,
-      consultPending,
-    };
-  }, [employees]);
+  // TEMPORARY — fixed dummy summary counts until journey progress API is wired.
+  const summary = {
+    bloodDone: 999,
+    bloodPending: 999,
+    qDone: 999,
+    qPending: 999,
+    bioDone: 999,
+    bioPending: 999,
+    consultDoctor: 999,
+    consultNutritionist: 999,
+    consultPending: 999,
+  };
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -315,7 +280,7 @@ export function EmployeesPage() {
           </button>
           <div className="emp-header__updated">
             <span className="emp-header__updated-dot" aria-hidden />
-            <span>Updated 2 hrs ago</span>
+            <span>Updated 999 hrs ago</span>
           </div>
         </div>
       </header>

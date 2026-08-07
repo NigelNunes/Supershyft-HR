@@ -8,6 +8,7 @@ import {
 } from '../../data/dummyAllYearsMetrics';
 import type { YearOption } from '../layout/DashboardHeader';
 import type { OverallRiskBand, OverallRiskScoreBucket } from '../../types';
+import { AllYearsRiskHoverTooltip } from './AllYearsRiskHoverTooltip';
 import { OVERALL_RISK_COLORS, useChartTheme } from './chartTheme';
 import { PieHoverTooltip } from './PieHoverTooltip';
 import './OverallRiskScoreChart.css';
@@ -31,10 +32,15 @@ function RiskPie({
   data,
   assessed,
   size = 'lg',
+  allYearsHover,
 }: {
   data: { name: string; value: number; count: number }[];
   assessed: string;
   size?: 'lg' | 'sm';
+  allYearsHover?: {
+    yearBlocks: typeof DUMMY_ALL_YEARS_OVERALL_RISK;
+    activeYear: number;
+  };
 }) {
   const chart = useChartTheme();
   const dim = size === 'sm' ? 128 : 208;
@@ -42,6 +48,22 @@ function RiskPie({
   const outer = size === 'sm' ? 58 : 92;
   const chartData =
     data.length > 0 ? data : [{ name: 'empty', value: 1, count: 0 }];
+
+  const tooltip = allYearsHover ? (
+    <Tooltip
+      content={
+        <AllYearsRiskHoverTooltip
+          yearBlocks={allYearsHover.yearBlocks}
+          activeYear={allYearsHover.activeYear}
+        />
+      }
+      wrapperStyle={{ zIndex: 30, outline: 'none' }}
+      allowEscapeViewBox={{ x: true, y: true }}
+      offset={12}
+    />
+  ) : (
+    <Tooltip content={<PieHoverTooltip />} wrapperStyle={{ zIndex: 20, outline: 'none' }} />
+  );
 
   const pie = (
     <PieChart width={dim} height={dim} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
@@ -75,9 +97,7 @@ function RiskPie({
           />
         ))}
       </Pie>
-      {data.length > 0 && (
-        <Tooltip content={<PieHoverTooltip />} wrapperStyle={{ zIndex: 20, outline: 'none' }} />
-      )}
+      {data.length > 0 && tooltip}
     </PieChart>
   );
 
@@ -119,9 +139,7 @@ function RiskPie({
                 />
               ))}
             </Pie>
-            {data.length > 0 && (
-              <Tooltip content={<PieHoverTooltip />} wrapperStyle={{ zIndex: 20, outline: 'none' }} />
-            )}
+            {data.length > 0 && tooltip}
           </PieChart>
         </ResponsiveContainer>
       ) : (
@@ -156,6 +174,10 @@ function AllYearsOverallRisk() {
                   data={chartData}
                   assessed={yearBlock.assessed.toLocaleString()}
                   size="sm"
+                  allYearsHover={{
+                    yearBlocks: DUMMY_ALL_YEARS_OVERALL_RISK,
+                    activeYear: yearBlock.year,
+                  }}
                 />
               </div>
             );

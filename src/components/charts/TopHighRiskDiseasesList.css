@@ -15,12 +15,16 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+  overflow: visible;
 }
 
 .top-disease-bubbles__header {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  flex-shrink: 0;
 }
 
 .top-disease-bubbles__title-row {
@@ -88,21 +92,22 @@
 }
 
 .top-disease-bubbles__legend {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
-  gap: 1.5rem;
   width: 100%;
-  max-width: 20rem;
-  margin: 1.25rem auto 0;
-  padding: 0 0.75rem;
+  max-width: none;
+  margin: 1.25rem 0 0;
+  padding: 0;
   box-sizing: border-box;
 }
 
 .top-disease-bubbles__legend-item {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  width: 100%;
 }
 
 .top-disease-bubbles__legend-swatch {
@@ -124,7 +129,10 @@
   position: relative;
   width: 100%;
   flex: 1;
-  min-height: 22rem;
+  min-height: 26rem;
+  margin-top: 0.75rem;
+  /* Room for float motion without clipping bubbles */
+  overflow: visible;
 }
 
 .top-disease-bubbles__stage--allyears {
@@ -143,10 +151,10 @@
   min-width: 0;
 }
 
-/* Cluster layouts mirror Figma absolute placements, scaled per column */
+/* Cluster layouts — keep all bubbles inside the stage (no negative tops) */
 .top-disease-year-cluster--1 .top-disease-bubble--allyears-lg {
   left: 28%;
-  top: -4%;
+  top: 4%;
 }
 
 .top-disease-year-cluster--1 .top-disease-bubble--allyears-md {
@@ -171,7 +179,7 @@
 
 .top-disease-year-cluster--2 .top-disease-bubble--allyears-sm {
   left: 38%;
-  top: -2%;
+  top: 4%;
 }
 
 .top-disease-year-cluster--3 .top-disease-bubble--allyears-lg {
@@ -181,7 +189,7 @@
 
 .top-disease-year-cluster--3 .top-disease-bubble--allyears-md {
   left: 42%;
-  top: -2%;
+  top: 4%;
 }
 
 .top-disease-year-cluster--3 .top-disease-bubble--allyears-sm {
@@ -271,7 +279,7 @@
   width: 15rem;
   height: 15rem;
   left: 0;
-  top: -0.5rem;
+  top: 0.75rem;
   z-index: 1;
   animation: top-disease-float-1 14s ease-in-out infinite;
 }
@@ -289,7 +297,8 @@
   width: 9rem;
   height: 9rem;
   left: 28%;
-  top: 62%;
+  top: auto;
+  bottom: 0.75rem;
   z-index: 3;
   animation: top-disease-float-3 12s ease-in-out infinite;
 }
@@ -300,10 +309,10 @@
     transform: translate(0, 0);
   }
   33% {
-    transform: translate(18px, -22px);
+    transform: translate(12px, 8px);
   }
   66% {
-    transform: translate(-14px, 14px);
+    transform: translate(-10px, 14px);
   }
 }
 
@@ -313,10 +322,10 @@
     transform: translate(0, 0);
   }
   40% {
-    transform: translate(-20px, 16px);
+    transform: translate(-14px, 10px);
   }
   70% {
-    transform: translate(14px, -18px);
+    transform: translate(10px, -8px);
   }
 }
 
@@ -326,10 +335,10 @@
     transform: translate(0, 0);
   }
   35% {
-    transform: translate(20px, 14px);
+    transform: translate(12px, -8px);
   }
   65% {
-    transform: translate(-16px, -20px);
+    transform: translate(-10px, -6px);
   }
 }
 

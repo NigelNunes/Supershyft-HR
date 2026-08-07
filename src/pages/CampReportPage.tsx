@@ -160,6 +160,7 @@ function CampReportPageContent({ onRefresh }: { onRefresh: () => void }) {
         departments={mockDashboard.departments}
         totalHeadcount={oxidativeHeadcount}
         loading={oxidativeLoading}
+        selectedYear={selectedYear}
       />
 
       <CampSectionTitle>Blood & Lab Intelligence</CampSectionTitle>

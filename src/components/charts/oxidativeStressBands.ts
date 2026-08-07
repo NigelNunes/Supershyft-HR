@@ -1,7 +1,7 @@
 export const OXIDATIVE_BAND_COLORS = {
-  low: '#00DA5F',
+  low: '#00DA5E',
   moderate: '#F59E0B',
-  high: '#EA580C',
+  high: '#FF6E00',
   veryHigh: '#DE4A4A',
 } as const;
 

@@ -55,7 +55,8 @@ export function OxidativeStressPanelBody({
                 cy="50%"
                 innerRadius={58}
                 outerRadius={92}
-                paddingAngle={2}
+                paddingAngle={3.5}
+                cornerRadius={7}
                 stroke="none"
               >
                 {pieData.map((entry) => (

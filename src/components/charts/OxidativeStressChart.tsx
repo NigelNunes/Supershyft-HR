@@ -2,8 +2,11 @@ import { useMemo } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { CHART_INFO } from '../../content/chartInfo';
 import { getOxidativeStressConcernInsight } from '../../content/chartInsights';
+import { DUMMY_ALL_YEARS_OXIDATIVE_CONCERN } from '../../data/dummyAllYearsMetrics';
 import type { DepartmentSummary, OxidativeStressByDept } from '../../types';
+import type { YearOption } from '../layout/DashboardHeader';
 import { ChartCard } from '../ui/ChartCard';
+import { AllYearsOxidativeBody } from './AllYearsOxidativeBody';
 import { OxidativeStressPanelBody } from './OxidativeStressPanelBody';
 import { oxidativeElevatedPercent } from './oxidativeStressBands';
 import './OxidativeStressChart.css';
@@ -13,6 +16,7 @@ interface OxidativeStressChartProps {
   departments?: DepartmentSummary[];
   totalHeadcount?: number;
   loading?: boolean;
+  selectedYear?: YearOption;
 }
 
 function weightedCompanyRollup(
@@ -50,7 +54,9 @@ export function OxidativeStressChart({
   departments = [],
   totalHeadcount,
   loading = false,
+  selectedYear = '2026',
 }: OxidativeStressChartProps) {
+  const isAllYears = selectedYear === 'all';
   const headcounts = useMemo(
     () => new Map(departments.map((d) => [d.name, d.headcount])),
     [departments],
@@ -58,7 +64,9 @@ export function OxidativeStressChart({
 
   const company = useMemo(() => weightedCompanyRollup(data, headcounts), [data, headcounts]);
   const companyElevated = oxidativeElevatedPercent(company);
-  const insight = getOxidativeStressConcernInsight(companyElevated);
+  const insight = isAllYears
+    ? { tone: 'concern' as const, text: DUMMY_ALL_YEARS_OXIDATIVE_CONCERN }
+    : getOxidativeStressConcernInsight(companyElevated);
 
   const totalEmployees = useMemo(() => {
     if (totalHeadcount != null && totalHeadcount > 0) return totalHeadcount;
@@ -72,7 +80,7 @@ export function OxidativeStressChart({
       subtitle="Company-wide severity distribution"
       info={CHART_INFO.oxidativeStress}
       insight={
-        !loading && data.length > 0 ? (
+        isAllYears || (!loading && data.length > 0) ? (
           <div className="oxidative-stress-insight">
             <div className="oxidative-stress-insight__title">
               <AlertTriangle size={20} strokeWidth={1.75} aria-hidden />
@@ -82,9 +90,13 @@ export function OxidativeStressChart({
           </div>
         ) : undefined
       }
-      className="oxidative-stress-card"
+      className={`oxidative-stress-card${isAllYears ? ' oxidative-stress-card--allyears' : ''}`}
     >
-      <OxidativeStressPanelBody data={company} headcount={totalEmployees} loading={loading} />
+      {isAllYears ? (
+        <AllYearsOxidativeBody />
+      ) : (
+        <OxidativeStressPanelBody data={company} headcount={totalEmployees} loading={loading} />
+      )}
     </ChartCard>
   );
 }

@@ -606,10 +606,6 @@
   color: var(--emp-done);
 }
 
-.emp-status--progress {
-  color: var(--emp-progress);
-}
-
 .emp-status--pending {
   color: #ef4444;
 }

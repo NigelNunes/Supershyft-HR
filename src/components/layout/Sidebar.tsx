@@ -5,15 +5,12 @@ import {
   ChevronDown,
   LayoutDashboard,
   LogOut,
-  Moon,
   Network,
-  Sun,
   Users,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCamp } from '../../contexts/CampContext';
 import { useOrganization } from '../../contexts/OrganizationContext';
-import { useTheme } from '../../contexts/ThemeContext';
 import { organizationsApi } from '../../services/api';
 import type { ApiOrganizationCamp } from '../../services/apiTypes';
 import { formatCampDate } from '../../utils/campDisplay';
@@ -45,7 +42,6 @@ export function Sidebar({
   const { user, userLoading, accessToken, logout } = useAuth();
   const { selectedCampNo, selectedCampOrganizationId, selectCamp } = useCamp();
   const { organizationName, organizationLogo, loading: orgLoading } = useOrganization();
-  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const showLabels = isMobile || !collapsed;
@@ -303,17 +299,6 @@ export function Sidebar({
         </div>
 
         {showLabels && <div className="sidebar__footer-divider" />}
-
-        <button
-          type="button"
-          className="sidebar__logout"
-          onClick={toggleTheme}
-          title={sidebarCollapsed ? (theme === 'light' ? 'Dark mode' : 'Light mode') : undefined}
-          aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-        >
-          {theme === 'light' ? <Moon size={20} strokeWidth={1.75} /> : <Sun size={20} strokeWidth={1.75} />}
-          {showLabels && <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>}
-        </button>
 
         <button
           type="button"

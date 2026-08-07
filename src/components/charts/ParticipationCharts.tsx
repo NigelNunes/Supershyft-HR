@@ -8,10 +8,23 @@ import {
 } from '../../data/dummyAllYearsMetrics';
 import type { YearOption } from '../layout/DashboardHeader';
 import type { ParticipationByAge } from '../../types';
+import { AllYearsRiskHoverTooltip } from './AllYearsRiskHoverTooltip';
 import { PieHoverTooltip } from './PieHoverTooltip';
 import './ParticipationCharts.css';
 
 const AGE_COLORS = ['#3B82F6', '#34D399', '#8A61F7', '#FB923C', '#F87171'];
+
+const AGE_ACCENT_COLORS: Record<string, string> = Object.fromEntries(
+  DUMMY_AGE_BANDS.map((band, i) => [band, AGE_COLORS[i % AGE_COLORS.length]]),
+);
+
+const ALL_YEARS_AGE_BLOCKS = DUMMY_ALL_YEARS_AGE_PARTICIPATION.map((yearBlock) => ({
+  year: yearBlock.year,
+  bands: yearBlock.bands.map((row) => ({
+    band: row.ageGroup,
+    count: row.enrolled,
+  })),
+}));
 
 interface ParticipationChartsProps {
   byAge: ParticipationByAge[];
@@ -24,11 +37,17 @@ function AgePie({
   assessed,
   size = 'lg',
   centerLabel = 'Enrolled',
+  allYearsHover,
 }: {
   data: { name: string; value: number; enrolled: number; color: string }[];
   assessed: number | string;
   size?: 'lg' | 'sm';
   centerLabel?: string;
+  allYearsHover?: {
+    yearBlocks: typeof ALL_YEARS_AGE_BLOCKS;
+    activeYear: number;
+    accentColors: Record<string, string>;
+  };
 }) {
   const top =
     data.length > 0
@@ -37,6 +56,23 @@ function AgePie({
   const dim = size === 'sm' ? 128 : 224;
   const inner = size === 'sm' ? 46 : 62;
   const outer = size === 'sm' ? 58 : 92;
+
+  const tooltip = allYearsHover ? (
+    <Tooltip
+      content={
+        <AllYearsRiskHoverTooltip
+          yearBlocks={allYearsHover.yearBlocks}
+          activeYear={allYearsHover.activeYear}
+          accentColors={allYearsHover.accentColors}
+        />
+      }
+      wrapperStyle={{ zIndex: 30, outline: 'none' }}
+      allowEscapeViewBox={{ x: true, y: true }}
+      offset={12}
+    />
+  ) : (
+    <Tooltip content={<PieHoverTooltip />} wrapperStyle={{ zIndex: 20, outline: 'none' }} />
+  );
 
   return (
     <div
@@ -75,7 +111,7 @@ function AgePie({
             );
           })}
         </Pie>
-        <Tooltip content={<PieHoverTooltip />} wrapperStyle={{ zIndex: 20, outline: 'none' }} />
+        {data.length > 0 && tooltip}
       </PieChart>
       <div className="participation-age-pie__center" aria-hidden>
         <span className="participation-age-pie__center-value">{assessed}</span>
@@ -106,6 +142,11 @@ function AllYearsParticipation() {
                   assessed={yearBlock.assessed.toLocaleString()}
                   size="sm"
                   centerLabel="Assessed"
+                  allYearsHover={{
+                    yearBlocks: ALL_YEARS_AGE_BLOCKS,
+                    activeYear: yearBlock.year,
+                    accentColors: AGE_ACCENT_COLORS,
+                  }}
                 />
               </div>
             );

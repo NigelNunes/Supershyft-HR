@@ -43,7 +43,6 @@ function hashUnit(seed: string): number {
 
 function statusFromRoll(roll: number): JourneyStepStatus {
   if (roll < 0.55) return 'completed';
-  if (roll < 0.72) return 'in_progress';
   return 'pending';
 }
 
@@ -66,8 +65,9 @@ export function buildTemporaryJourney(seed: string): EmployeeRecord['journey'] {
   return journey;
 }
 
-export function temporaryAge(seed: string): number {
-  return 24 + Math.floor(hashUnit(`${seed}:age`) * 36);
+export function temporaryAge(_seed: string): number {
+  // TEMPORARY — fixed dummy age until participant age API is wired.
+  return 999;
 }
 
 export function mapCampParticipantToEmployee(

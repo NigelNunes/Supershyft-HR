@@ -17,9 +17,9 @@ export interface MetabolicAgeCategory {
 
 /** Temporary dummy data until metabolic-age API is wired. */
 export const DUMMY_METABOLIC_AGE_CATEGORIES: MetabolicAgeCategory[] = [
-  { key: 'good', label: 'GOOD', count: 132, percent: 68 },
-  { key: 'attention', label: 'NEEDS ATTENTION', count: 69, percent: 27 },
-  { key: 'highRisk', label: 'HIGH RISK', count: 23, percent: 15 },
+  { key: 'good', label: 'GOOD', count: 999, percent: 999 },
+  { key: 'attention', label: 'NEEDS ATTENTION', count: 999, percent: 999 },
+  { key: 'highRisk', label: 'HIGH RISK', count: 999, percent: 999 },
 ];
 
 interface MetabolicAgeDistributionCardProps {
@@ -34,51 +34,11 @@ const MID = VIEW_H / 2;
 /** Column centers — dashed guides + stats columns. */
 const COL_X = [VIEW_W * 0.17, VIEW_W * 0.5, VIEW_W * 0.83] as const;
 
-/**
- * Organic snake silhouette.
- * Start: flat vertical face + soft rounded corners, then a slight outward flare
- * before tapering (matches Figma head). Half-heights kept under full bleed.
- */
-const SILHOUETTE: { x: number; top: number; bot: number }[] = [
-  { x: 0, top: 78, bot: 78 },
-  { x: 6, top: 82, bot: 82 },
-  { x: 14, top: 85, bot: 85 },
-  { x: 26, top: 86, bot: 86 },
-  { x: 42, top: 86, bot: 86 },
-  { x: 60, top: 86, bot: 86 },
-  { x: 80, top: 86, bot: 86 },
-  { x: 100, top: 85, bot: 85 },
-  { x: 120, top: 84, bot: 84 },
-  { x: 140, top: 80, bot: 80 },
-  { x: 160, top: 72, bot: 72 },
-  { x: 180, top: 64, bot: 65 },
-  { x: 200, top: 57, bot: 59 },
-  { x: 220, top: 54, bot: 56 },
-  { x: 240, top: 53, bot: 56 },
-  { x: 260, top: 54, bot: 58 },
-  { x: 280, top: 52, bot: 57 },
-  { x: 300, top: 48, bot: 55 },
-  { x: 320, top: 44, bot: 53 },
-  { x: 340, top: 42, bot: 50 },
-  { x: 360, top: 36, bot: 44 },
-  { x: 380, top: 33, bot: 41 },
-  { x: 400, top: 32, bot: 35 },
-  { x: 420, top: 28, bot: 34 },
-  { x: 440, top: 24, bot: 30 },
-  { x: 460, top: 25, bot: 28 },
-  { x: 480, top: 22, bot: 26 },
-  { x: 500, top: 21, bot: 22 },
-  { x: 520, top: 15, bot: 19 },
-  { x: 540, top: 12, bot: 14 },
-  { x: 560, top: 10, bot: 10 },
-  { x: 580, top: 7, bot: 7 },
-  { x: 600, top: 5, bot: 7 },
-  { x: 620, top: 1, bot: 3 },
-  { x: 640, top: 0, bot: 0 },
-];
+/** Max half-height (px) when a category is at the peak count. */
+const BASE_HALF = 78;
 
-/** Figma dummy reference counts used to author the silhouette. */
-const REF_COUNTS = [132, 69, 23] as const;
+/** Sample density along the snake path. */
+const SAMPLE_STEP = 8;
 
 type Pt = { x: number; y: number };
 
@@ -104,7 +64,10 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * Math.min(1, Math.max(0, t));
 }
 
-/** Relative amplitude along x from three category counts (1 at the max count). */
+/**
+ * Relative amplitude along x from three category counts (1 at the max count).
+ * Holds each column's value across its span so equal counts stay uniform.
+ */
 function amplitudeAtX(x: number, counts: [number, number, number]): number {
   const max = Math.max(...counts, 1);
   const a0 = counts[0] / max;
@@ -112,25 +75,56 @@ function amplitudeAtX(x: number, counts: [number, number, number]): number {
   const a2 = counts[2] / max;
   const [x0, x1, x2] = COL_X;
 
-  if (x <= x0) return lerp(a0 * 0.98, a0, x / x0);
+  if (x <= x0) return a0;
   if (x <= x1) return lerp(a0, a1, (x - x0) / (x1 - x0));
   if (x <= x2) return lerp(a1, a2, (x - x1) / (x2 - x1));
-  return lerp(a2, 0, (x - x2) / (VIEW_W - x2));
+  return a2;
+}
+
+/**
+ * Soft organic envelope — rounded head, flat through the value columns,
+ * gentle tip after the last column. Does not encode fake left→right taper.
+ */
+function envelopeAtX(x: number): number {
+  const headEnd = 28;
+  const [, , x2] = COL_X;
+
+  if (x <= headEnd) {
+    // Rounded face that opens to full height
+    const t = x / headEnd;
+    return lerp(0.78, 1, t * (2 - t));
+  }
+  if (x <= x2) {
+    // Subtle organic undulation (±3%) without biasing any column
+    return 1 + 0.03 * Math.sin((x / VIEW_W) * Math.PI * 2.2);
+  }
+  // Soft tip after the last category column
+  const t = (x - x2) / Math.max(VIEW_W - x2, 1);
+  return lerp(1, 0.04, t * t);
+}
+
+function halfHeightAtX(x: number, counts: [number, number, number]): number {
+  const amp = amplitudeAtX(x, counts);
+  if (amp <= 0) return 0;
+  return BASE_HALF * amp * envelopeAtX(x);
 }
 
 function buildSnakePath(counts: [number, number, number]): string {
   const top: Pt[] = [];
   const bottom: Pt[] = [];
 
-  for (const point of SILHOUETTE) {
-    const dataAmp = amplitudeAtX(point.x, counts);
-    const refAmp = amplitudeAtX(point.x, [...REF_COUNTS]);
-    // Keep Figma edge character; scale thickness when category mix changes
-    const scale = refAmp > 0.02 ? dataAmp / refAmp : dataAmp > 0 ? 1 : 0;
-    top.push({ x: point.x, y: MID - point.top * scale });
-    bottom.push({ x: point.x, y: MID + point.bot * scale });
+  for (let x = 0; x <= VIEW_W; x += SAMPLE_STEP) {
+    const half = halfHeightAtX(x, counts);
+    top.push({ x, y: MID - half });
+    bottom.push({ x, y: MID + half });
+  }
+  if (top[top.length - 1]?.x !== VIEW_W) {
+    const half = halfHeightAtX(VIEW_W, counts);
+    top.push({ x: VIEW_W, y: MID - half });
+    bottom.push({ x: VIEW_W, y: MID + half });
   }
 
+  // Tip lands on the midline
   top[top.length - 1] = { x: VIEW_W, y: MID };
   bottom[bottom.length - 1] = { x: VIEW_W, y: MID };
 
