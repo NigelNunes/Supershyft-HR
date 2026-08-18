@@ -12,7 +12,7 @@ import {
 import { useOrganization } from '../contexts/OrganizationContext';
 import { ComingSoonPanel } from '../components/ui/ComingSoonPanel';
 import { CHART_INFO } from '../content/chartInfo';
-import { DashboardHeader, type YearOption } from '../components/layout/DashboardHeader';
+import { DashboardHeader, YEAR_OPTIONS, type YearOption } from '../components/layout/DashboardHeader';
 import { DashboardMetricCards } from '../components/ui/DashboardMetricCards';
 import { MetabolicAgeDistributionCard } from '../components/charts/MetabolicAgeDistributionCard';
 import { ParticipationCharts } from '../components/charts/ParticipationCharts';
@@ -103,6 +103,7 @@ function DepartmentDetailPageContent({
         onRefresh={onRefresh}
         selectedYear={selectedYear}
         onYearChange={setSelectedYear}
+        yearOptions={YEAR_OPTIONS.map((opt) => ({ ...opt, campNo: null }))}
       />
 
       <div className="dashboard-metrics-row">

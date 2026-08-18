@@ -37,13 +37,15 @@ export function buildCampYearChoices(camps: ApiOrganizationCamp[]): CampYearChoi
   }
 
   const years = [...byYear.keys()].sort((a, b) => Number(b) - Number(a));
-  const choices: CampYearChoice[] = years.map((year) => ({
+  // TEMPORARY: only show 2026
+  const filtered = years.filter((y) => y === '2026');
+  const choices: CampYearChoice[] = filtered.map((year) => ({
     value: year,
     label: year,
     campNo: byYear.get(year)!.camp_no,
   }));
 
-  if (years.length > 1) {
+  if (filtered.length > 1) {
     choices.push({ value: 'all', label: 'All Years', campNo: null });
   }
 

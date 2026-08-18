@@ -3,7 +3,7 @@ import { RefreshCw } from 'lucide-react';
 import type { CampYearChoice, CampYearOption } from '../../utils/campYears';
 import './DashboardHeader.css';
 
-/** @deprecated Prefer year options from useCamp().yearOptions */
+/** @deprecated Kept for DepartmentDetailPage fallback only */
 export const YEAR_OPTIONS = [
   { value: '2026', label: '2026' },
   { value: '2025', label: '2025' },
@@ -33,10 +33,7 @@ export function DashboardHeader({
   subtitle = 'Workforce wellness analysis',
 }: DashboardHeaderProps) {
   const [refreshing, setRefreshing] = useState(false);
-  const options =
-    yearOptions && yearOptions.length > 0
-      ? yearOptions
-      : YEAR_OPTIONS.map((opt) => ({ ...opt, campNo: null as number | null }));
+  const options = yearOptions ?? [];
 
   const handleRefresh = async () => {
     setRefreshing(true);
