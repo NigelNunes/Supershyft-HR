@@ -8,16 +8,9 @@ import {
   Network,
   Users,
 } from 'lucide-react';
-import {
-  DEMO_CAMP_NAME,
-  DEMO_CAMP_NO,
-  DEMO_ORG_ID,
-  DEMO_ORG_NAME,
-} from '../../config/demo';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCamp } from '../../contexts/CampContext';
 import { useOrganization } from '../../contexts/OrganizationContext';
-import type { ApiOrganizationCamp } from '../../services/apiTypes';
 import { formatUserDisplayName, formatUserPhone, userInitial } from '../../utils/userDisplay';
 import './Sidebar.css';
 
@@ -35,19 +28,6 @@ const navItems = [
   { to: '/employees', label: 'All Employees', icon: Users },
 ];
 
-const DEMO_CAMPS: ApiOrganizationCamp[] = [
-  {
-    camp_no: DEMO_CAMP_NO,
-    camp_name: DEMO_CAMP_NAME,
-    organization_id: DEMO_ORG_ID,
-    organization_name: DEMO_ORG_NAME,
-    start_date: '2024-11-01',
-    engagement_count: 1086,
-    department_count: 10,
-    report_count: 1086,
-  },
-];
-
 export function Sidebar({
   collapsed,
   onToggle,
@@ -56,7 +36,7 @@ export function Sidebar({
   onNavigate,
 }: SidebarProps) {
   const { user, userLoading, logout } = useAuth();
-  const { selectedCampNo } = useCamp();
+  const { selectedCampName, selectedCampOrganizationName } = useCamp();
   const { organizationName, organizationLogo, departments, loading: orgLoading } =
     useOrganization();
   const navigate = useNavigate();
@@ -64,10 +44,19 @@ export function Sidebar({
 
   const showLabels = isMobile || !collapsed;
   const sidebarCollapsed = !isMobile && collapsed;
-  const displayName = user ? formatUserDisplayName(user) : userLoading ? 'Loading…' : '—';
+  const displayName = user ? formatUserDisplayName(user) : userLoading ? 'Loading…' : '-';
   const displayPhone = user ? formatUserPhone(user.phone) : '';
-  const companyLabel = orgLoading ? 'Loading…' : organizationName;
-  const companyInitial = companyLabel.charAt(0).toUpperCase() || '?';
+  // Prefer live /organizations/we name; fall back to the org name saved at camp select.
+  const companyLabel = orgLoading
+    ? 'Loading…'
+    : organizationName !== '-'
+      ? organizationName
+      : selectedCampOrganizationName?.trim() || '-';
+  const companyInitial =
+    companyLabel && companyLabel !== '-' && companyLabel !== 'Loading…'
+      ? companyLabel.charAt(0).toUpperCase()
+      : '?';
+  const campSubtitle = selectedCampName?.trim() || '-';
   const activeDepartmentSlug = location.pathname.startsWith('/departments/')
     ? location.pathname.slice('/departments/'.length).split('/')[0]
     : null;
@@ -75,7 +64,6 @@ export function Sidebar({
 
   const [campsOpen, setCampsOpen] = useState(false);
   const [departmentsOpen, setDepartmentsOpen] = useState(false);
-  const camps = DEMO_CAMPS;
   const campsRef = useRef<HTMLDivElement>(null);
   const departmentsRef = useRef<HTMLDivElement>(null);
 
@@ -110,16 +98,6 @@ export function Sidebar({
     setDepartmentsOpen(false);
   }, [collapsed, mobileOpen]);
 
-  const selectedCamp = camps.find((camp) => camp.camp_no === selectedCampNo) ?? camps[0];
-  const campSubtitle = selectedCamp?.camp_name ?? DEMO_CAMP_NAME;
-
-  const handleSelectCamp = (camp: ApiOrganizationCamp) => {
-    setCampsOpen(false);
-    if (camp.camp_no === selectedCampNo) return;
-    navigate('/', { replace: true });
-    onNavigate?.();
-  };
-
   const handleToggleDepartments = () => {
     if (sidebarCollapsed) {
       onToggle();
@@ -138,6 +116,7 @@ export function Sidebar({
 
   const handleLogout = () => {
     logout();
+    navigate('/login', { replace: true });
     onNavigate?.();
   };
 
@@ -225,27 +204,20 @@ export function Sidebar({
               id="sidebar-camps-list"
               className="sidebar__camps-panel"
               role="region"
-              aria-label="Camps"
+              aria-label="Current camp"
             >
               <ul className="sidebar__camps-list">
-                {camps.map((camp) => {
-                  const isSelected = camp.camp_no === selectedCampNo;
-                  return (
-                    <li key={camp.camp_no}>
-                      <button
-                        type="button"
-                        className={`sidebar__camp-item${isSelected ? ' sidebar__camp-item--active' : ''}`}
-                        onClick={() => handleSelectCamp(camp)}
-                        aria-current={isSelected ? 'true' : undefined}
-                      >
-                        <span className="sidebar__camp-item-name">{camp.camp_name}</span>
-                        <span className="sidebar__camp-item-meta">
-                          {camp.organization_name} · Nov 2024
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
+                <li>
+                  <button
+                    type="button"
+                    className="sidebar__camp-item sidebar__camp-item--active"
+                    onClick={() => setCampsOpen(false)}
+                    aria-current="true"
+                  >
+                    <span className="sidebar__camp-item-name">{campSubtitle}</span>
+                    <span className="sidebar__camp-item-meta">{companyLabel}</span>
+                  </button>
+                </li>
               </ul>
             </div>
           )}

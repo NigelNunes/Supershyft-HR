@@ -1,7 +1,13 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import abcLogo from '../assets/abc-logo.svg';
-import { DEMO_MODE, DEMO_ORG_ID, DEMO_ORG_NAME } from '../config/demo';
-import { DEPARTMENTS, departmentSlug } from '../data/participantPool';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+import { departmentSlug } from '../data/participantPool';
+import { organizationsApi } from '../services/api';
 import type { ApiMyOrganization, ApiOrganizationDepartment } from '../services/apiTypes';
 import { useAuth } from './AuthContext';
 import { useCamp } from './CampContext';
@@ -17,7 +23,10 @@ interface OrganizationContextValue {
 
 const OrganizationContext = createContext<OrganizationContextValue | null>(null);
 
-/** Normalize /organizations/me department entries into { department, slug }. */
+const API_BASE =
+  import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api';
+
+/** Normalize organization department entries into { department, slug }. */
 export function normalizeOrganizationDepartments(
   departments: ApiMyOrganization['departments'],
 ): ApiOrganizationDepartment[] {
@@ -54,53 +63,102 @@ export function resolveOrganizationLogoUrl(logo: string | null | undefined): str
     trimmed.startsWith('http://') ||
     trimmed.startsWith('https://') ||
     trimmed.startsWith('data:') ||
-    trimmed.startsWith('/')
+    trimmed.startsWith('blob:')
   ) {
     return trimmed;
   }
-  return trimmed;
+  if (trimmed.startsWith('/')) {
+    return trimmed.startsWith('/api/') ? trimmed : `${API_BASE.replace(/\/$/, '')}${trimmed}`;
+  }
+  return `${API_BASE.replace(/\/$/, '')}/${trimmed.replace(/^\//, '')}`;
 }
 
-const DEMO_ORGANIZATION: ApiMyOrganization = {
-  organization_id: DEMO_ORG_ID,
-  name: DEMO_ORG_NAME,
-  organization_type: 'corporate',
-  logo: abcLogo,
-  city: 'Mumbai',
-  state: 'Maharashtra',
-  country: 'India',
-  departments: DEPARTMENTS.map((department) => ({
-    department,
-    slug: departmentSlug(department),
-  })),
-  status: 'active',
-};
+/**
+ * Resolve organization_id, then load name/logo from GET /organizations/{organization_id}.
+ *
+ * Id source:
+ * 1. selected camp's organization_id (stored at camp select)
+ * 2. else GET /organizations/we → organizations[0].organization_id
+ */
+async function loadOrganizationDetails(
+  token: string,
+  selectedOrganizationId: number | null,
+): Promise<ApiMyOrganization | null> {
+  let organizationId =
+    selectedOrganizationId != null && selectedOrganizationId > 0
+      ? selectedOrganizationId
+      : null;
+
+  if (organizationId == null) {
+    const { items } = await organizationsApi.listAllMyOrganizations(token);
+    if (!items.length) return null;
+    organizationId = items[0].organization_id;
+  }
+
+  if (organizationId == null || organizationId <= 0) return null;
+
+  return organizationsApi.get(organizationId, token);
+}
 
 export function OrganizationProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
-  const { selectedCampOrganizationName } = useCamp();
+  const { isAuthenticated, accessToken } = useAuth();
+  const {
+    selectedCampNo,
+    selectedCampOrganizationId,
+    selectedCampOrganizationName,
+  } = useCamp();
 
-  const value = useMemo<OrganizationContextValue>(() => {
-    if (!DEMO_MODE || !isAuthenticated) {
-      return {
-        activeOrganization: null,
-        organizationName: selectedCampOrganizationName ?? 'Organization',
-        organizationLogo: null,
-        departments: [],
-        loading: false,
-        error: null,
-      };
+  const [activeOrganization, setActiveOrganization] = useState<ApiMyOrganization | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated || !accessToken || !selectedCampNo) {
+      setActiveOrganization(null);
+      setLoading(false);
+      setError(null);
+      return;
     }
 
-    return {
-      activeOrganization: DEMO_ORGANIZATION,
-      organizationName: DEMO_ORG_NAME,
-      organizationLogo: abcLogo,
-      departments: normalizeOrganizationDepartments(DEMO_ORGANIZATION.departments),
-      loading: false,
-      error: null,
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    void loadOrganizationDetails(accessToken, selectedCampOrganizationId)
+      .then((org) => {
+        if (cancelled) return;
+        setActiveOrganization(org);
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setActiveOrganization(null);
+        setError(err instanceof Error ? err.message : 'Failed to load organization');
+        setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
     };
-  }, [isAuthenticated, selectedCampOrganizationName]);
+  }, [isAuthenticated, accessToken, selectedCampNo, selectedCampOrganizationId]);
+
+  const value = useMemo<OrganizationContextValue>(() => {
+    // Prefer live details from GET /organizations/{id}; fall back to camp select label.
+    const organizationName =
+      activeOrganization?.name?.trim() ||
+      selectedCampOrganizationName?.trim() ||
+      '-';
+    const organizationLogo = resolveOrganizationLogoUrl(activeOrganization?.logo);
+
+    return {
+      activeOrganization,
+      organizationName,
+      organizationLogo,
+      departments: normalizeOrganizationDepartments(activeOrganization?.departments),
+      loading,
+      error,
+    };
+  }, [activeOrganization, selectedCampOrganizationName, loading, error]);
 
   return <OrganizationContext.Provider value={value}>{children}</OrganizationContext.Provider>;
 }

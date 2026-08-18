@@ -1,10 +1,6 @@
 import { useId, useMemo } from 'react';
 import { AlertCircle, Info } from 'lucide-react';
 import { CHART_INFO } from '../../content/chartInfo';
-import {
-  DUMMY_ALL_YEARS_METABOLIC_AGE,
-  DUMMY_ALL_YEARS_METABOLIC_INSIGHT,
-} from '../../data/dummyAllYearsMetrics';
 import type { YearOption } from '../layout/DashboardHeader';
 import './MetabolicAgeDistributionCard.css';
 
@@ -15,12 +11,14 @@ export interface MetabolicAgeCategory {
   percent: number;
 }
 
-/** Fallback = 2026 metabolic mix (matches getDummyYearMetabolicAge(2026)). */
-export const DUMMY_METABOLIC_AGE_CATEGORIES: MetabolicAgeCategory[] = [
-  { key: 'good', label: 'GOOD', count: 504, percent: 45 },
-  { key: 'attention', label: 'NEEDS ATTENTION', count: 448, percent: 40 },
-  { key: 'highRisk', label: 'HIGH RISK', count: 168, percent: 15 },
+const EMPTY_CATEGORIES: MetabolicAgeCategory[] = [
+  { key: 'good', label: 'GOOD', count: 0, percent: 0 },
+  { key: 'attention', label: 'NEEDS ATTENTION', count: 0, percent: 0 },
+  { key: 'highRisk', label: 'HIGH RISK', count: 0, percent: 0 },
 ];
+
+const PLACEHOLDER_YEARS = [2024, 2025, 2026] as const;
+const EMPTY = '-';
 
 interface MetabolicAgeDistributionCardProps {
   categories?: MetabolicAgeCategory[];
@@ -186,10 +184,13 @@ function MetabolicAgeSnake({ categories }: { categories: MetabolicAgeCategory[] 
 }
 
 export function MetabolicAgeDistributionCard({
-  categories = DUMMY_METABOLIC_AGE_CATEGORIES,
+  categories,
   selectedYear = '2026',
 }: MetabolicAgeDistributionCardProps) {
-  const highRisk = categories.find((c) => c.key === 'highRisk');
+  const resolved =
+    categories && categories.length > 0 ? categories : EMPTY_CATEGORIES;
+  const hasData = Boolean(categories && categories.length > 0);
+  const highRisk = resolved.find((c) => c.key === 'highRisk');
   const insightPercent = highRisk?.percent ?? 0;
   const isAllYears = selectedYear === 'all';
 
@@ -212,31 +213,19 @@ export function MetabolicAgeDistributionCard({
 
       {isAllYears ? (
         <>
-          {/* TEMPORARY: DUMMY_ALL_YEARS_METABOLIC_* — remove when multi-year API exists */}
           <div className="metabolic-age-bars">
-            {DUMMY_ALL_YEARS_METABOLIC_AGE.map((row) => {
-              const goodEnd = row.good;
-              const cautionEnd = row.good + row.caution;
-              return (
-                <div key={row.year} className="metabolic-age-bars__row">
-                  <span className="metabolic-age-bars__year">{row.year}</span>
-                  <div className="metabolic-age-bars__track" aria-hidden>
-                    <div
-                      className="metabolic-age-bars__seg metabolic-age-bars__seg--high"
-                      style={{ width: '100%' }}
-                    />
-                    <div
-                      className="metabolic-age-bars__seg metabolic-age-bars__seg--caution"
-                      style={{ width: `${cautionEnd}%` }}
-                    />
-                    <div
-                      className="metabolic-age-bars__seg metabolic-age-bars__seg--good"
-                      style={{ width: `${goodEnd}%` }}
-                    />
-                  </div>
+            {PLACEHOLDER_YEARS.map((year) => (
+              <div key={year} className="metabolic-age-bars__row">
+                <span className="metabolic-age-bars__year">{year}</span>
+                <div className="metabolic-age-bars__track" aria-hidden>
+                  <div
+                    className="metabolic-age-bars__seg metabolic-age-bars__seg--good"
+                    style={{ width: '100%', opacity: 0.15 }}
+                  />
                 </div>
-              );
-            })}
+                <span className="metabolic-age-bars__empty">{EMPTY}</span>
+              </div>
+            ))}
           </div>
 
           <ul className="metabolic-age-bars__legend">
@@ -256,32 +245,36 @@ export function MetabolicAgeDistributionCard({
 
           <div className="metabolic-age-card__insight">
             <AlertCircle size={20} aria-hidden />
-            <p>{DUMMY_ALL_YEARS_METABOLIC_INSIGHT}</p>
+            <p>{EMPTY}</p>
           </div>
         </>
       ) : (
         <>
           <div className="metabolic-age-card__stats">
-            {categories.map((category) => (
+            {resolved.map((category) => (
               <div
                 key={category.key}
                 className={`metabolic-age-stat metabolic-age-stat--${category.key}`}
               >
                 <span className="metabolic-age-stat__label">{category.label}</span>
                 <span className="metabolic-age-stat__count">
-                  {category.count.toLocaleString()}
+                  {hasData ? category.count.toLocaleString() : EMPTY}
                 </span>
-                <span className="metabolic-age-stat__percent">{category.percent}%</span>
+                <span className="metabolic-age-stat__percent">
+                  {hasData ? `${category.percent}%` : EMPTY}
+                </span>
               </div>
             ))}
           </div>
 
-          <MetabolicAgeSnake categories={categories} />
+          {hasData ? <MetabolicAgeSnake categories={resolved} /> : null}
 
           <div className="metabolic-age-card__insight">
             <AlertCircle size={20} aria-hidden />
             <p>
-              {insightPercent}% Employees have their metabolic age &gt;3 years of their actual age
+              {hasData
+                ? `${insightPercent}% Employees have their metabolic age >3 years of their actual age`
+                : EMPTY}
             </p>
           </div>
         </>

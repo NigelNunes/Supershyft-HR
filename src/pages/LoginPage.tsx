@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { LoginLayout } from '../components/auth/LoginLayout';
-import { DEMO_PHONE, isDemoPhone } from '../config/demo';
 import { useAuth } from '../contexts/AuthContext';
 import { useCamp } from '../contexts/CampContext';
+import { authApi } from '../services/api';
 import './LoginPage.css';
 
 export function LoginPage() {
@@ -15,7 +15,7 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   if (isAuthenticated) {
-    return <Navigate to={selectedCampNo ? '/' : '/'} replace />;
+    return <Navigate to={selectedCampNo ? '/' : '/login/select-camp'} replace />;
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -25,14 +25,17 @@ export function LoginPage() {
       setError('Enter a valid 10-digit mobile number.');
       return;
     }
-    if (!isDemoPhone(normalized)) {
-      setError(`Demo login only. Use ${DEMO_PHONE}`);
-      return;
-    }
+
     setLoading(true);
     setError('');
-    navigate('/login/verify', { state: { phone: normalized } });
-    setLoading(false);
+    try {
+      await authApi.sendOtp(normalized);
+      navigate('/login/verify', { state: { phone: normalized } });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send OTP');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,15 +53,15 @@ export function LoginPage() {
               setPhone(digits);
               setError('');
             }}
-            placeholder={DEMO_PHONE}
+            placeholder="10-digit mobile"
             autoComplete="tel"
             maxLength={10}
             required
           />
         </label>
         {error && <p className="login-form__error" role="alert">{error}</p>}
-        <button type="submit" disabled={loading}>
-          {loading ? 'Continuing…' : 'Continue'}
+        <button type="submit" disabled={loading || phone.replace(/\D/g, '').length !== 10}>
+          {loading ? 'Sending…' : 'Send OTP'}
         </button>
       </form>
     </LoginLayout>

@@ -5,9 +5,19 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCamp } from '../contexts/CampContext';
 import { organizationsApi } from '../services/api';
 import type { ApiOrganizationCamp } from '../services/apiTypes';
-import './CampSelectPage.css';
 import { formatCampDate } from '../utils/campDisplay';
+import './CampSelectPage.css';
 
+/**
+ * /login/select-camp
+ *
+ * Role branching (after GET /users/me):
+ * - admin     → GET /organizations/camps
+ * - non-admin → GET /organizations/we → GET /organizations/{id}/camps
+ *
+ * Card fields always come from the camps response:
+ * camp_name, organization_name, start_date, camp_no, organization_id
+ */
 export function CampSelectPage() {
   const { isAuthenticated, accessToken, user, userLoading, logout } = useAuth();
   const { selectedCampNo, selectCamp } = useCamp();
@@ -19,6 +29,7 @@ export function CampSelectPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    // Wait for /users/me so role is known before loading camps.
     if (!accessToken || !isAuthenticated || selectedCampNo || userLoading) return;
 
     const token = accessToken;
@@ -30,20 +41,23 @@ export function CampSelectPage() {
       setError('');
 
       try {
-        const { items: campList } = await organizationsApi.listCampsForUser(token, { role });
+        const { items: campList } = await organizationsApi.listCampsForUser(token, role);
         if (cancelled) return;
 
         if (campList.length === 0) {
+          setCamps([]);
           setError('No camps found for your account.');
           setLoading(false);
           return;
         }
 
         if (campList.length === 1) {
+          const camp = campList[0];
           const result = await selectCamp(
-            campList[0].camp_no,
-            campList[0].organization_id,
-            campList[0].organization_name,
+            camp.camp_no,
+            camp.organization_id,
+            camp.organization_name,
+            camp.camp_name,
           );
           if (cancelled) return;
           if (result.ok) {
@@ -78,7 +92,13 @@ export function CampSelectPage() {
     setSelectingCampNo(camp.camp_no);
     setError('');
 
-    const result = await selectCamp(camp.camp_no, camp.organization_id, camp.organization_name);
+    const result = await selectCamp(
+      camp.camp_no,
+      camp.organization_id,
+      camp.organization_name,
+      camp.camp_name,
+      camp.start_date,
+    );
     setSelectingCampNo(null);
 
     if (result.ok) {
@@ -87,6 +107,11 @@ export function CampSelectPage() {
     }
 
     setError(result.error ?? 'Unable to access this camp.');
+  };
+
+  const handleSignOut = () => {
+    logout();
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -125,7 +150,7 @@ export function CampSelectPage() {
       )}
 
       {!loading && error && (
-        <button type="button" className="login-back" onClick={() => logout()}>
+        <button type="button" className="login-back" onClick={handleSignOut}>
           Sign out
         </button>
       )}

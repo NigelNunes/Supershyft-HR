@@ -1,17 +1,6 @@
 import type { ApiCampParticipant } from './apiTypes';
 import type { EmployeeRecord, JourneyStepId, JourneyStepStatus } from '../types';
 
-const JOURNEY_STEPS: JourneyStepId[] = [
-  'anthropometry',
-  'vitals',
-  'dietLifestyle',
-  'bloodReport',
-  'bloodReportAi',
-  'bioAiReport',
-  'bioAiShared',
-  'consultations',
-];
-
 function normalizeGender(value: string | null | undefined): EmployeeRecord['gender'] {
   const raw = (value ?? '').trim().toLowerCase();
   if (raw === 'male' || raw === 'm') return 'Male';
@@ -28,124 +17,84 @@ function displayName(participant: ApiCampParticipant): string {
     .map((part) => part?.trim())
     .filter(Boolean)
     .join(' ');
-  return full || '—';
+  return full || '-';
 }
 
-/** Deterministic 0–1 from string — TEMPORARY until journey API exists. */
-function hashUnit(seed: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < seed.length; i += 1) {
-    h ^= seed.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return (h >>> 0) / 4294967295;
+function boolStatus(value: boolean | null | undefined): JourneyStepStatus {
+  return value === true ? 'completed' : 'pending';
 }
 
-function statusFromRoll(roll: number): JourneyStepStatus {
-  if (roll < 0.55) return 'completed';
-  if (roll < 0.72) return 'in_progress';
-  return 'pending';
+/** Humanize API department slug when org label is unavailable. */
+export function formatDepartmentLabel(slugOrName: string | null | undefined): string {
+  const raw = (slugOrName ?? '').trim();
+  if (!raw) return '-';
+  if (raw.includes(' ') && !raw.includes('_')) return raw;
+  return raw
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-/**
- * TEMPORARY — synthesize journey + age for table UI.
- * Replace with API fields when participant progress endpoints are available.
- */
-export function buildTemporaryJourney(seed: string): EmployeeRecord['journey'] {
-  const journey = {} as EmployeeRecord['journey'];
-  let forcePending = false;
-  for (const step of JOURNEY_STEPS) {
-    if (forcePending) {
-      journey[step] = 'pending';
-      continue;
-    }
-    const status = statusFromRoll(hashUnit(`${seed}:${step}`));
-    journey[step] = status;
-    if (status !== 'completed') forcePending = true;
-  }
-  return journey;
-}
-
-/**
- * Demo journey aligned to participant flags so employee-table counts
- * match dashboard KPIs (blood tests / doctor consultations / bio-AI).
- */
-export function buildAlignedJourney(
-  seed: string,
-  flags: { bloodTestDone: boolean; doctorConsultation: boolean; bioAiDone?: boolean },
+export function buildJourneyFromParticipant(
+  participant: ApiCampParticipant,
 ): EmployeeRecord['journey'] {
-  const journey = buildTemporaryJourney(seed);
+  const q = participant.questionnaires ?? {};
+  const reports = participant.reports ?? {};
 
-  if (flags.bloodTestDone) {
-    journey.anthropometry = 'completed';
-    journey.vitals = 'completed';
-    journey.dietLifestyle = 'completed';
-    journey.bloodReport = 'completed';
-    if (hashUnit(`${seed}:bloodReportAi`) < 0.85) {
-      journey.bloodReportAi = 'completed';
-    } else {
-      journey.bloodReportAi = 'in_progress';
-    }
-  } else {
-    journey.bloodReport = 'pending';
-    journey.bloodReportAi = 'pending';
-    journey.bioAiReport = 'pending';
-    journey.bioAiShared = 'pending';
-    journey.consultations = 'pending';
-    return journey;
-  }
-
-  const bioAiExplicit = flags.bioAiDone;
-  if (bioAiExplicit === true) {
-    journey.bioAiReport = 'completed';
-    journey.bioAiShared = hashUnit(`${seed}:bioAiShared`) < 0.7 ? 'completed' : 'in_progress';
-  } else if (bioAiExplicit === false) {
-    journey.bioAiReport = 'in_progress';
-    journey.bioAiShared = 'pending';
-  } else if (flags.doctorConsultation) {
-    journey.bioAiReport = 'completed';
-    journey.bioAiShared = hashUnit(`${seed}:bioAiShared`) < 0.7 ? 'completed' : 'in_progress';
-  } else if (hashUnit(`${seed}:bioAiReport`) < 0.55) {
-    journey.bioAiReport = 'completed';
-    journey.bioAiShared = hashUnit(`${seed}:bioAiShared`) < 0.4 ? 'completed' : 'pending';
-  } else {
-    journey.bioAiReport = 'in_progress';
-    journey.bioAiShared = 'pending';
-  }
-
-  journey.consultations = flags.doctorConsultation ? 'completed' : 'pending';
-
-  return journey;
-}
-
-export function temporaryAge(seed: string): number {
-  return 24 + Math.floor(hashUnit(`${seed}:age`) * 36);
+  return {
+    anthropometry: boolStatus(q['physical-measurement']),
+    vitals: boolStatus(q.vitals),
+    dietLifestyle: boolStatus(q['diet-lifestyle-parameters']),
+    bloodReport: boolStatus(reports.blood_report_generated),
+    bloodReportAi: boolStatus(reports.blood_report_sent),
+    bioAiReport: boolStatus(reports.bio_ai_report_generated),
+    bioAiShared: boolStatus(reports.bio_ai_report_sent),
+    consultations: boolStatus(participant.consultations),
+  };
 }
 
 export function mapCampParticipantToEmployee(
   participant: ApiCampParticipant,
   index: number,
+  departmentLabels?: Map<string, string>,
 ): EmployeeRecord {
   const baseId =
-    participant.user_id != null ? String(participant.user_id) : `participant-${index + 1}`;
+    participant.engagement_participant_id != null
+      ? String(participant.engagement_participant_id)
+      : participant.user_id != null
+        ? String(participant.user_id)
+        : `participant-${index + 1}`;
   const id = `${baseId}-${index}`;
+
+  const departmentSlug = (
+    participant.participant_department?.trim() ||
+    participant.department?.trim() ||
+    ''
+  ).toLowerCase();
+
+  const department =
+    (departmentSlug && departmentLabels?.get(departmentSlug)) ||
+    formatDepartmentLabel(
+      participant.participant_department || participant.department || '',
+    );
 
   return {
     id,
     name: displayName(participant),
-    phone: participant.phone?.trim() ?? '—',
-    email: participant.email?.trim() ?? '',
+    phone: participant.phone?.trim() || '-',
+    email: participant.email?.trim() || '',
     bloodGroup:
-      participant.blood_group?.trim() ||
       participant.participant_blood_group?.trim() ||
-      '—',
-    department:
-      participant.department?.trim() ||
-      participant.participant_department?.trim() ||
-      '—',
+      participant.blood_group?.trim() ||
+      '-',
+    department,
+    departmentSlug: departmentSlug || undefined,
     gender: normalizeGender(participant.gender),
-    age: temporaryAge(id),
-    journey: buildTemporaryJourney(id),
+    age: typeof participant.age === 'number' && Number.isFinite(participant.age)
+      ? participant.age
+      : undefined,
+    journey: buildJourneyFromParticipant(participant),
   };
 }
 
@@ -157,11 +106,11 @@ function employeeDisplayKey(employee: EmployeeRecord): string {
     phoneDigits,
     normalize(employee.gender),
     normalize(employee.bloodGroup),
-    normalize(employee.department),
+    normalize(employee.departmentSlug || employee.department),
   ].join('|');
 }
 
-/** Keep the first row when name, phone, gender, blood group, and department all match. */
+/** Keep the first row when identity columns match. */
 export function dedupeEmployeesByDisplayColumns(employees: EmployeeRecord[]): EmployeeRecord[] {
   const seen = new Set<string>();
   return employees.filter((employee) => {
@@ -172,8 +121,34 @@ export function dedupeEmployeesByDisplayColumns(employees: EmployeeRecord[]): Em
   });
 }
 
-export function mapCampParticipantsToEmployees(participants: ApiCampParticipant[]): EmployeeRecord[] {
+export function mapCampParticipantsToEmployees(
+  participants: ApiCampParticipant[],
+  departmentLabels?: Map<string, string>,
+): EmployeeRecord[] {
   return dedupeEmployeesByDisplayColumns(
-    participants.map((participant, index) => mapCampParticipantToEmployee(participant, index)),
+    participants.map((participant, index) =>
+      mapCampParticipantToEmployee(participant, index, departmentLabels),
+    ),
   );
 }
+
+/** Used by offline aggregate helpers — maps simple flags into journey columns. */
+export function buildAlignedJourney(
+  _seed: string,
+  flags: { bloodTestDone: boolean; doctorConsultation: boolean; bioAiDone?: boolean },
+): EmployeeRecord['journey'] {
+  const blood = flags.bloodTestDone;
+  const bioAi = flags.bioAiDone === true;
+  return {
+    anthropometry: blood ? 'completed' : 'pending',
+    vitals: blood ? 'completed' : 'pending',
+    dietLifestyle: blood ? 'completed' : 'pending',
+    bloodReport: blood ? 'completed' : 'pending',
+    bloodReportAi: blood ? 'completed' : 'pending',
+    bioAiReport: bioAi ? 'completed' : 'pending',
+    bioAiShared: bioAi ? 'completed' : 'pending',
+    consultations: flags.doctorConsultation ? 'completed' : 'pending',
+  };
+}
+
+export type { JourneyStepId };

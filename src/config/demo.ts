@@ -1,8 +1,8 @@
 /**
  * Demo-login branch: offline fake auth + dashboard.
- * This branch is disposable — do not merge into production.
+ * Disabled while using live phone OTP + camp picker APIs.
  */
-export const DEMO_MODE = true;
+export const DEMO_MODE = false;
 
 export const DEMO_PHONE = '0000000000';
 export const DEMO_OTP = '0000';

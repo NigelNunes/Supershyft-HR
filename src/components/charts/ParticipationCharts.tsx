@@ -1,17 +1,14 @@
 import { Cell, Pie, PieChart, Tooltip } from 'recharts';
 import { Info, Lightbulb } from 'lucide-react';
 import { CHART_INFO } from '../../content/chartInfo';
-import {
-  DUMMY_AGE_BANDS,
-  DUMMY_ALL_YEARS_AGE_INSIGHT,
-  DUMMY_ALL_YEARS_AGE_PARTICIPATION,
-} from '../../data/dummyAllYearsMetrics';
 import type { YearOption } from '../layout/DashboardHeader';
 import type { ParticipationByAge } from '../../types';
 import { PieHoverTooltip } from './PieHoverTooltip';
 import './ParticipationCharts.css';
 
 const AGE_COLORS = ['#3B82F6', '#34D399', '#8A61F7', '#FB923C', '#F87171'];
+const PLACEHOLDER_YEARS = [2024, 2025, 2026] as const;
+const EMPTY = '-';
 
 interface ParticipationChartsProps {
   byAge: ParticipationByAge[];
@@ -37,6 +34,8 @@ function AgePie({
   const dim = size === 'sm' ? 128 : 224;
   const inner = size === 'sm' ? 46 : 62;
   const outer = size === 'sm' ? 58 : 92;
+  const chartData =
+    data.length > 0 ? data : [{ name: 'empty', value: 1, enrolled: 0, color: 'rgba(255,255,255,0.08)' }];
 
   return (
     <div
@@ -45,18 +44,18 @@ function AgePie({
     >
       <PieChart width={dim} height={dim} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
         <Pie
-          data={data}
+          data={chartData}
           dataKey="value"
           nameKey="name"
           cx="50%"
           cy="50%"
           innerRadius={inner}
           outerRadius={outer}
-          paddingAngle={3.5}
+          paddingAngle={data.length > 1 ? 3.5 : 0}
           cornerRadius={size === 'sm' ? 5 : 7}
           stroke="none"
         >
-          {data.map((entry) => {
+          {chartData.map((entry) => {
             const isLead = top != null && entry.name === top.name;
             return (
               <Cell
@@ -75,7 +74,9 @@ function AgePie({
             );
           })}
         </Pie>
-        <Tooltip content={<PieHoverTooltip />} wrapperStyle={{ zIndex: 20, outline: 'none' }} />
+        {data.length > 0 && (
+          <Tooltip content={<PieHoverTooltip />} wrapperStyle={{ zIndex: 20, outline: 'none' }} />
+        )}
       </PieChart>
       <div className="participation-age-pie__center" aria-hidden>
         <span className="participation-age-pie__center-value">{assessed}</span>
@@ -86,43 +87,17 @@ function AgePie({
 }
 
 function AllYearsParticipation() {
-  // TEMPORARY: DUMMY_ALL_YEARS_AGE_* — remove when multi-year API exists
   return (
     <>
       <div className="participation-age-card__allyears">
         <div className="participation-age-card__allyears-pies">
-          {DUMMY_ALL_YEARS_AGE_PARTICIPATION.map((yearBlock) => {
-            const chartData = yearBlock.bands.map((row, i) => ({
-              name: row.ageGroup,
-              value: row.percent,
-              enrolled: row.enrolled,
-              color: AGE_COLORS[i % AGE_COLORS.length],
-            }));
-            return (
-              <div key={yearBlock.year} className="participation-age-card__allyears-col">
-                <span className="participation-age-card__allyears-year">{yearBlock.year}</span>
-                <AgePie
-                  data={chartData}
-                  assessed={yearBlock.assessed.toLocaleString()}
-                  size="sm"
-                  centerLabel="Assessed"
-                />
-              </div>
-            );
-          })}
-        </div>
-
-        <ul className="participation-age-pie__legend participation-age-pie__legend--horizontal">
-          {DUMMY_AGE_BANDS.map((band, i) => (
-            <li key={band} className="participation-age-pie__legend-item">
-              <span
-                className="participation-age-pie__dot"
-                style={{ backgroundColor: AGE_COLORS[i % AGE_COLORS.length] }}
-              />
-              <span className="participation-age-pie__label">{band}</span>
-            </li>
+          {PLACEHOLDER_YEARS.map((year) => (
+            <div key={year} className="participation-age-card__allyears-col">
+              <span className="participation-age-card__allyears-year">{year}</span>
+              <AgePie data={[]} assessed={EMPTY} size="sm" centerLabel="Assessed" />
+            </div>
           ))}
-        </ul>
+        </div>
       </div>
 
       <footer className="participation-age-card__insight">
@@ -130,7 +105,7 @@ function AllYearsParticipation() {
           <Lightbulb size={20} aria-hidden />
           <span>Insight</span>
         </div>
-        <p className="participation-age-card__insight-text">{DUMMY_ALL_YEARS_AGE_INSIGHT}</p>
+        <p className="participation-age-card__insight-text">{EMPTY}</p>
       </footer>
     </>
   );
@@ -160,7 +135,7 @@ function SingleYearParticipation({
       <div className="participation-age-card__body">
         <AgePie
           data={chartData}
-          assessed={loading ? '…' : byAge.length > 0 ? totalEnrolled.toLocaleString() : '—'}
+          assessed={loading ? '…' : byAge.length > 0 ? totalEnrolled.toLocaleString() : EMPTY}
           size="lg"
           centerLabel="Enrolled"
         />
@@ -170,7 +145,7 @@ function SingleYearParticipation({
             <li className="participation-age-pie__empty">Loading…</li>
           )}
           {!loading && byAge.length === 0 && (
-            <li className="participation-age-pie__empty">No data available</li>
+            <li className="participation-age-pie__empty">{EMPTY}</li>
           )}
           {byAge.map((row, i) => (
             <li key={row.ageGroup} className="participation-age-pie__row">

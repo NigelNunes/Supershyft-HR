@@ -1,11 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
-  DEMO_MODE,
-  DEMO_PHONE,
-  DEMO_REFRESH_TOKEN,
-  DEMO_TOKEN,
-  isDemoCredentials,
-} from '../config/demo';
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+import { authApi, usersApi } from '../services/api';
 import type { ApiCurrentUser } from '../services/apiTypes';
 
 interface AuthContextValue {
@@ -31,29 +33,20 @@ function clearStoredAuth() {
   sessionStorage.removeItem(DEMO_SESSION_KEY);
 }
 
-const DEMO_USER: ApiCurrentUser = {
-  user_id: 1,
-  first_name: 'Demo',
-  last_name: 'HR',
-  phone: DEMO_PHONE,
-  email: 'hr@abc.demo',
-  employee: {
-    employee_id: 1,
-    role: 'hr_admin',
-  },
-};
+function readStoredToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  if (sessionStorage.getItem(AUTH_KEY) !== '1') return null;
+  return sessionStorage.getItem(TOKEN_KEY);
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     if (typeof window === 'undefined') return false;
-    return DEMO_MODE && sessionStorage.getItem(AUTH_KEY) === '1';
+    return sessionStorage.getItem(AUTH_KEY) === '1' && Boolean(sessionStorage.getItem(TOKEN_KEY));
   });
-  const [accessToken, setAccessToken] = useState<string | null>(() => {
-    if (typeof window === 'undefined' || !DEMO_MODE) return null;
-    return sessionStorage.getItem(TOKEN_KEY) === DEMO_TOKEN ? DEMO_TOKEN : null;
-  });
+  const [accessToken, setAccessToken] = useState<string | null>(() => readStoredToken());
   const [user, setUser] = useState<ApiCurrentUser | null>(null);
-  const [userLoading, setUserLoading] = useState(false);
+  const [userLoading, setUserLoading] = useState(() => Boolean(readStoredToken()));
 
   useEffect(() => {
     if (!isAuthenticated || !accessToken) {
@@ -61,34 +54,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserLoading(false);
       return;
     }
-    setUser(DEMO_USER);
-    setUserLoading(false);
+
+    let cancelled = false;
+    setUserLoading(true);
+
+    void usersApi
+      .me(accessToken)
+      .then((me) => {
+        if (cancelled) return;
+        setUser(me);
+      })
+      .catch(() => {
+        // Camp picker may still load camps; role can be fetched again there if missing.
+        if (cancelled) return;
+        setUser(null);
+      })
+      .finally(() => {
+        if (!cancelled) setUserLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [isAuthenticated, accessToken]);
 
   const login = useCallback(async (phone: string, otp: string) => {
-    if (!isDemoCredentials(phone, otp)) {
+    try {
+      const normalizedPhone = phone.replace(/\D/g, '');
+      const normalizedOtp = otp.replace(/\D/g, '').slice(0, 6);
+      const result = await authApi.verifyOtp(normalizedPhone, normalizedOtp);
+      const { access_token, refresh_token } = result.tokens;
+
+      sessionStorage.setItem(AUTH_KEY, '1');
+      sessionStorage.setItem(TOKEN_KEY, access_token);
+      sessionStorage.setItem(REFRESH_TOKEN_KEY, refresh_token);
+      sessionStorage.removeItem(DEMO_SESSION_KEY);
+
+      setAccessToken(access_token);
+      setIsAuthenticated(true);
+      return { ok: true };
+    } catch (err) {
       return {
         ok: false,
-        error: `Use demo credentials: ${DEMO_PHONE} / 0000`,
+        error: err instanceof Error ? err.message : 'Verification failed',
       };
     }
-
-    sessionStorage.setItem(AUTH_KEY, '1');
-    sessionStorage.setItem(DEMO_SESSION_KEY, '1');
-    sessionStorage.setItem(TOKEN_KEY, DEMO_TOKEN);
-    sessionStorage.setItem(REFRESH_TOKEN_KEY, DEMO_REFRESH_TOKEN);
-    setAccessToken(DEMO_TOKEN);
-    setUser(DEMO_USER);
-    setIsAuthenticated(true);
-    return { ok: true };
   }, []);
 
   const logout = useCallback(() => {
+    const refreshToken = sessionStorage.getItem(REFRESH_TOKEN_KEY);
     clearStoredAuth();
     setAccessToken(null);
     setUser(null);
     setUserLoading(false);
     setIsAuthenticated(false);
+
+    if (refreshToken) {
+      void authApi.logout(refreshToken).catch(() => {
+        // Ignore logout API failures after local session is cleared.
+      });
+    }
   }, []);
 
   const value = useMemo(
@@ -97,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       accessToken,
       user,
       userLoading,
-      isDemoSession: DEMO_MODE && isAuthenticated,
+      isDemoSession: false,
       login,
       logout,
     }),

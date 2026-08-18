@@ -104,14 +104,26 @@ function genderHeadcount(side: ApiCampDashboardGenderDistribution): number {
   return side.count.reduce((sum, count) => sum + count, 0);
 }
 
+function sideElevatedPercent(side: ApiCampDashboardGenderDistribution): number {
+  if (typeof side.elevated_percent === 'number') return side.elevated_percent;
+
+  return side.group.reduce((sum, group, i) => {
+    const level = riskLevelFromGroup(group);
+    if (level === 'Increased' || level === 'High' || level === 'Very High') {
+      return sum + (side.percent[i] ?? 0);
+    }
+    return sum;
+  }, 0);
+}
+
 function workforceElevatedPercent(item: ApiCampDashboardDiseaseGenderItem): number {
   const maleTotal = genderHeadcount(item.male);
   const femaleTotal = genderHeadcount(item.female);
   const total = maleTotal + femaleTotal;
   if (total === 0) return 0;
 
-  const maleElevated = item.male.elevated_percent ?? 0;
-  const femaleElevated = item.female.elevated_percent ?? 0;
+  const maleElevated = sideElevatedPercent(item.male);
+  const femaleElevated = sideElevatedPercent(item.female);
   return Math.round(((maleElevated * maleTotal + femaleElevated * femaleTotal) / total) * 10) / 10;
 }
 
@@ -183,16 +195,59 @@ function mapGenderDistributionPair(
 }
 
 export function mapCampKpis(api: ApiCampDashboardKpis): KpiSummary {
+  const enrolled = api.employees_enrolled ?? 0;
+  const doctor =
+    api.doctor_consultation ?? api.consultations?.doctor ?? 0;
+  const nutritionist =
+    api.nutritionist_consultation ?? api.consultations?.nutritionist ?? 0;
+  const doctorAndNutritionist =
+    api.doctor_and_nutritionist_consultation ??
+    api.consultations?.doctor_nutritionist ??
+    0;
+  const bioAi = api.bio_ai_report_generated ?? 0;
+  const bioAiPercent =
+    enrolled > 0 ? Math.round((bioAi / enrolled) * 100) : undefined;
+
   return {
-    employeesEnrolled: api.employees_enrolled,
+    employeesEnrolled: enrolled,
     maleEnrolled: api.male_enrolled,
     femaleEnrolled: api.female_enrolled,
     totalBloodTest: api.total_blood_test,
     bloodTestPercent: api.blood_test_percent,
-    doctorConsultation: api.doctor_consultation,
-    nutritionistConsultation: api.nutritionist_consultation,
-    highRiskGroup: api.high_risk_group,
+    totalBioAiReports: bioAi,
+    bioAiPercent,
+    questionnaireCompleted: api.questionnaire_completed,
+    doctorConsultation: doctor,
+    nutritionistConsultation: nutritionist,
+    doctorAndNutritionistConsultation: doctorAndNutritionist,
+    highRiskGroup: api.high_risk_group ?? 0,
+    cautionRiskGroup: api.caution_risk_group ?? 0,
+    goodRiskGroup: api.good_risk_group ?? 0,
   };
+}
+
+/** Build metabolic age buckets from KPI risk-group counts. */
+export function metabolicCategoriesFromKpis(kpis: KpiSummary | null | undefined): {
+  key: 'good' | 'attention' | 'highRisk';
+  label: string;
+  count: number;
+  percent: number;
+}[] {
+  if (!kpis) return [];
+
+  const good = kpis.goodRiskGroup ?? 0;
+  const caution = kpis.cautionRiskGroup ?? 0;
+  const high = kpis.highRiskGroup ?? 0;
+  const total = good + caution + high;
+  if (total <= 0) return [];
+
+  const pct = (count: number) => Math.round((count / total) * 100);
+
+  return [
+    { key: 'good', label: 'GOOD', count: good, percent: pct(good) },
+    { key: 'attention', label: 'NEEDS ATTENTION', count: caution, percent: pct(caution) },
+    { key: 'highRisk', label: 'HIGH RISK', count: high, percent: pct(high) },
+  ];
 }
 
 export function mapCampRanking(api: ApiCampDashboardRanking): RankingSummary | null {
@@ -264,18 +319,20 @@ export function mapCampRiskLifestyleByGender(
   api: ApiCampDashboardDiseaseGenderSection,
 ): CampRiskLifestyleView {
   const items = api.diseases ?? [];
-
-  const topHighRiskDiseases = [...items]
-    .sort((a, b) => workforceElevatedPercent(b) - workforceElevatedPercent(a))
-    .slice(0, 3)
-    .map((item) => ({
-      name: diseaseDefinitionForCode(item.code).name,
-      highRiskPercent: workforceElevatedPercent(item),
-    }));
-
-  const diseases = items
+  const ranked = [...items]
     .filter((item) => !DEEP_DIVE_EXCLUDED_CODES.has(item.code))
-    .map(mapDiseaseGenderItem);
+    .map((item) => ({
+      item,
+      highRiskPercent: workforceElevatedPercent(item),
+    }))
+    .sort((a, b) => b.highRiskPercent - a.highRiskPercent);
+
+  const topHighRiskDiseases = ranked.slice(0, 3).map(({ item, highRiskPercent }) => ({
+    name: diseaseDefinitionForCode(item.code).name,
+    highRiskPercent,
+  }));
+
+  const diseases = ranked.map(({ item }) => mapDiseaseGenderItem(item));
 
   return { topHighRiskDiseases, diseases };
 }

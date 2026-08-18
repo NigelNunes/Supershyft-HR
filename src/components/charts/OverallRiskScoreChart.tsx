@@ -2,10 +2,6 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { AlertCircle, Info } from 'lucide-react';
 import { CHART_INFO } from '../../content/chartInfo';
 import { getOverallRiskConcernInsight } from '../../content/chartInsights';
-import {
-  DUMMY_ALL_YEARS_OVERALL_RISK,
-  DUMMY_ALL_YEARS_OVERALL_RISK_CONCERN,
-} from '../../data/dummyAllYearsMetrics';
 import type { YearOption } from '../layout/DashboardHeader';
 import type { OverallRiskBand, OverallRiskScoreBucket } from '../../types';
 import { OVERALL_RISK_COLORS, useChartTheme } from './chartTheme';
@@ -19,6 +15,8 @@ interface OverallRiskScoreChartProps {
 }
 
 const BAND_ORDER: OverallRiskBand[] = ['Optimal', 'Low risk', 'Increased Risk', 'High risk'];
+const PLACEHOLDER_YEARS = [2024, 2025, 2026] as const;
+const EMPTY = '-';
 
 function normalizeBuckets(buckets: OverallRiskScoreBucket[]): OverallRiskScoreBucket[] {
   const byBand = new Map(buckets.map((b) => [b.band, b]));
@@ -136,30 +134,16 @@ function RiskPie({
 }
 
 function AllYearsOverallRisk() {
-  // TEMPORARY: DUMMY_ALL_YEARS_OVERALL_RISK_* — remove when multi-year API exists
   return (
     <>
       <div className="overall-risk-card__allyears">
         <div className="overall-risk-card__allyears-pies">
-          {DUMMY_ALL_YEARS_OVERALL_RISK.map((yearBlock) => {
-            const chartData = yearBlock.bands
-              .filter((b) => b.percent > 0 || b.count > 0)
-              .map((b) => ({
-                name: b.band,
-                value: b.percent,
-                count: b.count,
-              }));
-            return (
-              <div key={yearBlock.year} className="overall-risk-card__allyears-col">
-                <span className="overall-risk-card__allyears-year">{yearBlock.year}</span>
-                <RiskPie
-                  data={chartData}
-                  assessed={yearBlock.assessed.toLocaleString()}
-                  size="sm"
-                />
-              </div>
-            );
-          })}
+          {PLACEHOLDER_YEARS.map((year) => (
+            <div key={year} className="overall-risk-card__allyears-col">
+              <span className="overall-risk-card__allyears-year">{year}</span>
+              <RiskPie data={[]} assessed={EMPTY} size="sm" />
+            </div>
+          ))}
         </div>
 
         <ul className="overall-risk-pie__legend overall-risk-pie__legend--horizontal">
@@ -180,7 +164,7 @@ function AllYearsOverallRisk() {
           <AlertCircle size={20} aria-hidden />
           <span>Concern</span>
         </div>
-        <p className="overall-risk-card__concern-text">{DUMMY_ALL_YEARS_OVERALL_RISK_CONCERN}</p>
+        <p className="overall-risk-card__concern-text">{EMPTY}</p>
       </div>
     </>
   );
@@ -213,7 +197,7 @@ function SingleYearOverallRisk({
       <div className="overall-risk-card__body">
         <RiskPie
           data={chartData}
-          assessed={loading ? '…' : buckets.length > 0 ? totalCount.toLocaleString() : '—'}
+          assessed={loading ? '…' : buckets.length > 0 ? totalCount.toLocaleString() : EMPTY}
           size="lg"
         />
 
@@ -222,7 +206,7 @@ function SingleYearOverallRisk({
             <li className="overall-risk-pie__empty">Loading…</li>
           )}
           {!loading && buckets.length === 0 && (
-            <li className="overall-risk-pie__empty">No data available</li>
+            <li className="overall-risk-pie__empty">{EMPTY}</li>
           )}
           {(buckets.length > 0 || loading) &&
             normalized.map((b) => (

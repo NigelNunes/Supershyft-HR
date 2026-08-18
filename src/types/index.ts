@@ -27,9 +27,13 @@ export interface KpiSummary {
   bloodTestPercent?: number;
   totalBioAiReports?: number;
   bioAiPercent?: number;
+  questionnaireCompleted?: number;
   doctorConsultation: number;
   nutritionistConsultation: number;
+  doctorAndNutritionistConsultation?: number;
   highRiskGroup: number;
+  cautionRiskGroup?: number;
+  goodRiskGroup?: number;
 }
 
 export interface RankingSummary {
@@ -154,10 +158,10 @@ export interface EmployeeRecord {
   email: string;
   bloodGroup: string;
   department: string;
+  /** Department slug from API (participant_department), used for filters. */
+  departmentSlug?: string;
   gender: 'Male' | 'Female' | 'Other';
-  /** Display age when available; otherwise derived for UI until API ships age. */
   age?: number;
-  /** TEMPORARY journey progress until participant status API is wired. */
   journey: Record<JourneyStepId, JourneyStepStatus>;
 }
 

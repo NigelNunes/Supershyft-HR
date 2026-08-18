@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { RefreshCw } from 'lucide-react';
+import type { CampYearChoice, CampYearOption } from '../../utils/campYears';
 import './DashboardHeader.css';
 
+/** @deprecated Prefer year options from useCamp().yearOptions */
 export const YEAR_OPTIONS = [
   { value: '2026', label: '2026' },
   { value: '2025', label: '2025' },
@@ -9,13 +11,14 @@ export const YEAR_OPTIONS = [
   { value: 'all', label: 'All Years' },
 ] as const;
 
-export type YearOption = (typeof YEAR_OPTIONS)[number]['value'];
+export type YearOption = CampYearOption;
 
 interface DashboardHeaderProps {
   onRefresh: () => void;
   updatedLabel?: string;
   selectedYear: YearOption;
   onYearChange: (year: YearOption) => void;
+  yearOptions?: CampYearChoice[];
   title?: string;
   subtitle?: string;
 }
@@ -25,10 +28,15 @@ export function DashboardHeader({
   updatedLabel = 'Updated 2 hrs ago',
   selectedYear,
   onYearChange,
+  yearOptions,
   title = 'HR health intelligence dashboard',
   subtitle = 'Workforce wellness analysis',
 }: DashboardHeaderProps) {
   const [refreshing, setRefreshing] = useState(false);
+  const options =
+    yearOptions && yearOptions.length > 0
+      ? yearOptions
+      : YEAR_OPTIONS.map((opt) => ({ ...opt, campNo: null as number | null }));
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -64,23 +72,25 @@ export function DashboardHeader({
           </div>
         </div>
 
-        <div className="dashboard-header__years" role="tablist" aria-label="Year filter">
-          {YEAR_OPTIONS.map((opt) => {
-            const isActive = opt.value === selectedYear;
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                className={`dashboard-header__year${isActive ? ' dashboard-header__year--active' : ''}`}
-                onClick={() => onYearChange(opt.value)}
-              >
-                {opt.label}
-              </button>
-            );
-          })}
-        </div>
+        {options.length > 0 && (
+          <div className="dashboard-header__years" role="tablist" aria-label="Year filter">
+            {options.map((opt) => {
+              const isActive = opt.value === selectedYear;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  className={`dashboard-header__year${isActive ? ' dashboard-header__year--active' : ''}`}
+                  onClick={() => onYearChange(opt.value)}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </header>
   );

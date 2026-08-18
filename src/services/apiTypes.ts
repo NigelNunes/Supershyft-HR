@@ -74,9 +74,19 @@ export interface ApiCampDashboardKpis {
   female_enrolled: number;
   total_blood_test: number;
   blood_test_percent: number;
+  consultations?: {
+    doctor?: number;
+    nutritionist?: number;
+    doctor_nutritionist?: number;
+  } | null;
   doctor_consultation: number;
   nutritionist_consultation: number;
+  doctor_and_nutritionist_consultation?: number;
+  questionnaire_completed?: number;
+  bio_ai_report_generated?: number;
   high_risk_group: number;
+  caution_risk_group?: number;
+  good_risk_group?: number;
 }
 
 export interface ApiCampDashboardParticipationByAge {
@@ -163,7 +173,25 @@ export type CampDashboardSection =
   | 'ranking';
 
 /** GET /reports/camps/{camp_no}/participants */
+export interface ApiCampParticipantQuestionnaires {
+  'physical-measurement'?: boolean;
+  vitals?: boolean;
+  'diet-lifestyle-parameters'?: boolean;
+  'blood-parameters'?: boolean;
+  'advanced-blood-parameters'?: boolean;
+  [key: string]: boolean | undefined;
+}
+
+export interface ApiCampParticipantReports {
+  blood_report_generated?: boolean;
+  blood_report_sent?: boolean;
+  bio_ai_report_generated?: boolean;
+  bio_ai_report_sent?: boolean;
+}
+
 export interface ApiCampParticipant {
+  engagement_participant_id?: number;
+  engagement_id?: number;
   user_id?: number;
   first_name?: string | null;
   last_name?: string | null;
@@ -171,10 +199,14 @@ export interface ApiCampParticipant {
   phone?: string | null;
   email?: string | null;
   gender?: string | null;
+  age?: number | null;
   blood_group?: string | null;
   participant_blood_group?: string | null;
   department?: string | null;
   participant_department?: string | null;
+  questionnaires?: ApiCampParticipantQuestionnaires | null;
+  reports?: ApiCampParticipantReports | null;
+  consultations?: boolean | null;
 }
 
 export interface ApiPaginatedMeta {

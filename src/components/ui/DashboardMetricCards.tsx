@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { Droplets, FileText, Stethoscope, Users } from 'lucide-react';
-import { DUMMY_ALL_YEARS_METRICS, DUMMY_EXECUTIVE_RANKING } from '../../data/dummyAllYearsMetrics';
 import { highlightIndexForRank, uniformAscendingHeights } from '../../utils/rankSparkline';
 import type { YearOption } from '../layout/DashboardHeader';
 import type { KpiSummary, RankingSummary } from '../../types';
@@ -16,9 +15,12 @@ interface DashboardMetricCardsProps {
   showRanking?: boolean;
 }
 
+const EMPTY = '-';
+const PLACEHOLDER_YEARS = [2024, 2025, 2026] as const;
+
 function displayNumber(value: number | undefined | null, loading: boolean): string {
   if (loading) return '…';
-  if (value == null || Number.isNaN(value)) return '—';
+  if (value == null || Number.isNaN(value)) return EMPTY;
   return value.toLocaleString();
 }
 
@@ -30,14 +32,10 @@ function displayPercentOfEnrolled(
 ): string {
   if (loading) return '…';
   if (explicitPercent != null) return `${Math.round(explicitPercent)}% of enrolled`;
-  if (count == null || enrolled == null || enrolled <= 0) return '—';
+  if (count == null || enrolled == null || enrolled <= 0) return EMPTY;
   return `${Math.round((count / enrolled) * 100)}% of enrolled`;
 }
 
-/**
- * Uniformly ascending heights (left → right), expressed as a percentage of the
- * sparkline box so the bars scale with the card instead of being clipped.
- */
 const RANK_SPARK_BAR_COUNT = 36;
 const RANK_SPARK_HEIGHTS = uniformAscendingHeights(RANK_SPARK_BAR_COUNT, 4, 100);
 
@@ -61,92 +59,13 @@ function RankSparkline({
   );
 }
 
-type TrendTone = 'green' | 'blue' | 'purple' | 'red' | 'lime' | 'amber';
-
-const TREND_COLORS: Record<TrendTone, string> = {
-  green: '#05FF54',
-  blue: '#4C7DFF',
-  purple: '#A555F6',
-  red: '#DE4A4A',
-  lime: '#E5FF64',
-  amber: '#FF8800',
-};
-
-/** 3-point sparkline for All Years cards. Lower values plot higher for ranks. */
-function YearTrendSparkline({
-  values,
-  tone,
-  invert = false,
-}: {
-  values: readonly number[];
-  tone: TrendTone;
-  invert?: boolean;
-}) {
-  const color = TREND_COLORS[tone];
-  const w = 128;
-  const h = 40;
-  const padX = 10;
-  const padY = 6;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const span = Math.max(max - min, 1);
-
-  const points = values.map((value, i) => {
-    const x = padX + (i * (w - padX * 2)) / Math.max(values.length - 1, 1);
-    const norm = invert ? (max - value) / span : (value - min) / span;
-    const y = padY + (1 - norm) * (h - padY * 2);
-    return { x, y };
-  });
-
-  const line = points.map((p) => `${p.x},${p.y}`).join(' ');
-  const last = points[points.length - 1];
-
-  return (
-    <svg className="metric-year-spark" viewBox={`0 0 ${w} ${h}`} aria-hidden>
-      <polyline
-        points={line}
-        fill="none"
-        stroke={color}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      {points.map((p, i) => {
-        const isLast = i === points.length - 1;
-        return (
-          <g key={i}>
-            {isLast && (
-              <circle cx={p.x} cy={p.y} r="7" fill={color} opacity="0.2" />
-            )}
-            <circle
-              cx={p.x}
-              cy={p.y}
-              r={isLast ? 5 : 3}
-              fill={color}
-            />
-          </g>
-        );
-      })}
-      {last && <circle cx={last.x} cy={last.y} r="5" fill={color} />}
-    </svg>
-  );
-}
-
 function AllYearsMetricCard({
   title,
-  values,
-  years,
-  tone,
-  invert,
   prefix = '',
   icon,
   glass,
 }: {
   title: string;
-  values: readonly number[];
-  years: readonly number[];
-  tone: TrendTone;
-  invert?: boolean;
   prefix?: string;
   icon?: ReactNode;
   glass?: boolean;
@@ -160,15 +79,12 @@ function AllYearsMetricCard({
         {icon}
       </div>
       <div className="metric-card__allyears-chart">
-        <YearTrendSparkline values={values} tone={tone} invert={invert} />
         <div className="metric-card__allyears-years">
-          {years.map((year, i) => (
+          {PLACEHOLDER_YEARS.map((year) => (
             <div key={year} className="metric-card__allyears-col">
-              <span
-                className={`metric-card__allyears-value${i === 0 ? ' metric-card__allyears-value--muted' : ''}`}
-              >
+              <span className="metric-card__allyears-value metric-card__allyears-value--muted">
                 {prefix}
-                {values[i].toLocaleString()}
+                {EMPTY}
               </span>
               <span className="metric-card__allyears-year">{year}</span>
             </div>
@@ -180,36 +96,16 @@ function AllYearsMetricCard({
 }
 
 function AllYearsMetricCards({ showRanking }: { showRanking: boolean }) {
-  // TEMPORARY: DUMMY_ALL_YEARS_METRICS — remove when multi-year API exists
-  const d = DUMMY_ALL_YEARS_METRICS;
-
   return (
     <div className={`metric-cards metric-cards--allyears${showRanking ? '' : ' metric-cards--no-rank'}`}>
       {showRanking && (
         <>
-          <AllYearsMetricCard
-            title="National Rank"
-            values={d.nationalRank}
-            years={d.years}
-            tone="green"
-            invert
-            prefix="#"
-          />
-          <AllYearsMetricCard
-            title="Industry Rank"
-            values={d.industryRank}
-            years={d.years}
-            tone="blue"
-            invert
-            prefix="#"
-          />
+          <AllYearsMetricCard title="National Rank" prefix="#" />
+          <AllYearsMetricCard title="Industry Rank" prefix="#" />
         </>
       )}
       <AllYearsMetricCard
         title="Employees"
-        values={d.employees}
-        years={d.years}
-        tone="purple"
         icon={
           <div className="metric-card__icon metric-card__icon--employees" aria-hidden>
             <Users size={20} strokeWidth={1.75} />
@@ -218,9 +114,6 @@ function AllYearsMetricCards({ showRanking }: { showRanking: boolean }) {
       />
       <AllYearsMetricCard
         title="Blood Tests"
-        values={d.bloodTests}
-        years={d.years}
-        tone="red"
         glass
         icon={
           <div className="metric-card__icon metric-card__icon--blood" aria-hidden>
@@ -230,9 +123,6 @@ function AllYearsMetricCards({ showRanking }: { showRanking: boolean }) {
       />
       <AllYearsMetricCard
         title="Bio-AI Reports"
-        values={d.bioAiReports}
-        years={d.years}
-        tone="lime"
         glass
         icon={
           <div className="metric-card__icon metric-card__icon--bio" aria-hidden>
@@ -242,9 +132,6 @@ function AllYearsMetricCards({ showRanking }: { showRanking: boolean }) {
       />
       <AllYearsMetricCard
         title="Consultations"
-        values={d.consultations}
-        years={d.years}
-        tone="amber"
         glass
         icon={
           <div className="metric-card__icon metric-card__icon--consult" aria-hidden>
@@ -271,16 +158,24 @@ function SingleYearMetricCards({
 }) {
   const nationalRank = ranking?.cityRank;
   const industryRank = ranking?.industryRank;
-  const d = DUMMY_EXECUTIVE_RANKING;
 
   const nationalHighlight =
     nationalRank == null || rankingLoading
       ? -1
-      : highlightIndexForRank(nationalRank, d.nationalAmong, RANK_SPARK_BAR_COUNT);
+      : highlightIndexForRank(nationalRank, 38, RANK_SPARK_BAR_COUNT);
   const industryHighlight =
     industryRank == null || rankingLoading
       ? -1
-      : highlightIndexForRank(industryRank, d.industryAmong, RANK_SPARK_BAR_COUNT);
+      : highlightIndexForRank(industryRank, 12, RANK_SPARK_BAR_COUNT);
+
+  const nationalFooter =
+    rankingLoading || nationalRank == null
+      ? EMPTY
+      : ranking?.city
+        ? `Among companies in ${ranking.city}`
+        : EMPTY;
+  const industryFooter =
+    rankingLoading || industryRank == null ? EMPTY : 'Among companies in industry';
 
   return (
     <div className={`metric-cards${showRanking ? '' : ' metric-cards--no-rank'}`}>
@@ -297,7 +192,7 @@ function SingleYearMetricCards({
               </div>
               <RankSparkline variant="green" highlightIndex={nationalHighlight} />
             </div>
-            <p className="metric-card__rank-footer">{d.nationalAmongLabel}</p>
+            <p className="metric-card__rank-footer">{nationalFooter}</p>
           </article>
 
           <article className="metric-card metric-card--rank metric-card--industry">
@@ -311,7 +206,7 @@ function SingleYearMetricCards({
               </div>
               <RankSparkline variant="blue" highlightIndex={industryHighlight} />
             </div>
-            <p className="metric-card__rank-footer">{d.industryAmongLabel}</p>
+            <p className="metric-card__rank-footer">{industryFooter}</p>
           </article>
         </>
       )}
@@ -389,7 +284,7 @@ function SingleYearMetricCards({
             {kpisLoading
               ? '…'
               : kpis == null
-                ? '—'
+                ? EMPTY
                 : `${displayNumber(kpis.doctorConsultation, false)}/${displayNumber(kpis.nutritionistConsultation, false)}`}
           </p>
           <p className="metric-card__stat-footer">Doctor / Nutritionist</p>

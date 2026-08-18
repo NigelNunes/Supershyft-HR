@@ -1,11 +1,6 @@
 import { useState } from 'react';
 import { Info, OctagonAlert } from 'lucide-react';
 import { PHYSICAL_ACTIVITY_BUCKETS, SLEEP_BUCKETS } from '../../data/participantPool';
-import {
-  DUMMY_ALL_YEARS_PHYSICAL,
-  DUMMY_ALL_YEARS_SLEEP,
-  type AllYearsLifestyleYearRow,
-} from '../../data/dummyAllYearsMetrics';
 import { CHART_INFO } from '../../content/chartInfo';
 import {
   computePoorActivityPercent,
@@ -27,7 +22,7 @@ interface PhysicalSleepSegmentChartsProps {
   selectedYear?: YearOption;
 }
 
-/** Figma palette — physical activity (All Years uses yellow for 30–60 mins) */
+/** Figma palette — physical activity */
 const PHYSICAL_COLORS: Record<string, string> = {
   'Less than 30mins': '#3B82F6',
   '30-60mins': '#FED300',
@@ -84,12 +79,10 @@ function SegmentBar({
   slices,
   labels,
   colors,
-  compact = false,
 }: {
   slices: DistributionSlice[];
   labels: readonly string[];
   colors: Record<string, string>;
-  compact?: boolean;
 }) {
   const parts = labels
     .map((label) => ({
@@ -102,19 +95,11 @@ function SegmentBar({
   const sum = parts.reduce((acc, p) => acc + p.pct, 0) || 1;
 
   if (parts.length === 0) {
-    return (
-      <div
-        className={`ps-segment-bar ps-segment-bar--empty${compact ? ' ps-segment-bar--compact' : ''}`}
-        aria-hidden
-      />
-    );
+    return <div className="ps-segment-bar ps-segment-bar--empty" aria-hidden />;
   }
 
   return (
-    <div
-      className={`ps-segment-bar${compact ? ' ps-segment-bar--compact' : ''}`}
-      aria-hidden
-    >
+    <div className="ps-segment-bar" aria-hidden>
       {parts.map((part, i) => (
         <span
           key={part.label}
@@ -163,45 +148,6 @@ function GenderRow({
   );
 }
 
-function AllYearsGenderBlock({
-  gender,
-  rows,
-  labels,
-  colors,
-}: {
-  gender: 'male' | 'female';
-  rows: readonly AllYearsLifestyleYearRow[];
-  labels: readonly string[];
-  colors: Record<string, string>;
-}) {
-  return (
-    <div className="ps-allyears-block">
-      <div className="ps-allyears-block__years" aria-hidden={false}>
-        {rows.map((row) => (
-          <div key={row.year} className="ps-allyears-block__year-row">
-            <span className="ps-allyears-block__year">{row.year}</span>
-            <span className="ps-allyears-block__highlight">{row.highlight}</span>
-          </div>
-        ))}
-      </div>
-      <div className="ps-allyears-block__chart">
-        <span className="ps-gender-row__gender">{gender === 'male' ? 'MALE' : 'FEMALE'}</span>
-        <div className="ps-allyears-block__bars">
-          {rows.map((row) => (
-            <SegmentBar
-              key={row.year}
-              slices={row.slices}
-              labels={labels}
-              colors={colors}
-              compact
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function Legend({
   labels,
   colors,
@@ -233,9 +179,6 @@ function LifestyleCard({
   loading,
   maleTotal,
   femaleTotal,
-  allYears,
-  allYearsMale,
-  allYearsFemale,
 }: {
   title: string;
   subtitle: string;
@@ -248,9 +191,6 @@ function LifestyleCard({
   loading: boolean;
   maleTotal: number | null;
   femaleTotal: number | null;
-  allYears: boolean;
-  allYearsMale: readonly AllYearsLifestyleYearRow[];
-  allYearsFemale: readonly AllYearsLifestyleYearRow[];
 }) {
   const showMale = view === 'both' || view === 'male';
   const showFemale = view === 'both' || view === 'female';
@@ -271,49 +211,26 @@ function LifestyleCard({
       </header>
 
       <div className="ps-card__body">
-        <div className={`ps-card__rows${allYears ? ' ps-card__rows--allyears' : ''}`}>
-          {allYears ? (
-            <>
-              {showMale && (
-                <AllYearsGenderBlock
-                  gender="male"
-                  rows={allYearsMale}
-                  labels={labels}
-                  colors={colors}
-                />
-              )}
-              {showFemale && (
-                <AllYearsGenderBlock
-                  gender="female"
-                  rows={allYearsFemale}
-                  labels={labels}
-                  colors={colors}
-                />
-              )}
-            </>
-          ) : (
-            <>
-              {showMale && (
-                <GenderRow
-                  gender="male"
-                  total={maleTotal}
-                  slices={data.male}
-                  labels={labels}
-                  colors={colors}
-                  loading={loading}
-                />
-              )}
-              {showFemale && (
-                <GenderRow
-                  gender="female"
-                  total={femaleTotal}
-                  slices={data.female}
-                  labels={labels}
-                  colors={colors}
-                  loading={loading}
-                />
-              )}
-            </>
+        <div className="ps-card__rows">
+          {showMale && (
+            <GenderRow
+              gender="male"
+              total={maleTotal}
+              slices={data.male}
+              labels={labels}
+              colors={colors}
+              loading={loading}
+            />
+          )}
+          {showFemale && (
+            <GenderRow
+              gender="female"
+              total={femaleTotal}
+              slices={data.female}
+              labels={labels}
+              colors={colors}
+              loading={loading}
+            />
           )}
         </div>
         <Legend labels={labels} colors={colors} />
@@ -338,10 +255,8 @@ export function PhysicalSleepSegmentCharts({
   loading = false,
   maleEnrolled,
   femaleEnrolled,
-  selectedYear = '2026',
 }: PhysicalSleepSegmentChartsProps) {
   const [view, setView] = useState<LifestyleGenderView>('both');
-  const isAllYears = selectedYear === 'all';
   const genderWeights =
     maleEnrolled != null && femaleEnrolled != null
       ? { male: maleEnrolled, female: femaleEnrolled }
@@ -355,34 +270,19 @@ export function PhysicalSleepSegmentCharts({
   const femaleSleepTotal =
     femaleEnrolled ?? (sleep.female.length ? sliceTotal(sleep.female) : null);
 
-  const hasPhysical =
-    isAllYears || physical.male.length > 0 || physical.female.length > 0;
-  const hasSleep = isAllYears || sleep.male.length > 0 || sleep.female.length > 0;
-
-  /** For All Years insights, use newest-year slices as a stand-in until multi-year API exists. */
-  const physicalForInsight: GenderDistributionPair = isAllYears
-    ? {
-        male: DUMMY_ALL_YEARS_PHYSICAL.male[0].slices,
-        female: DUMMY_ALL_YEARS_PHYSICAL.female[0].slices,
-      }
-    : physical;
-  const sleepForInsight: GenderDistributionPair = isAllYears
-    ? {
-        male: DUMMY_ALL_YEARS_SLEEP.male[0].slices,
-        female: DUMMY_ALL_YEARS_SLEEP.female[0].slices,
-      }
-    : sleep;
+  const hasPhysical = physical.male.length > 0 || physical.female.length > 0;
+  const hasSleep = sleep.male.length > 0 || sleep.female.length > 0;
 
   const physicalInsight = hasPhysical
     ? toChartInsight(
         getPhysicalActivityConcernInsight(
-          computePoorActivityPercent(physicalForInsight, view, genderWeights),
+          computePoorActivityPercent(physical, view, genderWeights),
         ),
       )
     : undefined;
   const sleepInsight = hasSleep
     ? toChartInsight(
-        getSleepConcernInsight(computePoorSleepPercent(sleepForInsight, view, genderWeights)),
+        getSleepConcernInsight(computePoorSleepPercent(sleep, view, genderWeights)),
       )
     : undefined;
 
@@ -396,7 +296,7 @@ export function PhysicalSleepSegmentCharts({
       : `Sleep hours per night · ${view}`;
 
   return (
-    <section className={`ps-section${loading && !isAllYears ? ' ps-section--loading' : ''}`}>
+    <section className={`ps-section${loading ? ' ps-section--loading' : ''}`}>
       <div className="ps-section__toolbar">
         <GenderToggle value={view} onChange={setView} />
       </div>
@@ -413,9 +313,6 @@ export function PhysicalSleepSegmentCharts({
           loading={loading}
           maleTotal={malePhysicalTotal}
           femaleTotal={femalePhysicalTotal}
-          allYears={isAllYears}
-          allYearsMale={DUMMY_ALL_YEARS_PHYSICAL.male}
-          allYearsFemale={DUMMY_ALL_YEARS_PHYSICAL.female}
         />
         <LifestyleCard
           title="Sleep"
@@ -429,9 +326,6 @@ export function PhysicalSleepSegmentCharts({
           loading={loading}
           maleTotal={maleSleepTotal}
           femaleTotal={femaleSleepTotal}
-          allYears={isAllYears}
-          allYearsMale={DUMMY_ALL_YEARS_SLEEP.male}
-          allYearsFemale={DUMMY_ALL_YEARS_SLEEP.female}
         />
       </div>
     </section>

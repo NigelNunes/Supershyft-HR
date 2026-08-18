@@ -9,7 +9,6 @@
   --emp-pending: #f87171;
   --emp-indigo: #818cf8;
   --emp-done: #22c55e;
-  --emp-progress: #bef264;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -52,8 +51,58 @@
 
 .emp-header__actions {
   display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.625rem;
+}
+
+.emp-header__status-row {
+  display: flex;
   align-items: center;
   gap: 0.625rem;
+}
+
+.emp-header__years {
+  display: inline-flex;
+  align-items: stretch;
+  min-width: 16rem;
+  height: 2rem;
+  padding: 4px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  background: rgba(25, 28, 38, 0.6);
+  outline: 1px solid rgba(255, 255, 255, 0.05);
+  outline-offset: -1px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.emp-header__year {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #6b7280;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 0.75rem;
+  cursor: pointer;
+}
+
+.emp-header__year--active {
+  background: rgba(133, 147, 234, 0.2);
+  color: #e5e7eb;
+  font-weight: 600;
+}
+
+.emp-header__year:hover:not(.emp-header__year--active) {
+  color: #a3a3a3;
 }
 
 .emp-header__refresh {
@@ -599,10 +648,6 @@
 
 .emp-status--done {
   color: var(--emp-done);
-}
-
-.emp-status--progress {
-  color: var(--emp-progress);
 }
 
 .emp-status--pending {

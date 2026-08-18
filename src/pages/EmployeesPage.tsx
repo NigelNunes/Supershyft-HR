@@ -15,10 +15,10 @@ import {
   X,
 } from 'lucide-react';
 import { useCampParticipants } from '../hooks/useCampParticipants';
+import { useCampKpis } from '../hooks/useCampDashboard';
+import { useCamp } from '../contexts/CampContext';
 import { useOrganization } from '../contexts/OrganizationContext';
-import { getDummyYearKpis } from '../data/dummyAllYearsMetrics';
-import { getDepartmentDetail } from '../data/mockDashboard';
-import { departmentSlug } from '../data/participantPool';
+import { formatDepartmentLabel } from '../services/campParticipantsMappers';
 import type { EmployeeRecord, JourneyStepId, JourneyStepStatus } from '../types';
 import anthropometryIconUrl from '../assets/icons/journey-anthropometry.png';
 import vitalsIconUrl from '../assets/icons/journey-vitals.png';
@@ -110,7 +110,7 @@ function matchesEmployeeName(name: string, query: string): boolean {
   const normalizedQuery = normalizeNameSearch(query);
   if (!normalizedQuery) return true;
   const normalizedName = normalizeNameSearch(name);
-  if (!normalizedName || normalizedName === '—') return false;
+  if (!normalizedName || normalizedName === '-' || normalizedName === '—') return false;
   if (normalizedName.includes(normalizedQuery)) return true;
   const tokens = normalizedQuery.split(' ').filter(Boolean);
   return tokens.every((token) => normalizedName.includes(token));
@@ -127,16 +127,6 @@ function countByStatus(
 function StatusIcon({ status }: { status: JourneyStepStatus }) {
   if (status === 'completed') {
     return <Check className="emp-status emp-status--done" size={18} strokeWidth={2.5} aria-label="Completed" />;
-  }
-  if (status === 'in_progress') {
-    return (
-      <RefreshCw
-        className="emp-status emp-status--progress"
-        size={18}
-        strokeWidth={2.25}
-        aria-label="In progress"
-      />
-    );
   }
   return <X className="emp-status emp-status--pending" size={18} strokeWidth={2.5} aria-label="Pending" />;
 }
@@ -173,8 +163,8 @@ function HeaderStepIcon({
 }
 
 export function EmployeesPage() {
-  const { employees, loading, error } = useCampParticipants();
   const { departments } = useOrganization();
+  const { selectedYear, setSelectedYear, yearOptions } = useCamp();
   const [query, setQuery] = useState('');
   const [department, setDepartment] = useState<string>('all');
   const [page, setPage] = useState(1);
@@ -185,27 +175,38 @@ export function EmployeesPage() {
   const [shareBioAi, setShareBioAi] = useState(false);
   const [stepFilters, setStepFilters] = useState<Record<string, StepFilterValue>>({});
 
+  const { employees, total, loading, error, refresh } = useCampParticipants(department);
+  const { data: kpis, loading: kpisLoading } = useCampKpis();
+
   const departmentOptions = useMemo(() => {
-    const fromOrg = departments.map((d) => d.department).filter(Boolean);
-    const fromEmployees = [...new Set(employees.map((e) => e.department).filter((d) => d && d !== '—'))];
-    return [...new Set([...fromOrg, ...fromEmployees])].sort((a, b) => a.localeCompare(b));
+    const fromOrg = departments
+      .filter((d) => d.slug || d.department)
+      .map((d) => ({
+        value: (d.slug || d.department).trim().toLowerCase(),
+        label: d.department || formatDepartmentLabel(d.slug),
+      }));
+
+    const fromEmployees = employees
+      .filter((e) => e.departmentSlug || (e.department && e.department !== '-'))
+      .map((e) => ({
+        value: (e.departmentSlug || e.department).trim().toLowerCase(),
+        label: e.department,
+      }));
+
+    const byValue = new Map<string, string>();
+    for (const option of [...fromOrg, ...fromEmployees]) {
+      if (!option.value) continue;
+      if (!byValue.has(option.value)) byValue.set(option.value, option.label);
+    }
+
+    return [...byValue.entries()]
+      .map(([value, label]) => ({ value, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
   }, [departments, employees]);
-
-  /** Department scope for KPI cards (ignores search / step filters). */
-  const departmentEmployees = useMemo(() => {
-    if (department === 'all') return employees;
-    return employees.filter((e) => e.department === department);
-  }, [employees, department]);
-
-  const scopedKpis = useMemo(() => {
-    if (department === 'all') return getDummyYearKpis(2026);
-    return getDepartmentDetail(departmentSlug(department))?.kpis ?? null;
-  }, [department]);
 
   const filtered = useMemo(() => {
     return employees.filter((employee) => {
       if (!matchesEmployeeName(employee.name, query)) return false;
-      if (department !== 'all' && employee.department !== department) return false;
       for (const [stepId, value] of Object.entries(stepFilters)) {
         if (value === 'any') continue;
         const status = employee.journey[stepId as JourneyStepId];
@@ -214,30 +215,27 @@ export function EmployeesPage() {
       }
       return true;
     });
-  }, [employees, query, department, stepFilters]);
+  }, [employees, query, stepFilters]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const summary = useMemo(() => {
-    const bloodDone =
-      scopedKpis?.totalBloodTest ?? countByStatus(departmentEmployees, 'bloodReport', 'completed');
-    const bioDone =
-      scopedKpis?.totalBioAiReports ??
-      countByStatus(departmentEmployees, 'bioAiReport', 'completed');
-    const consultDoctor =
-      scopedKpis?.doctorConsultation ??
-      countByStatus(departmentEmployees, 'consultations', 'completed');
-    const consultNutritionist =
-      scopedKpis?.nutritionistConsultation ?? Math.round(consultDoctor * 0.75);
+    const bloodDone = countByStatus(employees, 'bloodReport', 'completed');
+    // Match dashboard Bio-AI Reports KPI (bio_ai_report_generated).
+    const bioDone = kpis?.totalBioAiReports ?? 0;
+    const consultDoctor = countByStatus(employees, 'consultations', 'completed');
+    const consultNutritionist = 0;
 
-    const qDone = countByStatus(departmentEmployees, 'dietLifestyle', 'completed');
-    const qPending =
-      countByStatus(departmentEmployees, 'dietLifestyle', 'pending') +
-      countByStatus(departmentEmployees, 'dietLifestyle', 'in_progress');
+    const qDone = countByStatus(employees, 'dietLifestyle', 'completed');
+    const qPending = countByStatus(employees, 'dietLifestyle', 'pending');
 
-    const enrolled = scopedKpis?.employeesEnrolled ?? departmentEmployees.length;
+    const enrolled = Math.max(
+      kpis?.employeesEnrolled ?? 0,
+      total,
+      employees.length,
+    );
     const bloodPending = Math.max(0, enrolled - bloodDone);
     const bioPending = Math.max(0, enrolled - bioDone);
     const consultPending = Math.max(0, enrolled - consultDoctor);
@@ -253,12 +251,13 @@ export function EmployeesPage() {
       consultNutritionist,
       consultPending,
     };
-  }, [departmentEmployees, scopedKpis]);
+  }, [employees, total, kpis]);
 
-  const summaryLoading = loading;
+  const summaryLoading = loading || kpisLoading;
 
   const handleRefresh = () => {
     setRefreshing(true);
+    refresh();
     window.setTimeout(() => setRefreshing(false), 600);
   };
 
@@ -320,23 +319,44 @@ export function EmployeesPage() {
           </p>
         </div>
         <div className="emp-header__actions">
-          <button
-            type="button"
-            className="emp-header__refresh"
-            onClick={handleRefresh}
-            disabled={refreshing || loading}
-          >
-            <RefreshCw
-              size={14}
-              className={refreshing ? 'emp-header__spin' : undefined}
-              aria-hidden
-            />
-            <span>Refresh</span>
-          </button>
-          <div className="emp-header__updated">
-            <span className="emp-header__updated-dot" aria-hidden />
-            <span>Updated 2 hrs ago</span>
+          <div className="emp-header__status-row">
+            <button
+              type="button"
+              className="emp-header__refresh"
+              onClick={handleRefresh}
+              disabled={refreshing || loading}
+            >
+              <RefreshCw
+                size={14}
+                className={refreshing ? 'emp-header__spin' : undefined}
+                aria-hidden
+              />
+              <span>Refresh</span>
+            </button>
+            <div className="emp-header__updated">
+              <span className="emp-header__updated-dot" aria-hidden />
+              <span>Updated 2 hrs ago</span>
+            </div>
           </div>
+          {yearOptions.length > 0 && (
+            <div className="emp-header__years" role="tablist" aria-label="Year filter">
+              {yearOptions.map((opt) => {
+                const isActive = opt.value === selectedYear;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    className={`emp-header__year${isActive ? ' emp-header__year--active' : ''}`}
+                    onClick={() => setSelectedYear(opt.value)}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </header>
 
@@ -377,8 +397,8 @@ export function EmployeesPage() {
             >
               <option value="all">Department</option>
               {departmentOptions.map((dept) => (
-                <option key={dept} value={dept}>
-                  {dept}
+                <option key={dept.value} value={dept.value}>
+                  {dept.label}
                 </option>
               ))}
             </select>

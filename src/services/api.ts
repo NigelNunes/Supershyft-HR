@@ -142,22 +142,51 @@ export const campDashboardApi = {
     ),
 };
 
-/** GET /reports/camps/{camp_no}/participants */
+/** GET /reports/camps/{camp_no}/participants (+ department variant) */
 export const campParticipantsApi = {
-  list: (campNo: number, token: string, page = 1, limit = 100) =>
+  list: (campNo: number, token: string, page = 1, limit = 20) =>
     requestPaginated<import('./apiTypes').ApiCampParticipant[]>(
       `/reports/camps/${campNo}/participants?page=${page}&limit=${limit}`,
       { headers: { Authorization: `Bearer ${token}` } },
     ),
 
+  listByDepartment: (campNo: number, slug: string, token: string, page = 1, limit = 20) =>
+    requestPaginated<import('./apiTypes').ApiCampParticipant[]>(
+      `/reports/camps/${campNo}/department/${encodeURIComponent(slug)}/participants?page=${page}&limit=${limit}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    ),
+
   async listAll(campNo: number, token: string) {
-    const limit = 100;
+    const limit = 20;
     let page = 1;
     const items: import('./apiTypes').ApiCampParticipant[] = [];
     let total = 0;
 
     while (true) {
       const { data, meta } = await campParticipantsApi.list(campNo, token, page, limit);
+      items.push(...data);
+      total = meta.total;
+      if (items.length >= total || data.length < limit) break;
+      page += 1;
+    }
+
+    return { items, total };
+  },
+
+  async listAllByDepartment(campNo: number, slug: string, token: string) {
+    const limit = 20;
+    let page = 1;
+    const items: import('./apiTypes').ApiCampParticipant[] = [];
+    let total = 0;
+
+    while (true) {
+      const { data, meta } = await campParticipantsApi.listByDepartment(
+        campNo,
+        slug,
+        token,
+        page,
+        limit,
+      );
       items.push(...data);
       total = meta.total;
       if (items.length >= total || data.length < limit) break;
@@ -277,7 +306,7 @@ export const organizationsApi = {
     return { items, total };
   },
 
-  /** Resolve camps via /organizations/we then /organizations/{id}/camps. */
+  /** Non-admin: GET /organizations/we → first org → GET /organizations/{id}/camps */
   async listCampsForMyOrganizations(token: string) {
     const { items: organizations } = await organizationsApi.listAllMyOrganizations(token);
     if (!organizations.length) return { items: [], total: 0 };
@@ -286,26 +315,23 @@ export const organizationsApi = {
     return organizationsApi.listAllCamps(organizationId, token);
   },
 
-  /** Camps list based on role from GET /users/me (admin → /organizations/camps). */
-  async listCampsForUser(
-    token: string,
-    options?: { organizationId?: number | null; role?: string | null },
-  ) {
-    let role = options?.role ?? null;
-    if (!role) {
+  /**
+   * Camp picker loader — role branching must match product rules:
+   * - admin     → GET /organizations/camps (paginate)
+   * - non-admin → GET /organizations/we → GET /organizations/{organization_id}/camps
+   * Do not use /organizations/we for admin camp lists.
+   */
+  async listCampsForUser(token: string, role?: string | null) {
+    let resolvedRole = role ?? null;
+    if (!resolvedRole) {
       const user = await request<import('./apiTypes').ApiCurrentUser>('/users/me', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      role = user.employee?.role ?? null;
+      resolvedRole = user.employee?.role ?? null;
     }
 
-    if (role === 'admin') {
+    if (resolvedRole === 'admin') {
       return organizationsApi.listAllVisibleCamps(token);
-    }
-
-    const organizationId = options?.organizationId;
-    if (organizationId != null) {
-      return organizationsApi.listAllCamps(organizationId, token);
     }
 
     return organizationsApi.listCampsForMyOrganizations(token);

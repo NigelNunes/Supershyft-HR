@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   useCampRanking,
   useCampCompanyAverageScores,
@@ -10,7 +10,8 @@ import {
   useCampPositiveWins,
   useCampOxidativeStress,
 } from '../hooks/useCampDashboard';
-import { DashboardHeader, type YearOption } from '../components/layout/DashboardHeader';
+import { useCamp } from '../contexts/CampContext';
+import { DashboardHeader } from '../components/layout/DashboardHeader';
 import { ExecutiveRankingCard } from '../components/charts/ExecutiveRankingCard';
 import { CompanyAverageScores } from '../components/charts/CompanyAverageScores';
 import { PhysicalSleepSegmentCharts } from '../components/charts/PhysicalSleepSegmentCharts';
@@ -20,22 +21,16 @@ import { OxidativeStressChart } from '../components/charts/OxidativeStressChart'
 import { BloodParameterPanels } from '../components/charts/BloodParameterPanels';
 import { PositiveWinsPanel } from '../components/charts/PositiveWinsPanel';
 import { LeadershipTakeawaysSection } from '../components/charts/LeadershipTakeawaysSection';
-import { mockDashboard } from '../data/mockDashboard';
-import {
-  getDummyYearBloodPanels,
-  getDummyYearCompanyScores,
-  getDummyYearDiseases,
-  getDummyYearKpis,
-  getDummyYearPhysicalActivity,
-  getDummyYearRanking,
-  getDummyYearSleep,
-  getDummyYearTopDiseases,
-  parseCampYear,
-} from '../data/dummyAllYearsMetrics';
-import type { GenderDistributionPair } from '../types';
+import { SHOW_EXECUTIVE_RANKING } from '../config/dashboard';
+import type { GenderDistributionPair, PositiveWins } from '../types';
 import './CampReportPage.css';
 
 const EMPTY_GENDER_DISTRIBUTION: GenderDistributionPair = { male: [], female: [] };
+const EMPTY_POSITIVE_WINS: PositiveWins = {
+  lowRisk: [],
+  healthyHabits: [],
+  healthyProfiles: [],
+};
 
 function CampSectionTitle({ children }: { children: string }) {
   return (
@@ -47,8 +42,8 @@ function CampSectionTitle({ children }: { children: string }) {
 }
 
 function CampReportPageContent({ onRefresh }: { onRefresh: () => void }) {
-  const [selectedYear, setSelectedYear] = useState<YearOption>('2026');
-  const { data: apiRanking, loading: rankingLoading, error: rankingError } = useCampRanking();
+  const { selectedYear, setSelectedYear, yearOptions } = useCamp();
+  const { data: ranking, loading: rankingLoading, error: rankingError } = useCampRanking();
   const {
     data: companyScores,
     loading: companyScoresLoading,
@@ -56,11 +51,11 @@ function CampReportPageContent({ onRefresh }: { onRefresh: () => void }) {
   } = useCampCompanyAverageScores();
   const { data: apiKpis } = useCampKpis();
   const {
-    data: apiPhysicalActivity,
+    data: physicalActivity,
     loading: physicalLoading,
     error: physicalError,
   } = useCampPhysicalActivity();
-  const { data: apiSleep, loading: sleepLoading, error: sleepError } = useCampSleep();
+  const { data: sleepQuality, loading: sleepLoading, error: sleepError } = useCampSleep();
   const {
     data: riskLifestyle,
     loading: riskLifestyleLoading,
@@ -82,32 +77,27 @@ function CampReportPageContent({ onRefresh }: { onRefresh: () => void }) {
     error: oxidativeError,
   } = useCampOxidativeStress();
 
-  const campYear = parseCampYear(selectedYear);
-  const yearData = useMemo(() => {
-    if (!campYear) return null;
-    return {
-      ranking: getDummyYearRanking(campYear),
-      kpis: getDummyYearKpis(campYear),
-      companyScores: getDummyYearCompanyScores(campYear),
-      physical: getDummyYearPhysicalActivity(campYear),
-      sleep: getDummyYearSleep(campYear),
-      topDiseases: getDummyYearTopDiseases(campYear),
-      diseases: getDummyYearDiseases(campYear),
-      bloodPanels: getDummyYearBloodPanels(campYear),
-    };
-  }, [campYear]);
-
   const oxidativeData = oxidativeStress?.distribution ?? [];
-  const oxidativeHeadcount = yearData?.kpis.employeesEnrolled ?? oxidativeStress?.totalEmployees;
+  const oxidativeHeadcount =
+    oxidativeStress?.totalEmployees ?? apiKpis?.employeesEnrolled;
 
-  const ranking = yearData?.ranking ?? apiRanking;
-  const scores = yearData?.companyScores ?? companyScores ?? { nutrition: 0, fitness: 0, lifestyle: 0 };
-  const physical = yearData?.physical ?? apiPhysicalActivity ?? EMPTY_GENDER_DISTRIBUTION;
-  const sleep = yearData?.sleep ?? apiSleep ?? EMPTY_GENDER_DISTRIBUTION;
-  const kpis = yearData?.kpis ?? apiKpis;
-  const topDiseases = yearData?.topDiseases ?? riskLifestyle?.topHighRiskDiseases ?? [];
-  const diseases = yearData?.diseases ?? riskLifestyle?.diseases ?? [];
-  const panels = yearData?.bloodPanels ?? bloodPanels ?? [];
+  const scores = companyScores ?? { nutrition: 0, fitness: 0, lifestyle: 0 };
+  const physical = physicalActivity ?? EMPTY_GENDER_DISTRIBUTION;
+  const sleep = sleepQuality ?? EMPTY_GENDER_DISTRIBUTION;
+  const topDiseases = riskLifestyle?.topHighRiskDiseases ?? [];
+  const diseases = riskLifestyle?.diseases ?? [];
+  const panels = bloodPanels ?? [];
+
+  const sectionError =
+    companyScoresError ||
+    physicalError ||
+    sleepError ||
+    riskLifestyleError ||
+    oxidativeError ||
+    bloodPanelsError ||
+    positiveWinsError ||
+    (SHOW_EXECUTIVE_RANKING && rankingError) ||
+    null;
 
   return (
     <div className="dashboard-page">
@@ -117,47 +107,35 @@ function CampReportPageContent({ onRefresh }: { onRefresh: () => void }) {
         onRefresh={onRefresh}
         selectedYear={selectedYear}
         onYearChange={setSelectedYear}
+        yearOptions={yearOptions}
       />
 
-      {(rankingError ||
-        companyScoresError ||
-        physicalError ||
-        sleepError ||
-        riskLifestyleError ||
-        oxidativeError ||
-        bloodPanelsError ||
-        positiveWinsError) &&
-        !yearData && (
-          <p className="dashboard-api-error" role="alert">
-            {rankingError ||
-              companyScoresError ||
-              physicalError ||
-              sleepError ||
-              riskLifestyleError ||
-              oxidativeError ||
-              bloodPanelsError ||
-              positiveWinsError}
-          </p>
-        )}
+      {sectionError && (
+        <p className="dashboard-api-error" role="alert">
+          {sectionError}
+        </p>
+      )}
 
-      <ExecutiveRankingCard
-        ranking={ranking}
-        rankingLoading={!yearData && rankingLoading}
-        selectedYear={selectedYear}
-      />
+      {SHOW_EXECUTIVE_RANKING && (
+        <ExecutiveRankingCard
+          ranking={ranking}
+          rankingLoading={rankingLoading}
+          selectedYear={selectedYear}
+        />
+      )}
 
       <CompanyAverageScores
         scores={scores}
-        loading={!yearData && companyScoresLoading}
+        loading={companyScoresLoading}
         selectedYear={selectedYear}
       />
 
       <PhysicalSleepSegmentCharts
         physical={physical}
         sleep={sleep}
-        loading={!yearData && (physicalLoading || sleepLoading)}
-        maleEnrolled={kpis?.maleEnrolled}
-        femaleEnrolled={kpis?.femaleEnrolled}
+        loading={physicalLoading || sleepLoading}
+        maleEnrolled={apiKpis?.maleEnrolled}
+        femaleEnrolled={apiKpis?.femaleEnrolled}
         selectedYear={selectedYear}
       />
 
@@ -166,12 +144,12 @@ function CampReportPageContent({ onRefresh }: { onRefresh: () => void }) {
         <>
           <TopHighRiskDiseasesList
             diseases={topDiseases}
-            loading={!yearData && riskLifestyleLoading}
+            loading={riskLifestyleLoading}
             selectedYear={selectedYear}
           />
           <DiseaseDeepDive
             diseases={diseases}
-            loading={!yearData && riskLifestyleLoading}
+            loading={riskLifestyleLoading}
             selectedYear={selectedYear}
           />
         </>
@@ -179,12 +157,12 @@ function CampReportPageContent({ onRefresh }: { onRefresh: () => void }) {
         <div className="camp-risk-lifestyle-grid">
           <TopHighRiskDiseasesList
             diseases={topDiseases}
-            loading={!yearData && riskLifestyleLoading}
+            loading={riskLifestyleLoading}
             selectedYear={selectedYear}
           />
           <DiseaseDeepDive
             diseases={diseases}
-            loading={!yearData && riskLifestyleLoading}
+            loading={riskLifestyleLoading}
             selectedYear={selectedYear}
           />
         </div>
@@ -192,21 +170,20 @@ function CampReportPageContent({ onRefresh }: { onRefresh: () => void }) {
 
       <CampSectionTitle>Oxidative Stress</CampSectionTitle>
       <OxidativeStressChart
-        data={oxidativeData.length > 0 ? oxidativeData : mockDashboard.oxidativeStress}
-        departments={mockDashboard.departments}
+        data={oxidativeData}
         totalHeadcount={oxidativeHeadcount}
-        loading={!yearData && oxidativeLoading}
+        loading={oxidativeLoading}
       />
 
       <CampSectionTitle>Blood & Lab Intelligence</CampSectionTitle>
       <BloodParameterPanels
         panels={panels}
-        loading={!yearData && bloodPanelsLoading}
+        loading={bloodPanelsLoading}
         selectedYear={selectedYear}
       />
 
       <PositiveWinsPanel
-        data={positiveWins ?? { lowRisk: [], healthyHabits: [], healthyProfiles: [] }}
+        data={positiveWins ?? EMPTY_POSITIVE_WINS}
         loading={positiveWinsLoading}
       />
 

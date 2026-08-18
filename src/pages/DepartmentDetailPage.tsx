@@ -4,12 +4,9 @@ import { ArrowLeft } from 'lucide-react';
 import { getDepartmentDetail } from '../data/mockDashboard';
 import { DISPLAY_ENROLLED } from '../data/participantPool';
 import {
-  getDummyYearCompanyScores,
   getDummyYearMetabolicAge,
   getDummyYearOverallRisk,
   getDummyYearParticipationByAge,
-  getDummyYearPhysicalActivity,
-  getDummyYearSleep,
   parseCampYear,
 } from '../data/dummyAllYearsMetrics';
 import { useOrganization } from '../contexts/OrganizationContext';
@@ -77,18 +74,11 @@ function DepartmentDetailPageContent({
       count: scaleChart(row.count),
     }));
 
-    const physical = getDummyYearPhysicalActivity(campYear);
-    const sleep = getDummyYearSleep(campYear);
-    const scores = getDummyYearCompanyScores(campYear);
-
     return {
       kpis: companyKpisYear,
       participation,
       overallRisk,
       metabolic,
-      physical,
-      sleep,
-      scores,
       maleEnrolled: companyKpisYear.maleEnrolled,
       femaleEnrolled: companyKpisYear.femaleEnrolled,
     };
@@ -141,15 +131,15 @@ function DepartmentDetailPageContent({
       </div>
 
       <PhysicalSleepSegmentCharts
-        physical={yearView?.physical ?? detail.physicalActivityByGender ?? EMPTY_GENDER_DISTRIBUTION}
-        sleep={yearView?.sleep ?? detail.sleepQualityByGender ?? EMPTY_GENDER_DISTRIBUTION}
+        physical={detail.physicalActivityByGender ?? EMPTY_GENDER_DISTRIBUTION}
+        sleep={detail.sleepQualityByGender ?? EMPTY_GENDER_DISTRIBUTION}
         maleEnrolled={genderBreakdown.male}
         femaleEnrolled={genderBreakdown.female}
         selectedYear={selectedYear}
       />
 
       <CompanyAverageScores
-        scores={yearView?.scores ?? detail.companyScores}
+        scores={detail.companyScores}
         title="Company average scores"
         subtitle="Nutrition · fitness · lifestyle (scale 0–100)"
         info={CHART_INFO.deptCompanyScores}

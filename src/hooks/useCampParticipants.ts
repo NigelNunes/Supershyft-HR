@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCamp } from '../contexts/CampContext';
-import { mockDashboard } from '../data/mockDashboard';
+import { useOrganization } from '../contexts/OrganizationContext';
+import { campParticipantsApi } from '../services/api';
+import { mapCampParticipantsToEmployees } from '../services/campParticipantsMappers';
 import type { EmployeeRecord } from '../types';
 
 interface CampParticipantsState {
@@ -9,13 +11,20 @@ interface CampParticipantsState {
   total: number;
   loading: boolean;
   error: string | null;
+  refresh: () => void;
 }
 
-/** Offline demo employees — never calls participants API. */
-export function useCampParticipants(): CampParticipantsState {
+/**
+ * Load camp participants.
+ * - departmentSlug omitted / 'all' → GET /reports/camps/{camp_no}/participants
+ * - otherwise → GET /reports/camps/{camp_no}/department/{slug}/participants
+ */
+export function useCampParticipants(departmentSlug?: string | null): CampParticipantsState {
   const { accessToken } = useAuth();
   const { selectedCampNo } = useCamp();
-  const [state, setState] = useState<CampParticipantsState>({
+  const { departments } = useOrganization();
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [state, setState] = useState<Omit<CampParticipantsState, 'refresh'>>({
     employees: [],
     total: 0,
     loading: true,
@@ -28,14 +37,46 @@ export function useCampParticipants(): CampParticipantsState {
       return;
     }
 
-    const employees = mockDashboard.employees;
-    setState({
-      employees,
-      total: employees.length,
-      loading: false,
-      error: null,
-    });
-  }, [accessToken, selectedCampNo]);
+    let cancelled = false;
+    setState((prev) => ({ ...prev, loading: true, error: null }));
 
-  return state;
+    const slug = departmentSlug?.trim() && departmentSlug !== 'all' ? departmentSlug.trim() : null;
+    const departmentLabels = new Map(
+      departments.map((d) => [d.slug.trim().toLowerCase(), d.department]),
+    );
+
+    const load = slug
+      ? campParticipantsApi.listAllByDepartment(selectedCampNo, slug, accessToken)
+      : campParticipantsApi.listAll(selectedCampNo, accessToken);
+
+    void load
+      .then(({ items, total }) => {
+        if (cancelled) return;
+        const employees = mapCampParticipantsToEmployees(items, departmentLabels);
+        setState({
+          employees,
+          total: total || employees.length,
+          loading: false,
+          error: null,
+        });
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setState({
+          employees: [],
+          total: 0,
+          loading: false,
+          error: err instanceof Error ? err.message : 'Failed to load employees',
+        });
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, selectedCampNo, departmentSlug, departments, refreshKey]);
+
+  return {
+    ...state,
+    refresh: () => setRefreshKey((key) => key + 1),
+  };
 }
