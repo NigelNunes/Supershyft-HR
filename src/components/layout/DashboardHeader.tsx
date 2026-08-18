@@ -14,7 +14,7 @@ export const YEAR_OPTIONS = [
 export type YearOption = CampYearOption;
 
 interface DashboardHeaderProps {
-  onRefresh: () => void;
+  onRefresh: () => void | Promise<void>;
   updatedLabel?: string;
   selectedYear: YearOption;
   onYearChange: (year: YearOption) => void;
@@ -38,10 +38,15 @@ export function DashboardHeader({
       ? yearOptions
       : YEAR_OPTIONS.map((opt) => ({ ...opt, campNo: null as number | null }));
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setRefreshing(true);
-    onRefresh();
-    window.setTimeout(() => setRefreshing(false), 600);
+    try {
+      await onRefresh();
+    } catch {
+      // still stop the spinner on failure
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   return (

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   useCampRanking,
   useCampCompanyAverageScores,
@@ -41,40 +40,46 @@ function CampSectionTitle({ children }: { children: string }) {
   );
 }
 
-function CampReportPageContent({ onRefresh }: { onRefresh: () => void }) {
+export function CampReportPage() {
   const { selectedYear, setSelectedYear, yearOptions } = useCamp();
-  const { data: ranking, loading: rankingLoading, error: rankingError } = useCampRanking();
+  const { data: ranking, loading: rankingLoading, error: rankingError, refresh: refreshRanking } = useCampRanking();
   const {
     data: companyScores,
     loading: companyScoresLoading,
     error: companyScoresError,
+    refresh: refreshCompanyScores,
   } = useCampCompanyAverageScores();
-  const { data: apiKpis } = useCampKpis();
+  const { data: apiKpis, refresh: refreshKpis } = useCampKpis();
   const {
     data: physicalActivity,
     loading: physicalLoading,
     error: physicalError,
+    refresh: refreshPhysical,
   } = useCampPhysicalActivity();
-  const { data: sleepQuality, loading: sleepLoading, error: sleepError } = useCampSleep();
+  const { data: sleepQuality, loading: sleepLoading, error: sleepError, refresh: refreshSleep } = useCampSleep();
   const {
     data: riskLifestyle,
     loading: riskLifestyleLoading,
     error: riskLifestyleError,
+    refresh: refreshRiskLifestyle,
   } = useCampRiskLifestyleByGender();
   const {
     data: bloodPanels,
     loading: bloodPanelsLoading,
     error: bloodPanelsError,
+    refresh: refreshBlood,
   } = useCampBloodAndLabIntelligence();
   const {
     data: positiveWins,
     loading: positiveWinsLoading,
     error: positiveWinsError,
+    refresh: refreshPositiveWins,
   } = useCampPositiveWins();
   const {
     data: oxidativeStress,
     loading: oxidativeLoading,
     error: oxidativeError,
+    refresh: refreshOxidative,
   } = useCampOxidativeStress();
 
   const oxidativeData = oxidativeStress?.distribution ?? [];
@@ -99,12 +104,26 @@ function CampReportPageContent({ onRefresh }: { onRefresh: () => void }) {
     (SHOW_EXECUTIVE_RANKING && rankingError) ||
     null;
 
+  const handleRefresh = async () => {
+    await Promise.all([
+      refreshKpis(),
+      refreshRanking(),
+      refreshCompanyScores(),
+      refreshPhysical(),
+      refreshSleep(),
+      refreshRiskLifestyle(),
+      refreshOxidative(),
+      refreshBlood(),
+      refreshPositiveWins(),
+    ]);
+  };
+
   return (
     <div className="dashboard-page">
       <DashboardHeader
         title="HR health intelligence report"
         subtitle="Workforce wellness analysis"
-        onRefresh={onRefresh}
+        onRefresh={handleRefresh}
         selectedYear={selectedYear}
         onYearChange={setSelectedYear}
         yearOptions={yearOptions}
@@ -190,16 +209,5 @@ function CampReportPageContent({ onRefresh }: { onRefresh: () => void }) {
       <CampSectionTitle>Leadership Takeaways</CampSectionTitle>
       <LeadershipTakeawaysSection />
     </div>
-  );
-}
-
-export function CampReportPage() {
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  return (
-    <CampReportPageContent
-      key={refreshKey}
-      onRefresh={() => setRefreshKey((key) => key + 1)}
-    />
   );
 }

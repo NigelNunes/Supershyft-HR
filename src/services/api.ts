@@ -140,6 +140,14 @@ export const campDashboardApi = {
       `/reports/camps/${campNo}/dashboard?section=${section}`,
       { headers: { Authorization: `Bearer ${token}` } },
     ),
+
+  /** PUT /reports/camps/{camp_no}/refresh — returns { report_id, section: { data, … }, report_bts } */
+  refresh: (campNo: number, section: import('./apiTypes').CampDashboardSection, token: string) =>
+    request<Record<string, unknown>>(`/reports/camps/${campNo}/refresh`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ section }),
+    }),
 };
 
 /** GET /reports/camps/{camp_no}/participants (+ department variant) */

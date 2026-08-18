@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCamp } from '../contexts/CampContext';
 import { campDashboardApi } from '../services/api';
@@ -45,7 +45,10 @@ interface FetchState<T> {
   data: T | null;
   loading: boolean;
   error: string | null;
+  refresh: () => Promise<void>;
 }
+
+type SectionState<T> = Omit<FetchState<T>, 'refresh'>;
 
 function unwrapSectionPayload<T>(payload: { data: T } | T): T {
   if (
@@ -59,13 +62,29 @@ function unwrapSectionPayload<T>(payload: { data: T } | T): T {
   return payload as T;
 }
 
+/**
+ * PUT /refresh wraps the section inside { report_id, section: { data, name, … }, report_bts }.
+ * Extract `section.data` so the mapper receives the same shape as from GET.
+ */
+function unwrapRefreshPayload<T>(payload: unknown): T {
+  if (
+    payload != null &&
+    typeof payload === 'object' &&
+    'section' in payload
+  ) {
+    const section = (payload as { section: unknown }).section;
+    return unwrapSectionPayload<T>(section as { data: T } | T);
+  }
+  return unwrapSectionPayload<T>(payload as { data: T } | T);
+}
+
 function useCampSection<TApi, TView>(
   section: CampDashboardSection,
   map: (api: TApi) => TView,
 ): FetchState<TView> {
   const { accessToken } = useAuth();
   const { selectedCampNo } = useCamp();
-  const [state, setState] = useState<FetchState<TView>>({
+  const [state, setState] = useState<SectionState<TView>>({
     data: null,
     loading: true,
     error: null,
@@ -101,7 +120,26 @@ function useCampSection<TApi, TView>(
     };
   }, [accessToken, selectedCampNo, section, map]);
 
-  return state;
+  const refresh = useCallback((): Promise<void> => {
+    if (!accessToken || !selectedCampNo) return Promise.resolve();
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+
+    return campDashboardApi
+      .refresh(selectedCampNo, section, accessToken)
+      .then((payload) => {
+        const api = unwrapRefreshPayload<TApi>(payload);
+        setState({ data: map(api), loading: false, error: null });
+      })
+      .catch((err) => {
+        setState((prev) => ({
+          ...prev,
+          loading: false,
+          error: err instanceof Error ? err.message : 'Failed to refresh',
+        }));
+      });
+  }, [accessToken, selectedCampNo, section, map]);
+
+  return { ...state, refresh };
 }
 
 const mapKpis = (api: ApiCampDashboardKpis) => mapCampKpis(api);
@@ -170,5 +208,6 @@ export function useCampRanking(): FetchState<RankingSummary> {
     data: state.data,
     loading: state.loading,
     error: state.error,
+    refresh: state.refresh,
   };
 }

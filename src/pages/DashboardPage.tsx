@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   useCampKpis,
   useCampOverallRiskScore,
@@ -14,25 +14,30 @@ import { OverallRiskScoreChart } from '../components/charts/OverallRiskScoreChar
 import { DashboardExtendedSections } from './DashboardExtendedSections';
 import { metabolicCategoriesFromKpis } from '../services/campDashboardMappers';
 
-function DashboardPageContent({ onRefresh }: { onRefresh: () => void }) {
+export function DashboardPage() {
   const { selectedYear, setSelectedYear, yearOptions } = useCamp();
-  const { data: kpis, loading: kpisLoading, error: kpisError } = useCampKpis();
-  const { data: ranking, loading: rankingLoading, error: rankingError } = useCampRanking();
-  const { data: participationByAge, loading: ageLoading, error: ageError } =
+  const { data: kpis, loading: kpisLoading, error: kpisError, refresh: refreshKpis } = useCampKpis();
+  const { data: ranking, loading: rankingLoading, error: rankingError, refresh: refreshRanking } = useCampRanking();
+  const { data: participationByAge, loading: ageLoading, error: ageError, refresh: refreshAge } =
     useCampParticipationByAge();
   const {
     data: overallRiskScore,
     loading: riskLoading,
     error: riskError,
+    refresh: refreshRisk,
   } = useCampOverallRiskScore();
 
   const metabolicCategories = useMemo(() => metabolicCategoriesFromKpis(kpis), [kpis]);
   const sectionError = kpisError || rankingError || ageError || riskError;
 
+  const handleRefresh = async () => {
+    await Promise.all([refreshKpis(), refreshRanking(), refreshAge(), refreshRisk()]);
+  };
+
   return (
     <div className="dashboard-page">
       <DashboardHeader
-        onRefresh={onRefresh}
+        onRefresh={handleRefresh}
         selectedYear={selectedYear}
         onYearChange={setSelectedYear}
         yearOptions={yearOptions}
@@ -74,16 +79,5 @@ function DashboardPageContent({ onRefresh }: { onRefresh: () => void }) {
 
       <DashboardExtendedSections />
     </div>
-  );
-}
-
-export function DashboardPage() {
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  return (
-    <DashboardPageContent
-      key={refreshKey}
-      onRefresh={() => setRefreshKey((key) => key + 1)}
-    />
   );
 }

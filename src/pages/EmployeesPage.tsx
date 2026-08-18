@@ -176,7 +176,7 @@ export function EmployeesPage() {
   const [stepFilters, setStepFilters] = useState<Record<string, StepFilterValue>>({});
 
   const { employees, total, loading, error, refresh } = useCampParticipants(department);
-  const { data: kpis, loading: kpisLoading } = useCampKpis();
+  const { data: kpis, loading: kpisLoading, refresh: refreshKpis } = useCampKpis();
 
   const departmentOptions = useMemo(() => {
     const fromOrg = departments
@@ -255,10 +255,15 @@ export function EmployeesPage() {
 
   const summaryLoading = loading || kpisLoading;
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setRefreshing(true);
+    try {
+      await refreshKpis();
+    } catch {
+      // still re-fetch participants even if kpis refresh fails
+    }
     refresh();
-    window.setTimeout(() => setRefreshing(false), 600);
+    setRefreshing(false);
   };
 
   const setStepFilter = (stepId: JourneyStepId, value: StepFilterValue) => {
