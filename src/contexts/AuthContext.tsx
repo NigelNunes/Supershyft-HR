@@ -9,6 +9,15 @@ import {
 } from 'react';
 import { authApi, usersApi } from '../services/api';
 import type { ApiCurrentUser } from '../services/apiTypes';
+import {
+  clearAuthTokens,
+  getAccessToken,
+  getRefreshToken,
+  hasStoredSession,
+  refreshAccessToken,
+  setAuthTokens,
+  subscribeAuthTokens,
+} from '../services/authStorage';
 
 interface AuthContextValue {
   isAuthenticated: boolean;
@@ -21,36 +30,36 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-const AUTH_KEY = 'hr-dashboard-auth';
-const TOKEN_KEY = 'hr-dashboard-token';
-const REFRESH_TOKEN_KEY = 'hr-dashboard-refresh-token';
-const DEMO_SESSION_KEY = 'hr-dashboard-demo-session';
-
-function clearStoredAuth() {
-  sessionStorage.removeItem(AUTH_KEY);
-  sessionStorage.removeItem(TOKEN_KEY);
-  sessionStorage.removeItem(REFRESH_TOKEN_KEY);
-  sessionStorage.removeItem(DEMO_SESSION_KEY);
-}
-
-function readStoredToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  if (sessionStorage.getItem(AUTH_KEY) !== '1') return null;
-  return sessionStorage.getItem(TOKEN_KEY);
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return sessionStorage.getItem(AUTH_KEY) === '1' && Boolean(sessionStorage.getItem(TOKEN_KEY));
-  });
-  const [accessToken, setAccessToken] = useState<string | null>(() => readStoredToken());
+  const [accessToken, setAccessToken] = useState<string | null>(() => getAccessToken());
+  const [isAuthenticated, setIsAuthenticated] = useState(() => hasStoredSession());
   const [user, setUser] = useState<ApiCurrentUser | null>(null);
-  const [userLoading, setUserLoading] = useState(() => Boolean(readStoredToken()));
+  const [userLoading, setUserLoading] = useState(() => hasStoredSession());
 
+  // Keep React state in sync when tokens refresh/clear from the API layer.
   useEffect(() => {
-    if (!isAuthenticated || !accessToken) {
+    return subscribeAuthTokens((token) => {
+      setAccessToken(token);
+      setIsAuthenticated(Boolean(token));
+      if (!token) {
+        setUser(null);
+        setUserLoading(false);
+      }
+    });
+  }, []);
+
+  // Load current user once per authenticated session. 401s are refreshed inside the API client.
+  useEffect(() => {
+    if (!isAuthenticated) {
       setUser(null);
+      setUserLoading(false);
+      return;
+    }
+
+    const token = getAccessToken();
+    if (!token) {
+      setIsAuthenticated(false);
       setUserLoading(false);
       return;
     }
@@ -58,25 +67,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     setUserLoading(true);
 
-    void usersApi
-      .me(accessToken)
-      .then((me) => {
+    void (async () => {
+      try {
+        const me = await usersApi.me(token);
         if (cancelled) return;
         setUser(me);
-      })
-      .catch(() => {
-        // Camp picker may still load camps; role can be fetched again there if missing.
+        const latest = getAccessToken();
+        if (latest) setAccessToken(latest);
+      } catch {
         if (cancelled) return;
+        // Explicit refresh if the first me() failed (e.g. expired access, refresh not yet tried).
+        if (getRefreshToken()) {
+          const next = await refreshAccessToken(authApi.refreshToken);
+          if (cancelled) return;
+          if (next) {
+            try {
+              const me = await usersApi.me(next);
+              if (cancelled) return;
+              setAccessToken(next);
+              setUser(me);
+              return;
+            } catch {
+              // fall through
+            }
+          }
+        }
+        clearAuthTokens();
+        setAccessToken(null);
         setUser(null);
-      })
-      .finally(() => {
+        setIsAuthenticated(false);
+      } finally {
         if (!cancelled) setUserLoading(false);
-      });
+      }
+    })();
 
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, accessToken]);
+  }, [isAuthenticated]);
 
   const login = useCallback(async (phone: string, otp: string) => {
     try {
@@ -85,11 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await authApi.verifyOtp(normalizedPhone, normalizedOtp);
       const { access_token, refresh_token } = result.tokens;
 
-      sessionStorage.setItem(AUTH_KEY, '1');
-      sessionStorage.setItem(TOKEN_KEY, access_token);
-      sessionStorage.setItem(REFRESH_TOKEN_KEY, refresh_token);
-      sessionStorage.removeItem(DEMO_SESSION_KEY);
-
+      setAuthTokens(access_token, refresh_token);
       setAccessToken(access_token);
       setIsAuthenticated(true);
       return { ok: true };
@@ -102,8 +126,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    const refreshToken = sessionStorage.getItem(REFRESH_TOKEN_KEY);
-    clearStoredAuth();
+    const refreshToken = getRefreshToken();
+    clearAuthTokens();
     setAccessToken(null);
     setUser(null);
     setUserLoading(false);

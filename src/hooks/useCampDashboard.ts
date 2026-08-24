@@ -40,6 +40,7 @@ import type {
   PositiveWins,
   RankingSummary,
 } from '../types';
+import { isOverallLocation } from '../utils/campCities';
 
 interface FetchState<T> {
   data: T | null;
@@ -83,7 +84,8 @@ function useCampSection<TApi, TView>(
   map: (api: TApi) => TView,
 ): FetchState<TView> {
   const { accessToken } = useAuth();
-  const { selectedCampNo } = useCamp();
+  const { selectedCampNo, selectedCity } = useCamp();
+  const cityScoped = !isOverallLocation(selectedCity);
   const [state, setState] = useState<SectionState<TView>>({
     data: null,
     loading: true,
@@ -99,8 +101,11 @@ function useCampSection<TApi, TView>(
     let cancelled = false;
     setState({ data: null, loading: true, error: null });
 
-    void campDashboardApi
-      .section<TApi>(selectedCampNo, section, accessToken)
+    const request = cityScoped
+      ? campDashboardApi.citySection<TApi>(selectedCampNo, selectedCity, section, accessToken)
+      : campDashboardApi.section<TApi>(selectedCampNo, section, accessToken);
+
+    void request
       .then((payload) => {
         if (cancelled) return;
         const api = unwrapSectionPayload(payload);
@@ -118,16 +123,23 @@ function useCampSection<TApi, TView>(
     return () => {
       cancelled = true;
     };
-  }, [accessToken, selectedCampNo, section, map]);
+  }, [accessToken, selectedCampNo, selectedCity, cityScoped, section, map]);
 
   const refresh = useCallback((): Promise<void> => {
     if (!accessToken || !selectedCampNo) return Promise.resolve();
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
-    return campDashboardApi
-      .refresh(selectedCampNo, section, accessToken)
-      .then((payload) => {
-        const api = unwrapRefreshPayload<TApi>(payload);
+    // City dashboards only expose GET; re-fetch the section. Overall uses PUT /refresh.
+    const request = cityScoped
+      ? campDashboardApi
+          .citySection<TApi>(selectedCampNo, selectedCity, section, accessToken)
+          .then((payload) => unwrapSectionPayload<TApi>(payload))
+      : campDashboardApi
+          .refresh(selectedCampNo, section, accessToken)
+          .then((payload) => unwrapRefreshPayload<TApi>(payload));
+
+    return request
+      .then((api) => {
         setState({ data: map(api), loading: false, error: null });
       })
       .catch((err) => {
@@ -137,7 +149,7 @@ function useCampSection<TApi, TView>(
           error: err instanceof Error ? err.message : 'Failed to refresh',
         }));
       });
-  }, [accessToken, selectedCampNo, section, map]);
+  }, [accessToken, selectedCampNo, selectedCity, cityScoped, section, map]);
 
   return { ...state, refresh };
 }

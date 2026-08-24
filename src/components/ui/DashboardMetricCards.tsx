@@ -219,16 +219,16 @@ function SingleYearMetricCards({
           </p>
           <div className="metric-card__gender">
             <span className="metric-card__gender-item">
-              <span className="metric-card__gender-symbol metric-card__gender-symbol--female" aria-hidden>
-                ♀
-              </span>
-              <span>{displayNumber(kpis?.femaleEnrolled, kpisLoading)}</span>
-            </span>
-            <span className="metric-card__gender-item">
               <span className="metric-card__gender-symbol metric-card__gender-symbol--male" aria-hidden>
                 ♂
               </span>
               <span>{displayNumber(kpis?.maleEnrolled, kpisLoading)}</span>
+            </span>
+            <span className="metric-card__gender-item">
+              <span className="metric-card__gender-symbol metric-card__gender-symbol--female" aria-hidden>
+                ♀
+              </span>
+              <span>{displayNumber(kpis?.femaleEnrolled, kpisLoading)}</span>
             </span>
           </div>
         </div>

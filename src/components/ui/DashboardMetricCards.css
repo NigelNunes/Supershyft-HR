@@ -233,11 +233,11 @@
   line-height: 1;
 }
 
-.metric-card__gender-symbol--female {
+.metric-card__gender-symbol--male {
   color: #3b82f6;
 }
 
-.metric-card__gender-symbol--male {
+.metric-card__gender-symbol--female {
   color: #ff589b;
 }
 

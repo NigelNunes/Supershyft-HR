@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@vishalvoid/react-india-map": "^1.2.0",
+    "framer-motion": "^13.1.1",
     "lucide-react": "^1.16.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",

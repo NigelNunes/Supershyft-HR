@@ -33,14 +33,21 @@
   line-height: 1.25rem;
 }
 
+.dashboard-header__subtitle-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-width: 0;
+}
+
 .dashboard-header__actions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: space-between;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
   gap: 12px;
   flex-shrink: 0;
-  align-self: stretch;
 }
 
 .dashboard-header__status-row {
@@ -119,7 +126,7 @@
 .dashboard-header__years {
   display: inline-flex;
   align-items: stretch;
-  min-width: 20rem;
+  min-width: 0;
   height: 2rem;
   padding: 4px;
   box-sizing: border-box;
@@ -134,11 +141,12 @@
 }
 
 .dashboard-header__year {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 10px;
+  min-width: 3.25rem;
+  padding: 4px 12px;
   border: none;
   border-radius: 4px;
   background: transparent;

@@ -11,6 +11,9 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { useCamp } from '../../contexts/CampContext';
 import { useOrganization } from '../../contexts/OrganizationContext';
+import { organizationsApi } from '../../services/api';
+import type { ApiOrganizationCamp } from '../../services/apiTypes';
+import { yearFromCampStartDate } from '../../utils/campYears';
 import { formatUserDisplayName, formatUserPhone, userInitial } from '../../utils/userDisplay';
 import './Sidebar.css';
 
@@ -35,8 +38,13 @@ export function Sidebar({
   mobileOpen = false,
   onNavigate,
 }: SidebarProps) {
-  const { user, userLoading, logout } = useAuth();
-  const { selectedCampName, selectedCampOrganizationName } = useCamp();
+  const { accessToken, user, userLoading, logout } = useAuth();
+  const {
+    selectedCampNo,
+    selectedCampName,
+    selectedCampOrganizationName,
+    selectCamp,
+  } = useCamp();
   const { organizationName, organizationLogo, departments, loading: orgLoading } =
     useOrganization();
   const navigate = useNavigate();
@@ -64,8 +72,21 @@ export function Sidebar({
 
   const [campsOpen, setCampsOpen] = useState(false);
   const [departmentsOpen, setDepartmentsOpen] = useState(false);
+  const [accessibleCamps, setAccessibleCamps] = useState<ApiOrganizationCamp[]>([]);
+  const [campsListLoading, setCampsListLoading] = useState(false);
+  const [campsListError, setCampsListError] = useState<string | null>(null);
+  const [selectingCampNo, setSelectingCampNo] = useState<number | null>(null);
   const campsRef = useRef<HTMLDivElement>(null);
   const departmentsRef = useRef<HTMLDivElement>(null);
+  const campsLoadedForTokenRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!accessToken) {
+      campsLoadedForTokenRef.current = null;
+      setAccessibleCamps([]);
+      setCampsListError(null);
+    }
+  }, [accessToken]);
 
   useEffect(() => {
     if (!campsOpen) return;
@@ -79,6 +100,39 @@ export function Sidebar({
     document.addEventListener('mousedown', handlePointerDown);
     return () => document.removeEventListener('mousedown', handlePointerDown);
   }, [campsOpen]);
+
+  useEffect(() => {
+    if (!campsOpen || !accessToken || userLoading) return;
+    if (campsLoadedForTokenRef.current === accessToken) return;
+
+    const token = accessToken;
+    const role = user?.employee?.role ?? null;
+    let cancelled = false;
+
+    async function loadAccessibleCamps() {
+      setCampsListLoading(true);
+      setCampsListError(null);
+      try {
+        const { items } = await organizationsApi.listCampsForUser(token, role);
+        if (cancelled) return;
+        const sorted = [...items].sort((a, b) =>
+          a.camp_name.localeCompare(b.camp_name, undefined, { sensitivity: 'base' }),
+        );
+        setAccessibleCamps(sorted);
+        campsLoadedForTokenRef.current = token;
+      } catch (err) {
+        if (cancelled) return;
+        setCampsListError(err instanceof Error ? err.message : 'Failed to load camps');
+      } finally {
+        if (!cancelled) setCampsListLoading(false);
+      }
+    }
+
+    void loadAccessibleCamps();
+    return () => {
+      cancelled = true;
+    };
+  }, [campsOpen, accessToken, user, userLoading]);
 
   useEffect(() => {
     if (!departmentsOpen) return;
@@ -114,11 +168,41 @@ export function Sidebar({
     onNavigate?.();
   };
 
+  const handleSelectCamp = async (camp: ApiOrganizationCamp) => {
+    if (camp.camp_no === selectedCampNo) {
+      setCampsOpen(false);
+      return;
+    }
+
+    setSelectingCampNo(camp.camp_no);
+    setCampsListError(null);
+    const result = await selectCamp(
+      camp.camp_no,
+      camp.organization_id,
+      camp.organization_name,
+      camp.camp_name,
+      camp.start_date,
+    );
+    setSelectingCampNo(null);
+
+    if (result.ok) {
+      setCampsOpen(false);
+      onNavigate?.();
+      return;
+    }
+
+    setCampsListError(result.error ?? 'Unable to access this camp.');
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/login', { replace: true });
     onNavigate?.();
   };
+
+  const showOrgInCampMeta = accessibleCamps.some(
+    (camp) => camp.organization_id !== accessibleCamps[0]?.organization_id,
+  );
 
   const logoEl = (
     <span className="sidebar__logo">
@@ -203,22 +287,63 @@ export function Sidebar({
             <div
               id="sidebar-camps-list"
               className="sidebar__camps-panel"
-              role="region"
-              aria-label="Current camp"
+              role="listbox"
+              aria-label="Available camps"
             >
-              <ul className="sidebar__camps-list">
-                <li>
-                  <button
-                    type="button"
-                    className="sidebar__camp-item sidebar__camp-item--active"
-                    onClick={() => setCampsOpen(false)}
-                    aria-current="true"
-                  >
-                    <span className="sidebar__camp-item-name">{campSubtitle}</span>
-                    <span className="sidebar__camp-item-meta">{companyLabel}</span>
-                  </button>
-                </li>
-              </ul>
+              {campsListLoading && (
+                <p className="sidebar__camps-status">Loading camps…</p>
+              )}
+
+              {!campsListLoading && accessibleCamps.length === 0 && !campsListError && (
+                <p className="sidebar__camps-status">No camps available.</p>
+              )}
+
+              {!campsListLoading && accessibleCamps.length > 0 && (
+                <ul className="sidebar__camps-list">
+                  {accessibleCamps.map((camp) => {
+                    const isActive = camp.camp_no === selectedCampNo;
+                    const isSelecting = selectingCampNo === camp.camp_no;
+                    const year = yearFromCampStartDate(camp.start_date);
+                    const metaParts = [
+                      showOrgInCampMeta ? camp.organization_name : null,
+                      year,
+                    ].filter(Boolean);
+
+                    return (
+                      <li key={camp.camp_no}>
+                        <button
+                          type="button"
+                          role="option"
+                          className={`sidebar__camp-item${
+                            isActive ? ' sidebar__camp-item--active' : ''
+                          }`}
+                          aria-selected={isActive}
+                          aria-current={isActive ? 'true' : undefined}
+                          disabled={selectingCampNo != null}
+                          onClick={() => void handleSelectCamp(camp)}
+                        >
+                          <span className="sidebar__camp-item-name">{camp.camp_name}</span>
+                          {(metaParts.length > 0 || isSelecting) && (
+                            <span
+                              className={
+                                isSelecting
+                                  ? 'sidebar__camp-item-loading'
+                                  : 'sidebar__camp-item-meta'
+                              }
+                            >
+                              {isSelecting ? 'Switching…' : metaParts.join(' · ')}
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+
+              {!campsListLoading && campsListError && (
+                <p className="sidebar__camps-error">{campsListError}</p>
+              )}
             </div>
           )}
         </div>

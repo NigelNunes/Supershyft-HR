@@ -41,7 +41,14 @@ function CampSectionTitle({ children }: { children: string }) {
 }
 
 export function CampReportPage() {
-  const { selectedYear, setSelectedYear, yearOptions } = useCamp();
+  const {
+    selectedYear,
+    setSelectedYear,
+    yearOptions,
+    selectedCity,
+    setSelectedCity,
+    locationOptions,
+  } = useCamp();
   const { data: ranking, loading: rankingLoading, error: rankingError, refresh: refreshRanking } = useCampRanking();
   const {
     data: companyScores,
@@ -127,6 +134,9 @@ export function CampReportPage() {
         selectedYear={selectedYear}
         onYearChange={setSelectedYear}
         yearOptions={yearOptions}
+        locationOptions={locationOptions}
+        selectedLocation={selectedCity}
+        onLocationChange={setSelectedCity}
       />
 
       {sectionError && (

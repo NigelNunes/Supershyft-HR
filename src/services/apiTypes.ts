@@ -243,6 +243,12 @@ export interface ApiMyOrganization {
   updated_employee_id?: number | null;
 }
 
+/** Nested cities block on GET /organizations/{organization_id}/camps items. */
+export interface ApiOrganizationCampCities {
+  count?: number;
+  cities?: string[];
+}
+
 /** GET /organizations/{organization_id}/camps */
 export interface ApiOrganizationCamp {
   camp_no: number;
@@ -250,9 +256,16 @@ export interface ApiOrganizationCamp {
   organization_id: number;
   organization_name: string;
   start_date: string;
+  year?: number | null;
   engagement_count: number;
   department_count: number;
   report_count: number;
+  /**
+   * Cities for this camp. API shape is usually `{ count, cities: string[] }`
+   * (e.g. Bengaluru — use these exact strings in city dashboard paths).
+   */
+  cities?: string[] | ApiOrganizationCampCities | null;
+  city?: string | null;
 }
 
 /** GET /users/me */

@@ -15,7 +15,14 @@ import { DashboardExtendedSections } from './DashboardExtendedSections';
 import { metabolicCategoriesFromKpis } from '../services/campDashboardMappers';
 
 export function DashboardPage() {
-  const { selectedYear, setSelectedYear, yearOptions } = useCamp();
+  const {
+    selectedYear,
+    setSelectedYear,
+    yearOptions,
+    selectedCity,
+    setSelectedCity,
+    locationOptions,
+  } = useCamp();
   const { data: kpis, loading: kpisLoading, error: kpisError, refresh: refreshKpis } = useCampKpis();
   const { data: ranking, loading: rankingLoading, error: rankingError, refresh: refreshRanking } = useCampRanking();
   const { data: participationByAge, loading: ageLoading, error: ageError, refresh: refreshAge } =
@@ -41,6 +48,9 @@ export function DashboardPage() {
         selectedYear={selectedYear}
         onYearChange={setSelectedYear}
         yearOptions={yearOptions}
+        locationOptions={locationOptions}
+        selectedLocation={selectedCity}
+        onLocationChange={setSelectedCity}
       />
 
       {sectionError && (

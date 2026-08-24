@@ -124,7 +124,7 @@
   justify-content: center;
   flex-shrink: 0;
   overflow: hidden;
-  padding: 0;
+  padding: 6px;
   box-sizing: border-box;
 }
 
@@ -139,7 +139,8 @@
 .sidebar__logo-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   display: block;
 }
 

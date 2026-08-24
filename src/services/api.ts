@@ -5,40 +5,83 @@
  */
 
 import { throwApiError } from './apiErrors';
+import {
+  clearAuthTokens,
+  getRefreshToken,
+  readBearerFromHeaders,
+  refreshAccessToken,
+  withBearer,
+} from './authStorage';
 
 const BASE =
   import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '/api';
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export interface AuthTokens {
+  access_token: string;
+  refresh_token: string;
+  token_type?: string;
+}
+
+/** Raw refresh call — must not go through 401 retry to avoid loops. */
+async function postRefreshToken(refreshToken: string): Promise<{ tokens: AuthTokens }> {
+  const res = await fetch(`${BASE}/auth/refresh-token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  });
+  const body = await res.json().catch(() => null);
+  if (!res.ok) throwApiError(res, body);
+  return (body?.data ?? body) as { tokens: AuthTokens };
+}
+
+async function fetchJson(
+  path: string,
+  init?: RequestInit,
+  allowRefresh = true,
+): Promise<{ res: Response; body: unknown }> {
   const res = await fetch(`${BASE}${path}`, {
     ...init,
     headers: { 'Content-Type': 'application/json', ...init?.headers },
   });
   const body = await res.json().catch(() => null);
-  if (!res.ok) throwApiError(res, body);
-  return (body?.data ?? body) as T;
+
+  if (res.status === 401 && allowRefresh && readBearerFromHeaders(init?.headers)) {
+    const nextToken = await refreshAccessToken(postRefreshToken);
+    if (nextToken) {
+      return fetchJson(
+        path,
+        {
+          ...init,
+          headers: withBearer(
+            { 'Content-Type': 'application/json', ...init?.headers },
+            nextToken,
+          ),
+        },
+        false,
+      );
+    }
+  }
+
+  return { res, body };
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const { res, body } = await fetchJson(path, init);
+  if (!res.ok) throwApiError(res, body as Parameters<typeof throwApiError>[1]);
+  return ((body as { data?: T } | null)?.data ?? body) as T;
 }
 
 async function requestPaginated<T>(
   path: string,
   init?: RequestInit,
 ): Promise<{ data: T; meta: import('./apiTypes').ApiPaginatedMeta }> {
-  const res = await fetch(`${BASE}${path}`, {
-    ...init,
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
-  });
-  const body = await res.json().catch(() => null);
-  if (!res.ok) throwApiError(res, body);
+  const { res, body } = await fetchJson(path, init);
+  if (!res.ok) throwApiError(res, body as Parameters<typeof throwApiError>[1]);
+  const payload = body as { data?: T; meta?: import('./apiTypes').ApiPaginatedMeta } | null;
   return {
-    data: (body?.data ?? []) as T,
-    meta: (body?.meta ?? { page: 1, limit: 20, total: 0 }) as import('./apiTypes').ApiPaginatedMeta,
+    data: (payload?.data ?? []) as T,
+    meta: (payload?.meta ?? { page: 1, limit: 20, total: 0 }) as import('./apiTypes').ApiPaginatedMeta,
   };
-}
-
-export interface AuthTokens {
-  access_token: string;
-  refresh_token: string;
-  token_type?: string;
 }
 
 export const authApi = {
@@ -60,11 +103,7 @@ export const authApi = {
       body: JSON.stringify({ phone, otp }),
     }),
 
-  refreshToken: (refreshToken: string) =>
-    request<{ tokens: AuthTokens }>('/auth/refresh-token', {
-      method: 'POST',
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    }),
+  refreshToken: (refreshToken: string) => postRefreshToken(refreshToken),
 
   logout: (refreshToken: string) =>
     request<{ success: boolean }>('/auth/logout', {
@@ -72,6 +111,8 @@ export const authApi = {
       body: JSON.stringify({ refresh_token: refreshToken }),
     }),
 };
+
+export { clearAuthTokens, getRefreshToken, refreshAccessToken, postRefreshToken };
 
 export type {
   ApiCampDashboardKpis,
@@ -138,6 +179,21 @@ export const campDashboardApi = {
   section: <T>(campNo: number, section: import('./apiTypes').CampDashboardSection, token: string) =>
     request<import('./apiTypes').ApiCampDashboardSection<T>>(
       `/reports/camps/${campNo}/dashboard?section=${section}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    ),
+
+  /**
+   * GET /reports/camps/{camp_no}/{city}/dashboard?section=…
+   * Same section query param contract as the overall camp dashboard.
+   */
+  citySection: <T>(
+    campNo: number,
+    city: string,
+    section: import('./apiTypes').CampDashboardSection,
+    token: string,
+  ) =>
+    request<import('./apiTypes').ApiCampDashboardSection<T>>(
+      `/reports/camps/${campNo}/${encodeURIComponent(city)}/dashboard?section=${section}`,
       { headers: { Authorization: `Bearer ${token}` } },
     ),
 
@@ -314,19 +370,35 @@ export const organizationsApi = {
     return { items, total };
   },
 
-  /** Non-admin: GET /organizations/we → first org → GET /organizations/{id}/camps */
+  /** Non-admin: GET /organizations/we → camps for every accessible org */
   async listCampsForMyOrganizations(token: string) {
     const { items: organizations } = await organizationsApi.listAllMyOrganizations(token);
     if (!organizations.length) return { items: [], total: 0 };
 
-    const organizationId = organizations[0].organization_id;
-    return organizationsApi.listAllCamps(organizationId, token);
+    const results = await Promise.all(
+      organizations.map((org) =>
+        organizationsApi.listAllCamps(org.organization_id, token).catch(() => ({
+          items: [] as import('./apiTypes').ApiOrganizationCamp[],
+          total: 0,
+        })),
+      ),
+    );
+
+    const byCampNo = new Map<number, import('./apiTypes').ApiOrganizationCamp>();
+    for (const { items } of results) {
+      for (const camp of items) {
+        byCampNo.set(camp.camp_no, camp);
+      }
+    }
+
+    const items = Array.from(byCampNo.values());
+    return { items, total: items.length };
   },
 
   /**
    * Camp picker loader — role branching must match product rules:
    * - admin     → GET /organizations/camps (paginate)
-   * - non-admin → GET /organizations/we → GET /organizations/{organization_id}/camps
+   * - non-admin → GET /organizations/we → camps for each organization_id
    * Do not use /organizations/we for admin camp lists.
    */
   async listCampsForUser(token: string, role?: string | null) {

@@ -28,40 +28,14 @@ interface MetabolicAgeDistributionCardProps {
 const VIEW_W = 640;
 const VIEW_H = 192;
 const MID = VIEW_H / 2;
+/** Max half-height from midline at a full-strength peak. */
+const MAX_HALF = 78;
+/** Soft floor so tiny categories stay visible without looking empty. */
+const MIN_HALF = 8;
+const SAMPLE_STEP = 8;
 
-/** Column centers — dashed guides + stats columns. */
+/** Column centers — dashed guides + peak centers under each stat. */
 const COL_X = [VIEW_W * 0.17, VIEW_W * 0.5, VIEW_W * 0.83] as const;
-
-/**
- * Uniform ribbon silhouette (half-heights from midline).
- * Soft rounded head → steady taper → pointed tip. Top/bottom stay symmetric
- * so the snake reads clean instead of scattered.
- */
-const SILHOUETTE: { x: number; half: number }[] = [
-  { x: 0, half: 72 },
-  { x: 12, half: 80 },
-  { x: 28, half: 84 },
-  { x: 48, half: 84 },
-  { x: 80, half: 82 },
-  { x: 120, half: 78 },
-  { x: 160, half: 72 },
-  { x: 200, half: 64 },
-  { x: 240, half: 56 },
-  { x: 280, half: 48 },
-  { x: 320, half: 40 },
-  { x: 360, half: 33 },
-  { x: 400, half: 26 },
-  { x: 440, half: 20 },
-  { x: 480, half: 15 },
-  { x: 520, half: 11 },
-  { x: 560, half: 7 },
-  { x: 600, half: 4 },
-  { x: 628, half: 1.5 },
-  { x: 640, half: 0 },
-];
-
-/** Reference mix used when authoring the silhouette proportions. */
-const REF_COUNTS = [132, 69, 23] as const;
 
 type Pt = { x: number; y: number };
 
@@ -74,7 +48,6 @@ function smoothThrough(points: Pt[]): string {
     const p1 = pts[i];
     const p2 = pts[i + 1];
     const p3 = pts[i + 2];
-    // Gentler handles = smoother ribbon edges
     const cp1x = p1.x + (p2.x - p0.x) / 7;
     const cp1y = p1.y + (p2.y - p0.y) / 7;
     const cp2x = p2.x - (p3.x - p1.x) / 7;
@@ -93,36 +66,59 @@ function smoothstep(t: number) {
   return x * x * (3 - 2 * x);
 }
 
-/** Relative amplitude along x from three category counts (1 at the max count). */
-function amplitudeAtX(x: number, counts: [number, number, number]): number {
+/**
+ * Half-height at x from explicit peaks on each dashed column.
+ * Valleys sit midway between columns so each lobe is centered on its guide.
+ */
+function halfHeightAtX(x: number, counts: [number, number, number]): number {
   const max = Math.max(...counts, 1);
-  const a0 = counts[0] / max;
-  const a1 = counts[1] / max;
-  const a2 = counts[2] / max;
+  const peaks = counts.map((count) =>
+    count <= 0 ? 0 : lerp(MIN_HALF, MAX_HALF, count / max),
+  ) as [number, number, number];
+  const [h0, h1, h2] = peaks;
   const [x0, x1, x2] = COL_X;
+  const m01 = (x0 + x1) / 2;
+  const m12 = (x1 + x2) / 2;
+  const v01 = Math.min(h0, h1) * 0.38;
+  const v12 = Math.min(h1, h2) * 0.38;
 
-  if (x <= x0) return lerp(a0 * 0.96, a0, smoothstep(x / x0));
-  if (x <= x1) return lerp(a0, a1, smoothstep((x - x0) / (x1 - x0)));
-  if (x <= x2) return lerp(a1, a2, smoothstep((x - x1) / (x2 - x1)));
-  return lerp(a2, 0, smoothstep((x - x2) / (VIEW_W - x2)));
+  const keys: { x: number; h: number }[] = [
+    { x: 0, h: h0 * 0.42 },
+    { x: x0, h: h0 },
+    { x: m01, h: v01 },
+    { x: x1, h: h1 },
+    { x: m12, h: v12 },
+    { x: x2, h: h2 },
+    { x: VIEW_W, h: h2 * 0.22 },
+  ];
+
+  if (x <= keys[0].x) return keys[0].h;
+  for (let i = 0; i < keys.length - 1; i++) {
+    const a = keys[i];
+    const b = keys[i + 1];
+    if (x <= b.x) {
+      const t = smoothstep((x - a.x) / (b.x - a.x || 1));
+      return lerp(a.h, b.h, t);
+    }
+  }
+  return keys[keys.length - 1].h;
 }
 
 function buildSnakePath(counts: [number, number, number]): string {
+  const xs = new Set<number>();
+  for (let x = 0; x <= VIEW_W; x += SAMPLE_STEP) xs.add(x);
+  for (const cx of COL_X) xs.add(cx);
+  xs.add(VIEW_W);
+
+  const samples = Array.from(xs).sort((a, b) => a - b);
   const top: Pt[] = [];
   const bottom: Pt[] = [];
 
-  for (const point of SILHOUETTE) {
-    const dataAmp = amplitudeAtX(point.x, counts);
-    const refAmp = amplitudeAtX(point.x, [...REF_COUNTS]);
-    const scale = refAmp > 0.02 ? dataAmp / refAmp : dataAmp > 0 ? 1 : 0;
-    // Soft clamp so extreme mixes don't explode thickness
-    const half = point.half * Math.min(scale, 1.15);
-    top.push({ x: point.x, y: MID - half });
-    bottom.push({ x: point.x, y: MID + half });
+  for (const x of samples) {
+    const half = halfHeightAtX(x, counts);
+    top.push({ x, y: MID - half });
+    bottom.push({ x, y: MID + half });
   }
-
-  top[top.length - 1] = { x: VIEW_W, y: MID };
-  bottom[bottom.length - 1] = { x: VIEW_W, y: MID };
 
   const topPath = smoothThrough(top);
   const bottomPath = smoothThrough([...bottom].reverse()).replace(/^M/, 'L');

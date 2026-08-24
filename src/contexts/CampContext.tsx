@@ -10,6 +10,13 @@ import {
 import { campDashboardApi, organizationsApi } from '../services/api';
 import type { ApiOrganizationCamp } from '../services/apiTypes';
 import {
+  buildLocationOptions,
+  citiesForSelectedCamp,
+  isOverallLocation,
+  OVERALL_LOCATION_ID,
+  type CampLocationOption,
+} from '../utils/campCities';
+import {
   buildCampYearChoices,
   campForYear,
   yearFromCampStartDate,
@@ -28,6 +35,10 @@ interface CampContextValue {
   yearOptions: CampYearChoice[];
   selectedYear: CampYearOption;
   setSelectedYear: (year: CampYearOption) => void;
+  /** `overall` or a city name from GET /organizations/{id}/camps. */
+  selectedCity: string;
+  setSelectedCity: (city: string) => void;
+  locationOptions: CampLocationOption[];
   selectCamp: (
     campNo: number,
     organizationId?: number,
@@ -44,6 +55,7 @@ const CAMP_NAME_KEY = 'hr-dashboard-camp-name';
 const CAMP_ORG_ID_KEY = 'hr-dashboard-camp-org-id';
 const CAMP_ORG_NAME_KEY = 'hr-dashboard-camp-org-name';
 const CAMP_YEAR_KEY = 'hr-dashboard-camp-year';
+const CAMP_CITY_KEY = 'hr-dashboard-camp-city';
 
 function readStoredCampNo(): number | null {
   if (typeof window === 'undefined') return null;
@@ -79,6 +91,16 @@ function readStoredYear(): CampYearOption | null {
   return year || null;
 }
 
+function readStoredCity(): string {
+  if (typeof window === 'undefined') return OVERALL_LOCATION_ID;
+  const city = sessionStorage.getItem(CAMP_CITY_KEY)?.trim();
+  return city || OVERALL_LOCATION_ID;
+}
+
+function persistCity(city: string) {
+  sessionStorage.setItem(CAMP_CITY_KEY, city);
+}
+
 function persistCamp(
   campNo: number,
   organizationId: number,
@@ -112,10 +134,12 @@ export function CampProvider({ children }: { children: ReactNode }) {
     () => readStoredOrgName(),
   );
   const [organizationCamps, setOrganizationCamps] = useState<ApiOrganizationCamp[]>([]);
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [campsLoading, setCampsLoading] = useState(false);
   const [selectedYear, setSelectedYearState] = useState<CampYearOption>(
     () => readStoredYear() ?? 'all',
   );
+  const [selectedCity, setSelectedCityState] = useState<string>(() => readStoredCity());
 
   const clearCamp = useCallback(() => {
     sessionStorage.removeItem(CAMP_NO_KEY);
@@ -123,12 +147,15 @@ export function CampProvider({ children }: { children: ReactNode }) {
     sessionStorage.removeItem(CAMP_ORG_ID_KEY);
     sessionStorage.removeItem(CAMP_ORG_NAME_KEY);
     sessionStorage.removeItem(CAMP_YEAR_KEY);
+    sessionStorage.removeItem(CAMP_CITY_KEY);
     setSelectedCampNo(null);
     setSelectedCampName(null);
     setSelectedCampOrganizationId(null);
     setSelectedCampOrganizationName(null);
     setOrganizationCamps([]);
+    setAvailableCities([]);
     setSelectedYearState('all');
+    setSelectedCityState(OVERALL_LOCATION_ID);
   }, []);
 
   useEffect(() => {
@@ -142,6 +169,7 @@ export function CampProvider({ children }: { children: ReactNode }) {
     setSelectedCampOrganizationId(readStoredOrgId());
     setSelectedCampOrganizationName(readStoredOrgName());
     setSelectedYearState(readStoredYear() ?? 'all');
+    setSelectedCityState(readStoredCity());
   }, [isAuthenticated, clearCamp]);
 
   // Resolve missing camp/org labels from the same role-based camps list used at select-camp.
@@ -195,10 +223,11 @@ export function CampProvider({ children }: { children: ReactNode }) {
     user,
   ]);
 
-  // Load GET /organizations/{organization_id}/camps for year ↔ camp mapping.
+  // Load GET /organizations/{organization_id}/camps for year ↔ camp mapping + cities.
   useEffect(() => {
     if (!isAuthenticated || !accessToken || !selectedCampOrganizationId) {
       setOrganizationCamps([]);
+      setAvailableCities([]);
       setCampsLoading(false);
       return;
     }
@@ -228,10 +257,21 @@ export function CampProvider({ children }: { children: ReactNode }) {
           if (next !== prev) sessionStorage.setItem(CAMP_YEAR_KEY, next);
           return next;
         });
+
+        const cities = citiesForSelectedCamp(items, selectedCampNo);
+        setAvailableCities(cities);
+        setSelectedCityState((prev) => {
+          const next =
+            isOverallLocation(prev) || cities.includes(prev) ? prev : OVERALL_LOCATION_ID;
+          const normalized = isOverallLocation(next) ? OVERALL_LOCATION_ID : next;
+          if (normalized !== prev) persistCity(normalized);
+          return normalized;
+        });
       })
       .catch(() => {
         if (cancelled) return;
         setOrganizationCamps([]);
+        setAvailableCities([]);
         setCampsLoading(false);
       });
 
@@ -244,6 +284,17 @@ export function CampProvider({ children }: { children: ReactNode }) {
     () => buildCampYearChoices(organizationCamps),
     [organizationCamps],
   );
+
+  const locationOptions = useMemo(
+    () => buildLocationOptions(availableCities),
+    [availableCities],
+  );
+
+  const setSelectedCity = useCallback((city: string) => {
+    const next = city.trim() || OVERALL_LOCATION_ID;
+    persistCity(next);
+    setSelectedCityState(next);
+  }, []);
 
   const selectCamp = useCallback(
     async (
@@ -265,10 +316,13 @@ export function CampProvider({ children }: { children: ReactNode }) {
         const name = campName?.trim() ?? '';
         const year = yearFromCampStartDate(startDate) ?? readStoredYear();
         persistCamp(campNo, orgId, orgName, name, year);
+        persistCity(OVERALL_LOCATION_ID);
         setSelectedCampNo(campNo);
         setSelectedCampName(name || null);
         setSelectedCampOrganizationId(orgId > 0 ? orgId : null);
         setSelectedCampOrganizationName(orgName || null);
+        setSelectedCityState(OVERALL_LOCATION_ID);
+        setAvailableCities([]);
         if (year) setSelectedYearState(year);
         return { ok: true };
       } catch (err) {
@@ -313,6 +367,9 @@ export function CampProvider({ children }: { children: ReactNode }) {
       yearOptions: isAuthenticated ? yearOptions : [],
       selectedYear: isAuthenticated ? selectedYear : 'all',
       setSelectedYear,
+      selectedCity: isAuthenticated ? selectedCity : OVERALL_LOCATION_ID,
+      setSelectedCity,
+      locationOptions: isAuthenticated ? locationOptions : buildLocationOptions([]),
       selectCamp,
       clearCamp,
     }),
@@ -327,6 +384,9 @@ export function CampProvider({ children }: { children: ReactNode }) {
       yearOptions,
       selectedYear,
       setSelectedYear,
+      selectedCity,
+      setSelectedCity,
+      locationOptions,
       selectCamp,
       clearCamp,
     ],

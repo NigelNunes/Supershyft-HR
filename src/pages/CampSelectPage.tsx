@@ -13,7 +13,7 @@ import './CampSelectPage.css';
  *
  * Role branching (after GET /users/me):
  * - admin     → GET /organizations/camps
- * - non-admin → GET /organizations/we → GET /organizations/{id}/camps
+ * - non-admin → GET /organizations/we → camps for each organization
  *
  * Card fields always come from the camps response:
  * camp_name, organization_name, start_date, camp_no, organization_id
