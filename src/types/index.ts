@@ -82,6 +82,9 @@ export interface DistributionSlice {
 export interface GenderDistributionPair {
   male: DistributionSlice[];
   female: DistributionSlice[];
+  /** From API `total_responded` (or sum of counts) — prefer over KPI enrolled. */
+  maleTotalResponded?: number;
+  femaleTotalResponded?: number;
 }
 
 export type LifestyleGenderView = 'both' | 'male' | 'female';

@@ -115,6 +115,8 @@ export interface ApiCampDashboardGenderDistribution {
   group: string[];
   count: number[];
   percent: number[];
+  /** Respondents for this gender in the section (physical activity / sleep). */
+  total_responded?: number;
   elevated_percent?: number;
 }
 
@@ -249,17 +251,36 @@ export interface ApiOrganizationCampCities {
   cities?: string[];
 }
 
+/** Department entry nested under camp `departments.departments`. */
+export interface ApiOrganizationCampDepartment {
+  name: string;
+  slug: string;
+}
+
+/** Nested departments block on GET /organizations/{organization_id}/camps items. */
+export interface ApiOrganizationCampDepartments {
+  count?: number;
+  departments?: ApiOrganizationCampDepartment[];
+}
+
 /** GET /organizations/{organization_id}/camps */
 export interface ApiOrganizationCamp {
   camp_no: number;
   camp_name: string;
   organization_id: number;
   organization_name: string;
+  organization_logo?: string | null;
   start_date: string;
   year?: number | null;
-  engagement_count: number;
-  department_count: number;
-  report_count: number;
+  engagement_ids?: number[];
+  engagement_count?: number;
+  department_count?: number;
+  report_count?: number;
+  /**
+   * Departments for this camp. API shape is usually
+   * `{ count, departments: [{ name, slug }] }`.
+   */
+  departments?: ApiOrganizationCampDepartment[] | ApiOrganizationCampDepartments | null;
   /**
    * Cities for this camp. API shape is usually `{ count, cities: string[] }`
    * (e.g. Bengaluru — use these exact strings in city dashboard paths).

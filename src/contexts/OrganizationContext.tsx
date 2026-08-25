@@ -106,6 +106,8 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
     selectedCampNo,
     selectedCampOrganizationId,
     selectedCampOrganizationName,
+    departments: campDepartments,
+    campsLoading,
   } = useCamp();
 
   const [activeOrganization, setActiveOrganization] = useState<ApiMyOrganization | null>(null);
@@ -150,15 +152,26 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       '-';
     const organizationLogo = resolveOrganizationLogoUrl(activeOrganization?.logo);
 
+    // Prefer camp-scoped departments from GET /organizations/{id}/camps.
+    const orgDepartments = normalizeOrganizationDepartments(activeOrganization?.departments);
+    const departments = campDepartments.length > 0 ? campDepartments : orgDepartments;
+
     return {
       activeOrganization,
       organizationName,
       organizationLogo,
-      departments: normalizeOrganizationDepartments(activeOrganization?.departments),
-      loading,
+      departments,
+      loading: loading || campsLoading,
       error,
     };
-  }, [activeOrganization, selectedCampOrganizationName, loading, error]);
+  }, [
+    activeOrganization,
+    selectedCampOrganizationName,
+    campDepartments,
+    campsLoading,
+    loading,
+    error,
+  ]);
 
   return <OrganizationContext.Provider value={value}>{children}</OrganizationContext.Provider>;
 }

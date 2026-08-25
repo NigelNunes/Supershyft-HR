@@ -152,6 +152,10 @@ export function Sidebar({
     setDepartmentsOpen(false);
   }, [collapsed, mobileOpen]);
 
+  useEffect(() => {
+    if (departments.length === 0) setDepartmentsOpen(false);
+  }, [departments.length]);
+
   const handleToggleDepartments = () => {
     if (sidebarCollapsed) {
       onToggle();
@@ -365,48 +369,46 @@ export function Sidebar({
             </NavLink>
           ))}
 
-          <div
-            className={[
-              'sidebar__nav-dropdown',
-              departmentsOpen ? 'sidebar__nav-dropdown--open' : '',
-            ]
-              .filter(Boolean)
-              .join(' ')}
-            ref={departmentsRef}
-          >
-            <button
-              type="button"
-              className={`sidebar__link sidebar__link--button${
-                departmentsActive || departmentsOpen ? ' sidebar__link--active' : ''
-              }`}
-              onClick={handleToggleDepartments}
-              aria-expanded={departmentsOpen}
-              aria-controls="sidebar-departments-list"
-              title={sidebarCollapsed ? 'Departments' : undefined}
+          {departments.length > 0 && (
+            <div
+              className={[
+                'sidebar__nav-dropdown',
+                departmentsOpen ? 'sidebar__nav-dropdown--open' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+              ref={departmentsRef}
             >
-              <Network size={20} strokeWidth={1.75} />
-              {showLabels && <span>Departments</span>}
-              {showLabels && (
-                <ChevronDown
-                  size={16}
-                  className={`sidebar__link-chevron${
-                    departmentsOpen ? ' sidebar__link-chevron--open' : ''
-                  }`}
-                  aria-hidden
-                />
-              )}
-            </button>
-
-            {departmentsOpen && !sidebarCollapsed && (
-              <div
-                id="sidebar-departments-list"
-                className="sidebar__camps-panel sidebar__nav-dropdown-panel"
-                role="region"
-                aria-label="Departments"
+              <button
+                type="button"
+                className={`sidebar__link sidebar__link--button${
+                  departmentsActive || departmentsOpen ? ' sidebar__link--active' : ''
+                }`}
+                onClick={handleToggleDepartments}
+                aria-expanded={departmentsOpen}
+                aria-controls="sidebar-departments-list"
+                title={sidebarCollapsed ? 'Departments' : undefined}
               >
-                {orgLoading && <p className="sidebar__camps-status">Loading departments…</p>}
+                <Network size={20} strokeWidth={1.75} />
+                {showLabels && <span>Departments</span>}
+                {showLabels && (
+                  <ChevronDown
+                    size={16}
+                    className={`sidebar__link-chevron${
+                      departmentsOpen ? ' sidebar__link-chevron--open' : ''
+                    }`}
+                    aria-hidden
+                  />
+                )}
+              </button>
 
-                {!orgLoading && departments.length > 0 && (
+              {departmentsOpen && !sidebarCollapsed && (
+                <div
+                  id="sidebar-departments-list"
+                  className="sidebar__camps-panel sidebar__nav-dropdown-panel"
+                  role="region"
+                  aria-label="Departments"
+                >
                   <ul className="sidebar__camps-list">
                     {departments.map((dept) => {
                       const isSelected = dept.slug === activeDepartmentSlug;
@@ -426,14 +428,10 @@ export function Sidebar({
                       );
                     })}
                   </ul>
-                )}
-
-                {!orgLoading && departments.length === 0 && (
-                  <p className="sidebar__camps-status">No departments found.</p>
-                )}
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {navItems.slice(2).map((item) => (
             <NavLink

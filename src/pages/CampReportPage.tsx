@@ -163,8 +163,6 @@ export function CampReportPage() {
         physical={physical}
         sleep={sleep}
         loading={physicalLoading || sleepLoading}
-        maleEnrolled={apiKpis?.maleEnrolled}
-        femaleEnrolled={apiKpis?.femaleEnrolled}
         selectedYear={selectedYear}
       />
 

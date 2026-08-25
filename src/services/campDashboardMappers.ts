@@ -173,24 +173,85 @@ function mapGenderPairToDiseaseRisk(
   return { disease, buckets, overallStatus };
 }
 
+function labelForGroup(key: string, labelMap: Record<string, string>): string {
+  if (labelMap[key]) return labelMap[key];
+  const lower = key.trim().toLowerCase();
+  const match = Object.entries(labelMap).find(([k]) => k.toLowerCase() === lower);
+  if (match) return match[1];
+  return key.replace(/_/g, ' ');
+}
+
+function emptyGenderSide(): ApiCampDashboardGenderDistribution {
+  return { group: [], count: [], percent: [] };
+}
+
+/**
+ * Normalize physical activity / sleep payloads.
+ * Accepts `{ male, female }` or a section wrapper `{ data: { male, female }, name? }`.
+ */
+function normalizeGenderDistributionPair(
+  api: unknown,
+): ApiCampDashboardGenderDistributionPair {
+  if (api == null || typeof api !== 'object') {
+    return { male: emptyGenderSide(), female: emptyGenderSide() };
+  }
+
+  let current = api as Record<string, unknown>;
+  // Unwrap nested `data` until we find male/female sides.
+  for (let i = 0; i < 3; i += 1) {
+    if ('male' in current || 'female' in current) break;
+    const nested = current.data;
+    if (nested != null && typeof nested === 'object' && !Array.isArray(nested)) {
+      current = nested as Record<string, unknown>;
+      continue;
+    }
+    break;
+  }
+
+  const male =
+    current.male != null && typeof current.male === 'object'
+      ? (current.male as ApiCampDashboardGenderDistribution)
+      : emptyGenderSide();
+  const female =
+    current.female != null && typeof current.female === 'object'
+      ? (current.female as ApiCampDashboardGenderDistribution)
+      : emptyGenderSide();
+
+  return { male, female };
+}
+
+function sideTotalResponded(side: ApiCampDashboardGenderDistribution): number {
+  if (typeof side.total_responded === 'number' && Number.isFinite(side.total_responded)) {
+    return side.total_responded;
+  }
+  return (side.count ?? []).reduce((sum, n) => sum + (Number(n) || 0), 0);
+}
+
 function mapGenderDistributionSide(
   side: ApiCampDashboardGenderDistribution,
   labelMap: Record<string, string>,
 ) {
-  return side.group.map((key, i) => ({
-    label: labelMap[key] ?? key.replace(/_/g, ' '),
-    percent: side.percent[i] ?? 0,
-    count: side.count[i] ?? 0,
+  const groups = Array.isArray(side.group) ? side.group : [];
+  const counts = Array.isArray(side.count) ? side.count : [];
+  const percents = Array.isArray(side.percent) ? side.percent : [];
+
+  return groups.map((key, i) => ({
+    label: labelForGroup(String(key), labelMap),
+    percent: Number(percents[i]) || 0,
+    count: Number(counts[i]) || 0,
   }));
 }
 
 function mapGenderDistributionPair(
-  api: ApiCampDashboardGenderDistributionPair,
+  api: unknown,
   labelMap: Record<string, string>,
 ): GenderDistributionPair {
+  const pair = normalizeGenderDistributionPair(api);
   return {
-    male: mapGenderDistributionSide(api.male, labelMap),
-    female: mapGenderDistributionSide(api.female, labelMap),
+    male: mapGenderDistributionSide(pair.male, labelMap),
+    female: mapGenderDistributionSide(pair.female, labelMap),
+    maleTotalResponded: sideTotalResponded(pair.male),
+    femaleTotalResponded: sideTotalResponded(pair.female),
   };
 }
 
@@ -284,12 +345,14 @@ export function mapCampOverallRiskScore(
 }
 
 export function mapCampPhysicalActivity(
-  api: ApiCampDashboardGenderDistributionPair,
+  api: ApiCampDashboardGenderDistributionPair | unknown,
 ): GenderDistributionPair {
   return mapGenderDistributionPair(api, PHYSICAL_ACTIVITY_GROUP_LABELS);
 }
 
-export function mapCampSleep(api: ApiCampDashboardGenderDistributionPair): GenderDistributionPair {
+export function mapCampSleep(
+  api: ApiCampDashboardGenderDistributionPair | unknown,
+): GenderDistributionPair {
   return mapGenderDistributionPair(api, SLEEP_GROUP_LABELS);
 }
 

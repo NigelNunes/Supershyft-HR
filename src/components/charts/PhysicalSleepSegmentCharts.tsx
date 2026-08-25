@@ -17,8 +17,6 @@ interface PhysicalSleepSegmentChartsProps {
   physical: GenderDistributionPair;
   sleep: GenderDistributionPair;
   loading?: boolean;
-  maleEnrolled?: number;
-  femaleEnrolled?: number;
   selectedYear?: YearOption;
 }
 
@@ -253,22 +251,26 @@ export function PhysicalSleepSegmentCharts({
   physical,
   sleep,
   loading = false,
-  maleEnrolled,
-  femaleEnrolled,
 }: PhysicalSleepSegmentChartsProps) {
   const [view, setView] = useState<LifestyleGenderView>('both');
-  const genderWeights =
-    maleEnrolled != null && femaleEnrolled != null
-      ? { male: maleEnrolled, female: femaleEnrolled }
-      : undefined;
 
   const malePhysicalTotal =
-    maleEnrolled ?? (physical.male.length ? sliceTotal(physical.male) : null);
+    physical.maleTotalResponded ?? (physical.male.length ? sliceTotal(physical.male) : null);
   const femalePhysicalTotal =
-    femaleEnrolled ?? (physical.female.length ? sliceTotal(physical.female) : null);
-  const maleSleepTotal = maleEnrolled ?? (sleep.male.length ? sliceTotal(sleep.male) : null);
+    physical.femaleTotalResponded ?? (physical.female.length ? sliceTotal(physical.female) : null);
+  const maleSleepTotal =
+    sleep.maleTotalResponded ?? (sleep.male.length ? sliceTotal(sleep.male) : null);
   const femaleSleepTotal =
-    femaleEnrolled ?? (sleep.female.length ? sliceTotal(sleep.female) : null);
+    sleep.femaleTotalResponded ?? (sleep.female.length ? sliceTotal(sleep.female) : null);
+
+  const physicalWeights =
+    malePhysicalTotal != null && femalePhysicalTotal != null
+      ? { male: malePhysicalTotal, female: femalePhysicalTotal }
+      : undefined;
+  const sleepWeights =
+    maleSleepTotal != null && femaleSleepTotal != null
+      ? { male: maleSleepTotal, female: femaleSleepTotal }
+      : undefined;
 
   const hasPhysical = physical.male.length > 0 || physical.female.length > 0;
   const hasSleep = sleep.male.length > 0 || sleep.female.length > 0;
@@ -276,13 +278,13 @@ export function PhysicalSleepSegmentCharts({
   const physicalInsight = hasPhysical
     ? toChartInsight(
         getPhysicalActivityConcernInsight(
-          computePoorActivityPercent(physical, view, genderWeights),
+          computePoorActivityPercent(physical, view, physicalWeights),
         ),
       )
     : undefined;
   const sleepInsight = hasSleep
     ? toChartInsight(
-        getSleepConcernInsight(computePoorSleepPercent(sleep, view, genderWeights)),
+        getSleepConcernInsight(computePoorSleepPercent(sleep, view, sleepWeights)),
       )
     : undefined;
 

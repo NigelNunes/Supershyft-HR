@@ -22,8 +22,6 @@ interface PhysicalSleepPieChartsProps {
   physical: GenderDistributionPair;
   sleep: GenderDistributionPair;
   loading?: boolean;
-  maleEnrolled?: number;
-  femaleEnrolled?: number;
 }
 
 const PHYSICAL_COLORS = ['#E24B4A', '#EF9F27', '#1D9E75', '#7F77DD'];
@@ -193,26 +191,28 @@ export function PhysicalSleepPieCharts({
   physical,
   sleep,
   loading = false,
-  maleEnrolled,
-  femaleEnrolled,
 }: PhysicalSleepPieChartsProps) {
   const [view, setView] = useState<LifestyleGenderView>('both');
-  const genderWeights =
-    maleEnrolled != null && femaleEnrolled != null
-      ? { male: maleEnrolled, female: femaleEnrolled }
+  const physicalWeights =
+    physical.maleTotalResponded != null && physical.femaleTotalResponded != null
+      ? { male: physical.maleTotalResponded, female: physical.femaleTotalResponded }
+      : undefined;
+  const sleepWeights =
+    sleep.maleTotalResponded != null && sleep.femaleTotalResponded != null
+      ? { male: sleep.maleTotalResponded, female: sleep.femaleTotalResponded }
       : undefined;
   const hasPhysicalData = physical.male.length > 0 || physical.female.length > 0;
   const hasSleepData = sleep.male.length > 0 || sleep.female.length > 0;
   const physicalInsight = hasPhysicalData
     ? toChartInsight(
         getPhysicalActivityConcernInsight(
-          computePoorActivityPercent(physical, view, genderWeights),
+          computePoorActivityPercent(physical, view, physicalWeights),
         ),
       )
     : undefined;
   const sleepInsight = hasSleepData
     ? toChartInsight(
-        getSleepConcernInsight(computePoorSleepPercent(sleep, view, genderWeights)),
+        getSleepConcernInsight(computePoorSleepPercent(sleep, view, sleepWeights)),
       )
     : undefined;
 

@@ -197,6 +197,21 @@ export const campDashboardApi = {
       { headers: { Authorization: `Bearer ${token}` } },
     ),
 
+  /**
+   * GET /reports/camps/{camp_no}/department/{slug}/dashboard?section=…
+   * Same section query param contract as the overall camp dashboard.
+   */
+  departmentSection: <T>(
+    campNo: number,
+    slug: string,
+    section: import('./apiTypes').CampDashboardSection,
+    token: string,
+  ) =>
+    request<import('./apiTypes').ApiCampDashboardSection<T>>(
+      `/reports/camps/${campNo}/department/${encodeURIComponent(slug)}/dashboard?section=${section}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    ),
+
   /** PUT /reports/camps/{camp_no}/refresh — returns { report_id, section: { data, … }, report_bts } */
   refresh: (campNo: number, section: import('./apiTypes').CampDashboardSection, token: string) =>
     request<Record<string, unknown>>(`/reports/camps/${campNo}/refresh`, {

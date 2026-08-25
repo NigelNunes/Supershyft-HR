@@ -59,9 +59,10 @@ export function DashboardHeader({
     }
   };
 
+  // Options always include "Overall" + cities; hide when ≤1 city (no meaningful choice).
   const showLocation =
     showLocationFilter &&
-    Boolean(locationOptions?.length) &&
+    (locationOptions?.length ?? 0) > 2 &&
     selectedLocation != null &&
     onLocationChange != null;
 
