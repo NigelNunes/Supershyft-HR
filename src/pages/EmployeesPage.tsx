@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  Download,
   Droplets,
   FileText,
   RefreshCw,
@@ -22,6 +23,7 @@ import { useCamp } from '../contexts/CampContext';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { formatDepartmentLabel } from '../services/campParticipantsMappers';
 import type { EmployeeRecord, JourneyStepId, JourneyStepStatus } from '../types';
+import { downloadEmployeesExcel } from '../utils/exportEmployeesExcel';
 import anthropometryIconUrl from '../assets/icons/journey-anthropometry.png';
 import vitalsIconUrl from '../assets/icons/journey-vitals.png';
 import dietLifestyleIconUrl from '../assets/icons/journey-diet-lifestyle.png';
@@ -178,11 +180,12 @@ function HeaderStepIcon({
 
 export function EmployeesPage() {
   const { departments } = useOrganization();
-  const { selectedYear } = useCamp();
+  const { selectedYear, selectedCampNo } = useCamp();
   const [query, setQuery] = useState('');
   const [department, setDepartment] = useState<string>('all');
   const [page, setPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [shareFor, setShareFor] = useState<EmployeeRecord | null>(null);
   const [shareBlood, setShareBlood] = useState(false);
@@ -275,6 +278,19 @@ export function EmployeesPage() {
     setRefreshing(false);
   };
 
+  const handleDownload = () => {
+    if (!employees.length || downloading) return;
+    setDownloading(true);
+    try {
+      downloadEmployeesExcel(employees, {
+        campNo: selectedCampNo,
+        year: EMPLOYEES_ENABLED_YEAR,
+      });
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const setStepFilter = (stepId: JourneyStepId, value: StepFilterValue) => {
     setStepFilters((prev) => {
       const next = { ...prev };
@@ -350,6 +366,15 @@ export function EmployeesPage() {
                 aria-hidden
               />
               <span>Refresh</span>
+            </button>
+            <button
+              type="button"
+              className="emp-header__download"
+              onClick={handleDownload}
+              disabled={loading || downloading || employees.length === 0}
+            >
+              <Download size={14} aria-hidden />
+              <span>{downloading ? 'Downloading…' : 'Download'}</span>
             </button>
           </div>
           <div className="emp-header__years" aria-label="Camp year">

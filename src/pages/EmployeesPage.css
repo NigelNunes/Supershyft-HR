@@ -119,6 +119,30 @@
   cursor: not-allowed;
 }
 
+.emp-header__download {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid rgba(133, 147, 234, 0.45);
+  border-radius: 9999px;
+  background: rgba(133, 147, 234, 0.15);
+  color: #e5e7eb;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1rem;
+  cursor: pointer;
+}
+
+.emp-header__download:hover:not(:disabled) {
+  background: rgba(133, 147, 234, 0.25);
+}
+
+.emp-header__download:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .emp-header__spin {
   animation: emp-spin 0.6s linear infinite;
 }
