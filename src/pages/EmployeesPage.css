@@ -65,7 +65,6 @@
 .emp-header__years {
   display: inline-flex;
   align-items: stretch;
-  min-width: 16rem;
   height: 2rem;
   padding: 4px;
   box-sizing: border-box;
@@ -79,11 +78,11 @@
 }
 
 .emp-header__year {
-  flex: 1 1 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 10px;
+  min-width: 3.5rem;
+  padding: 4px 12px;
   border: none;
   border-radius: 4px;
   background: transparent;
@@ -92,17 +91,12 @@
   font-size: 0.8125rem;
   font-weight: 400;
   line-height: 0.75rem;
-  cursor: pointer;
 }
 
 .emp-header__year--active {
   background: rgba(133, 147, 234, 0.2);
   color: #e5e7eb;
   font-weight: 600;
-}
-
-.emp-header__year:hover:not(.emp-header__year--active) {
-  color: #a3a3a3;
 }
 
 .emp-header__refresh {
@@ -133,27 +127,6 @@
   to {
     transform: rotate(360deg);
   }
-}
-
-.emp-header__updated {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.75rem;
-  border: 1px solid #4338ca;
-  border-radius: 9999px;
-  background: rgba(0, 0, 0, 0.2);
-  color: var(--emp-indigo);
-  font-size: 0.75rem;
-  font-weight: 500;
-  line-height: 1rem;
-}
-
-.emp-header__updated-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 9999px;
-  background: #818cf8;
 }
 
 .emp-toolbar {
@@ -501,7 +474,8 @@
 }
 
 .emp-table__col-dept {
-  width: 12%;
+  width: 14%;
+  white-space: nowrap;
 }
 
 .emp-table__col-contact {
@@ -616,12 +590,21 @@
   line-height: 1rem;
 }
 
-.emp-dept-pill {
-  display: inline-flex;
-  padding: 0.156rem 0.75rem;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(163, 163, 163, 0.2);
+.emp-dept-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+}
+
+.emp-dept-name {
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1rem;
+}
+
+.emp-dept-id {
   color: var(--emp-stone);
   font-size: 0.75rem;
   font-weight: 500;

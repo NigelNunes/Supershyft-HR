@@ -153,6 +153,9 @@ export type JourneyStepId =
 
 export interface EmployeeRecord {
   id: string;
+  /** Company employee id from the API; omitted when the payload has none. */
+  employeeId?: string;
+  /** Display name from the API; empty when first/last/name are all missing. */
   name: string;
   phone: string;
   email: string;

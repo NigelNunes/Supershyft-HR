@@ -193,6 +193,8 @@ export interface ApiCampParticipant {
   engagement_participant_id?: number;
   engagement_id?: number;
   user_id?: number;
+  employee_id?: number | string | null;
+  employee_code?: string | null;
   first_name?: string | null;
   last_name?: string | null;
   name?: string | null;

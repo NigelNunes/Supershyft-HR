@@ -8,6 +8,7 @@ import {
   Network,
   Users,
 } from 'lucide-react';
+import { EMPLOYEES_ENABLED_YEAR } from '../../config/dashboard';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCamp } from '../../contexts/CampContext';
 import { useOrganization } from '../../contexts/OrganizationContext';
@@ -43,10 +44,13 @@ export function Sidebar({
     selectedCampNo,
     selectedCampName,
     selectedCampOrganizationName,
+    selectedYear,
     selectCamp,
   } = useCamp();
+  const employeesEnabled = selectedYear === EMPLOYEES_ENABLED_YEAR;
   const { organizationName, organizationLogo, departments, loading: orgLoading } =
     useOrganization();
+  const hasDepartments = departments.length > 0;
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -151,6 +155,10 @@ export function Sidebar({
     setCampsOpen(false);
     setDepartmentsOpen(false);
   }, [collapsed, mobileOpen]);
+
+  useEffect(() => {
+    if (!hasDepartments) setDepartmentsOpen(false);
+  }, [hasDepartments]);
 
   const handleToggleDepartments = () => {
     if (sidebarCollapsed) {
@@ -365,90 +373,105 @@ export function Sidebar({
             </NavLink>
           ))}
 
-          <div
-            className={[
-              'sidebar__nav-dropdown',
-              departmentsOpen ? 'sidebar__nav-dropdown--open' : '',
-            ]
-              .filter(Boolean)
-              .join(' ')}
-            ref={departmentsRef}
-          >
-            <button
-              type="button"
-              className={`sidebar__link sidebar__link--button${
-                departmentsActive || departmentsOpen ? ' sidebar__link--active' : ''
-              }`}
-              onClick={handleToggleDepartments}
-              aria-expanded={departmentsOpen}
-              aria-controls="sidebar-departments-list"
-              title={sidebarCollapsed ? 'Departments' : undefined}
+          {hasDepartments && (
+            <div
+              className={[
+                'sidebar__nav-dropdown',
+                departmentsOpen ? 'sidebar__nav-dropdown--open' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+              ref={departmentsRef}
             >
-              <Network size={20} strokeWidth={1.75} />
-              {showLabels && <span>Departments</span>}
-              {showLabels && (
-                <ChevronDown
-                  size={16}
-                  className={`sidebar__link-chevron${
-                    departmentsOpen ? ' sidebar__link-chevron--open' : ''
-                  }`}
-                  aria-hidden
-                />
-              )}
-            </button>
-
-            {departmentsOpen && !sidebarCollapsed && (
-              <div
-                id="sidebar-departments-list"
-                className="sidebar__camps-panel sidebar__nav-dropdown-panel"
-                role="region"
-                aria-label="Departments"
+              <button
+                type="button"
+                className={`sidebar__link sidebar__link--button${
+                  departmentsActive || departmentsOpen ? ' sidebar__link--active' : ''
+                }`}
+                onClick={handleToggleDepartments}
+                aria-expanded={departmentsOpen}
+                aria-controls="sidebar-departments-list"
+                title={sidebarCollapsed ? 'Departments' : undefined}
               >
-                {orgLoading && <p className="sidebar__camps-status">Loading departments…</p>}
-
-                {!orgLoading && departments.length > 0 && (
-                  <ul className="sidebar__camps-list">
-                    {departments.map((dept) => {
-                      const isSelected = dept.slug === activeDepartmentSlug;
-                      return (
-                        <li key={dept.slug}>
-                          <button
-                            type="button"
-                            className={`sidebar__camp-item${
-                              isSelected ? ' sidebar__camp-item--active' : ''
-                            }`}
-                            onClick={() => handleSelectDepartment(dept.slug)}
-                            aria-current={isSelected ? 'true' : undefined}
-                          >
-                            <span className="sidebar__camp-item-name">{dept.department}</span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
+                <Network size={20} strokeWidth={1.75} />
+                {showLabels && <span>Departments</span>}
+                {showLabels && (
+                  <ChevronDown
+                    size={16}
+                    className={`sidebar__link-chevron${
+                      departmentsOpen ? ' sidebar__link-chevron--open' : ''
+                    }`}
+                    aria-hidden
+                  />
                 )}
+              </button>
 
-                {!orgLoading && departments.length === 0 && (
-                  <p className="sidebar__camps-status">No departments found.</p>
-                )}
-              </div>
-            )}
-          </div>
+              {departmentsOpen && !sidebarCollapsed && (
+                <div
+                  id="sidebar-departments-list"
+                  className="sidebar__camps-panel sidebar__nav-dropdown-panel"
+                  role="region"
+                  aria-label="Departments"
+                >
+                  {orgLoading && <p className="sidebar__camps-status">Loading departments…</p>}
 
-          {navItems.slice(2).map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              onClick={onNavigate}
-              title={sidebarCollapsed ? item.label : undefined}
-              className={({ isActive }) =>
-                `sidebar__link${isActive ? ' sidebar__link--active' : ''}`
-              }
-            >
-              <item.icon size={20} strokeWidth={1.75} />
-              {showLabels && <span>{item.label}</span>}
-            </NavLink>
-          ))}
+                  {!orgLoading && (
+                    <ul className="sidebar__camps-list">
+                      {departments.map((dept) => {
+                        const isSelected = dept.slug === activeDepartmentSlug;
+                        return (
+                          <li key={dept.slug}>
+                            <button
+                              type="button"
+                              className={`sidebar__camp-item${
+                                isSelected ? ' sidebar__camp-item--active' : ''
+                              }`}
+                              onClick={() => handleSelectDepartment(dept.slug)}
+                              aria-current={isSelected ? 'true' : undefined}
+                            >
+                              <span className="sidebar__camp-item-name">{dept.department}</span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {navItems.slice(2).map((item) => {
+            const employeesLocked = item.to === '/employees' && !employeesEnabled;
+            if (employeesLocked) {
+              return (
+                <span
+                  key={item.to}
+                  className="sidebar__link sidebar__link--disabled"
+                  aria-disabled="true"
+                  title="All Employees is available for 2026"
+                >
+                  <item.icon size={20} strokeWidth={1.75} />
+                  {showLabels && <span>{item.label}</span>}
+                </span>
+              );
+            }
+
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                onClick={onNavigate}
+                title={sidebarCollapsed ? item.label : undefined}
+                className={({ isActive }) =>
+                  `sidebar__link${isActive ? ' sidebar__link--active' : ''}`
+                }
+              >
+                <item.icon size={20} strokeWidth={1.75} />
+                {showLabels && <span>{item.label}</span>}
+              </NavLink>
+            );
+          })}
         </nav>
       </div>
 

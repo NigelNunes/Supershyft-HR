@@ -9,15 +9,31 @@ function normalizeGender(value: string | null | undefined): EmployeeRecord['gend
   return 'Other';
 }
 
+function optionalApiText(...candidates: Array<string | number | null | undefined>): string | undefined {
+  for (const raw of candidates) {
+    if (raw == null) continue;
+    const value = String(raw).trim();
+    if (value) return value;
+  }
+  return undefined;
+}
+
 function displayName(participant: ApiCampParticipant): string {
   const explicit = participant.name?.trim();
   if (explicit) return explicit;
 
-  const full = [participant.first_name, participant.last_name]
+  return [participant.first_name, participant.last_name]
     .map((part) => part?.trim())
     .filter(Boolean)
     .join(' ');
-  return full || '-';
+}
+
+function apiEmployeeId(participant: ApiCampParticipant): string | undefined {
+  return optionalApiText(
+    participant.employee_id,
+    participant.employee_code,
+    participant.user_id,
+  );
 }
 
 function boolStatus(value: boolean | null | undefined): JourneyStepStatus {
@@ -73,14 +89,16 @@ export function mapCampParticipantToEmployee(
     ''
   ).toLowerCase();
 
+  const rawDepartment = participant.participant_department || participant.department || '';
   const department =
     (departmentSlug && departmentLabels?.get(departmentSlug)) ||
-    formatDepartmentLabel(
-      participant.participant_department || participant.department || '',
-    );
+    (rawDepartment.trim() ? formatDepartmentLabel(rawDepartment) : '');
+
+  const employeeId = apiEmployeeId(participant);
 
   return {
     id,
+    employeeId,
     name: displayName(participant),
     phone: participant.phone?.trim() || '-',
     email: participant.email?.trim() || '',

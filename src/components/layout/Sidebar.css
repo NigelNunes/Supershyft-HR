@@ -331,6 +331,16 @@
   color: var(--sidebar-text);
 }
 
+.sidebar__link--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sidebar__link--disabled:hover {
+  color: var(--sidebar-muted);
+  background: transparent;
+}
+
 .sidebar__link-chevron {
   margin-left: auto;
   opacity: 0.8;

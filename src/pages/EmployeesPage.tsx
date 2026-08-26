@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import {
   BriefcaseMedical,
   Check,
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useCampParticipants } from '../hooks/useCampParticipants';
 import { useCampKpis } from '../hooks/useCampDashboard';
+import { EMPLOYEES_ENABLED_YEAR } from '../config/dashboard';
 import { useCamp } from '../contexts/CampContext';
 import { useOrganization } from '../contexts/OrganizationContext';
 import { formatDepartmentLabel } from '../services/campParticipantsMappers';
@@ -116,6 +118,18 @@ function matchesEmployeeName(name: string, query: string): boolean {
   return tokens.every((token) => normalizedName.includes(token));
 }
 
+function hasDepartmentValue(employee: EmployeeRecord): boolean {
+  const department = employee.department.trim();
+  return Boolean(department) && department !== '-' && department !== '—';
+}
+
+function deptIdParts(employee: EmployeeRecord): { department: string; employeeId: string } {
+  return {
+    department: hasDepartmentValue(employee) ? employee.department.trim() : '',
+    employeeId: employee.employeeId?.trim() || '',
+  };
+}
+
 function countByStatus(
   employees: EmployeeRecord[],
   step: JourneyStepId,
@@ -164,7 +178,7 @@ function HeaderStepIcon({
 
 export function EmployeesPage() {
   const { departments } = useOrganization();
-  const { selectedYear, setSelectedYear, yearOptions } = useCamp();
+  const { selectedYear } = useCamp();
   const [query, setQuery] = useState('');
   const [department, setDepartment] = useState<string>('all');
   const [page, setPage] = useState(1);
@@ -175,34 +189,23 @@ export function EmployeesPage() {
   const [shareBioAi, setShareBioAi] = useState(false);
   const [stepFilters, setStepFilters] = useState<Record<string, StepFilterValue>>({});
 
-  const { employees, total, loading, error, refresh } = useCampParticipants(department);
+  const hasDepartments = departments.length > 0;
+  const { employees, total, loading, error, refresh } = useCampParticipants(
+    hasDepartments ? department : 'all',
+  );
   const { data: kpis, loading: kpisLoading, refresh: refreshKpis } = useCampKpis();
 
-  const departmentOptions = useMemo(() => {
-    const fromOrg = departments
-      .filter((d) => d.slug || d.department)
-      .map((d) => ({
-        value: (d.slug || d.department).trim().toLowerCase(),
-        label: d.department || formatDepartmentLabel(d.slug),
-      }));
-
-    const fromEmployees = employees
-      .filter((e) => e.departmentSlug || (e.department && e.department !== '-'))
-      .map((e) => ({
-        value: (e.departmentSlug || e.department).trim().toLowerCase(),
-        label: e.department,
-      }));
-
-    const byValue = new Map<string, string>();
-    for (const option of [...fromOrg, ...fromEmployees]) {
-      if (!option.value) continue;
-      if (!byValue.has(option.value)) byValue.set(option.value, option.label);
-    }
-
-    return [...byValue.entries()]
-      .map(([value, label]) => ({ value, label }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-  }, [departments, employees]);
+  const departmentOptions = useMemo(
+    () =>
+      departments
+        .filter((d) => d.slug || d.department)
+        .map((d) => ({
+          value: (d.slug || d.department).trim().toLowerCase(),
+          label: d.department || formatDepartmentLabel(d.slug),
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [departments],
+  );
 
   const filtered = useMemo(() => {
     return employees.filter((employee) => {
@@ -220,6 +223,12 @@ export function EmployeesPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
   const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  const hasDeptInList = employees.some(hasDepartmentValue);
+  const hasIdInList = employees.some((employee) => Boolean(employee.employeeId?.trim()));
+  const showDeptIdColumn = hasDeptInList || hasIdInList;
+  const deptIdColumnLabel = hasDeptInList ? 'Department' : 'Employee Id';
+  const tableColSpan = showDeptIdColumn ? 5 : 4;
 
   const summary = useMemo(() => {
     const bloodDone = countByStatus(employees, 'bloodReport', 'completed');
@@ -314,6 +323,10 @@ export function EmployeesPage() {
     return pages;
   }, [safePage, totalPages]);
 
+  if (selectedYear !== EMPLOYEES_ENABLED_YEAR) {
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <div className="employees-page">
       <header className="emp-header">
@@ -338,30 +351,10 @@ export function EmployeesPage() {
               />
               <span>Refresh</span>
             </button>
-            <div className="emp-header__updated">
-              <span className="emp-header__updated-dot" aria-hidden />
-              <span>Updated 2 hrs ago</span>
-            </div>
           </div>
-          {yearOptions.length > 0 && (
-            <div className="emp-header__years" role="tablist" aria-label="Year filter">
-              {yearOptions.map((opt) => {
-                const isActive = opt.value === selectedYear;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    role="tab"
-                    aria-selected={isActive}
-                    className={`emp-header__year${isActive ? ' emp-header__year--active' : ''}`}
-                    onClick={() => setSelectedYear(opt.value)}
-                  >
-                    {opt.label}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+          <div className="emp-header__years" aria-label="Camp year">
+            <span className="emp-header__year emp-header__year--active">{EMPLOYEES_ENABLED_YEAR}</span>
+          </div>
         </div>
       </header>
 
@@ -390,25 +383,27 @@ export function EmployeesPage() {
         </label>
 
         <div className="emp-toolbar__filters">
-          <label className="emp-dept-select">
-            <span className="visually-hidden">Department</span>
-            <select
-              value={department}
-              onChange={(e) => {
-                setDepartment(e.target.value);
-                setPage(1);
-              }}
-              aria-label="Filter by department"
-            >
-              <option value="all">Department</option>
-              {departmentOptions.map((dept) => (
-                <option key={dept.value} value={dept.value}>
-                  {dept.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={14} className="emp-dept-select__chevron" aria-hidden />
-          </label>
+          {hasDepartments && (
+            <label className="emp-dept-select">
+              <span className="visually-hidden">Department</span>
+              <select
+                value={department}
+                onChange={(e) => {
+                  setDepartment(e.target.value);
+                  setPage(1);
+                }}
+                aria-label="Filter by department"
+              >
+                <option value="all">Department</option>
+                {departmentOptions.map((dept) => (
+                  <option key={dept.value} value={dept.value}>
+                    {dept.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={14} className="emp-dept-select__chevron" aria-hidden />
+            </label>
+          )}
 
           <button
             type="button"
@@ -560,7 +555,9 @@ export function EmployeesPage() {
             <thead>
               <tr>
                 <th className="emp-table__col-participant">Participant</th>
-                <th className="emp-table__col-dept">Department</th>
+                {showDeptIdColumn && (
+                  <th className="emp-table__col-dept">{deptIdColumnLabel}</th>
+                )}
                 <th className="emp-table__col-contact">Contact</th>
                 <th className="emp-table__col-steps">
                   <div className="emp-table__steps-head">
@@ -579,31 +576,46 @@ export function EmployeesPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="emp-table__empty">
+                  <td colSpan={tableColSpan} className="emp-table__empty">
                     Loading employees…
                   </td>
                 </tr>
               ) : pageRows.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="emp-table__empty">
+                  <td colSpan={tableColSpan} className="emp-table__empty">
                     No employees match your filters.
                   </td>
                 </tr>
               ) : (
-                pageRows.map((emp) => (
+                pageRows.map((emp) => {
+                  const { department: deptLabel, employeeId: idLabel } = deptIdParts(emp);
+                  return (
                   <tr key={emp.id}>
                     <td className="emp-table__col-participant">
                       <div className="emp-participant">
-                        <span className="emp-participant__name">{emp.name}</span>
+                        {emp.name ? (
+                          <span className="emp-participant__name">{emp.name}</span>
+                        ) : null}
                         <span className="emp-participant__meta">
                           {emp.gender}
                           {emp.age != null ? ` • ${emp.age}` : ''}
                         </span>
                       </div>
                     </td>
-                    <td className="emp-table__col-dept">
-                      <span className="emp-dept-pill">{emp.department}</span>
-                    </td>
+                    {showDeptIdColumn && (
+                      <td className="emp-table__col-dept">
+                        {deptLabel || idLabel ? (
+                          <div className="emp-dept-cell">
+                            {deptLabel ? (
+                              <span className="emp-dept-name">{deptLabel}</span>
+                            ) : null}
+                            {idLabel ? (
+                              <span className="emp-dept-id">#{idLabel}</span>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </td>
+                    )}
                     <td className="emp-table__col-contact">
                       <div className="emp-contact">
                         <span className="emp-contact__phone">{emp.phone}</span>
@@ -630,7 +642,13 @@ export function EmployeesPage() {
                       <button
                         type="button"
                         className="emp-share-btn"
-                        aria-label={`Share report for ${emp.name}`}
+                        aria-label={
+                          emp.name
+                            ? `Share report for ${emp.name}`
+                            : emp.employeeId
+                              ? `Share report for ${emp.employeeId}`
+                              : 'Share report'
+                        }
                         onClick={() => {
                           setShareFor(emp);
                           setShareBlood(false);
@@ -641,7 +659,8 @@ export function EmployeesPage() {
                       </button>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>
