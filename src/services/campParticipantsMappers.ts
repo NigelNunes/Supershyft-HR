@@ -24,6 +24,26 @@ function boolStatus(value: boolean | null | undefined): JourneyStepStatus {
   return value === true ? 'completed' : 'pending';
 }
 
+export function hasDisplayDepartment(department?: string | null): boolean {
+  const text = department?.trim() ?? '';
+  return text.length > 0 && text !== '-';
+}
+
+export function parseParticipantEmployeeId(
+  participant: ApiCampParticipant,
+): string | undefined {
+  const raw = participant.participants_employee_id ?? null;
+  if (raw == null) return undefined;
+  const text = String(raw).trim();
+  return text || undefined;
+}
+
+export function formatEmployeeIdLabel(employeeId: string): string {
+  const text = employeeId.trim();
+  if (!text) return '';
+  return text.startsWith('#') ? text : `#${text}`;
+}
+
 /** Humanize API department slug when org label is unavailable. */
 export function formatDepartmentLabel(slugOrName: string | null | undefined): string {
   const raw = (slugOrName ?? '').trim();
@@ -67,17 +87,15 @@ export function mapCampParticipantToEmployee(
         : `participant-${index + 1}`;
   const id = `${baseId}-${index}`;
 
-  const departmentSlug = (
+  const rawDepartment =
     participant.participant_department?.trim() ||
     participant.department?.trim() ||
-    ''
-  ).toLowerCase();
-
-  const department =
-    (departmentSlug && departmentLabels?.get(departmentSlug)) ||
-    formatDepartmentLabel(
-      participant.participant_department || participant.department || '',
-    );
+    '';
+  const departmentSlug = rawDepartment.toLowerCase();
+  const department = rawDepartment
+    ? departmentLabels?.get(departmentSlug) || formatDepartmentLabel(rawDepartment)
+    : '';
+  const employeeId = parseParticipantEmployeeId(participant);
 
   return {
     id,
@@ -90,6 +108,7 @@ export function mapCampParticipantToEmployee(
       '-',
     department,
     departmentSlug: departmentSlug || undefined,
+    employeeId,
     gender: normalizeGender(participant.gender),
     age: typeof participant.age === 'number' && Number.isFinite(participant.age)
       ? participant.age
@@ -107,6 +126,7 @@ function employeeDisplayKey(employee: EmployeeRecord): string {
     normalize(employee.gender),
     normalize(employee.bloodGroup),
     normalize(employee.departmentSlug || employee.department),
+    normalize(employee.employeeId ?? ''),
   ].join('|');
 }
 

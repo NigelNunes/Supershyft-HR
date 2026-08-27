@@ -206,6 +206,7 @@ export interface ApiCampParticipant {
   participant_blood_group?: string | null;
   department?: string | null;
   participant_department?: string | null;
+  participants_employee_id?: string | number | null;
   questionnaires?: ApiCampParticipantQuestionnaires | null;
   reports?: ApiCampParticipantReports | null;
   consultations?: boolean | null;

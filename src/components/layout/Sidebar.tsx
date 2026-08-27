@@ -14,6 +14,7 @@ import { useOrganization } from '../../contexts/OrganizationContext';
 import { organizationsApi } from '../../services/api';
 import type { ApiOrganizationCamp } from '../../services/apiTypes';
 import { yearFromCampStartDate } from '../../utils/campYears';
+import { EMPLOYEES_CAMP_YEAR } from '../../config/camp';
 import { formatUserDisplayName, formatUserPhone, userInitial } from '../../utils/userDisplay';
 import './Sidebar.css';
 
@@ -43,6 +44,7 @@ export function Sidebar({
     selectedCampNo,
     selectedCampName,
     selectedCampOrganizationName,
+    selectedYear,
     selectCamp,
   } = useCamp();
   const { organizationName, organizationLogo, departments, loading: orgLoading } =
@@ -197,6 +199,8 @@ export function Sidebar({
 
     setCampsListError(result.error ?? 'Unable to access this camp.');
   };
+
+  const employeesNavDisabled = selectedYear !== EMPLOYEES_CAMP_YEAR;
 
   const handleLogout = () => {
     logout();
@@ -433,20 +437,32 @@ export function Sidebar({
             </div>
           )}
 
-          {navItems.slice(2).map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              onClick={onNavigate}
-              title={sidebarCollapsed ? item.label : undefined}
-              className={({ isActive }) =>
-                `sidebar__link${isActive ? ' sidebar__link--active' : ''}`
-              }
-            >
-              <item.icon size={20} strokeWidth={1.75} />
-              {showLabels && <span>{item.label}</span>}
-            </NavLink>
-          ))}
+          {navItems.slice(2).map((item) =>
+            employeesNavDisabled ? (
+              <span
+                key={item.to}
+                className="sidebar__link sidebar__link--disabled"
+                title="All Employees is available for 2026"
+                aria-disabled="true"
+              >
+                <item.icon size={20} strokeWidth={1.75} />
+                {showLabels && <span>{item.label}</span>}
+              </span>
+            ) : (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                onClick={onNavigate}
+                title={sidebarCollapsed ? item.label : undefined}
+                className={({ isActive }) =>
+                  `sidebar__link${isActive ? ' sidebar__link--active' : ''}`
+                }
+              >
+                <item.icon size={20} strokeWidth={1.75} />
+                {showLabels && <span>{item.label}</span>}
+              </NavLink>
+            ),
+          )}
         </nav>
       </div>
 

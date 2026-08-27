@@ -163,6 +163,8 @@ export interface EmployeeRecord {
   department: string;
   /** Department slug from API (participant_department), used for filters. */
   departmentSlug?: string;
+  /** Organization employee ID from the participants API, when present. */
+  employeeId?: string;
   gender: 'Male' | 'Female' | 'Other';
   age?: number;
   journey: Record<JourneyStepId, JourneyStepStatus>;

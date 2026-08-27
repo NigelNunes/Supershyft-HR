@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   BriefcaseMedical,
   Check,
@@ -14,11 +14,14 @@ import {
   SlidersHorizontal,
   X,
 } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
 import { useCampParticipants } from '../hooks/useCampParticipants';
 import { useCampKpis } from '../hooks/useCampDashboard';
 import { useCamp } from '../contexts/CampContext';
 import { useOrganization } from '../contexts/OrganizationContext';
-import { formatDepartmentLabel } from '../services/campParticipantsMappers';
+import { LocationDropdown } from '../components/ui/LocationDropdown';
+import { EMPLOYEES_CAMP_YEAR } from '../config/camp';
+import { formatDepartmentLabel, formatEmployeeIdLabel, hasDisplayDepartment } from '../services/campParticipantsMappers';
 import type { EmployeeRecord, JourneyStepId, JourneyStepStatus } from '../types';
 import anthropometryIconUrl from '../assets/icons/journey-anthropometry.png';
 import vitalsIconUrl from '../assets/icons/journey-vitals.png';
@@ -131,6 +134,32 @@ function StatusIcon({ status }: { status: JourneyStepStatus }) {
   return <X className="emp-status emp-status--pending" size={18} strokeWidth={2.5} aria-label="Pending" />;
 }
 
+function DepartmentCell({ employee }: { employee: EmployeeRecord }) {
+  const department = hasDisplayDepartment(employee.department) ? employee.department : null;
+  const employeeId = employee.employeeId?.trim()
+    ? formatEmployeeIdLabel(employee.employeeId)
+    : null;
+
+  if (department && employeeId) {
+    return (
+      <div className="emp-dept-stack">
+        <span className="emp-dept-pill">{department}</span>
+        <span className="emp-dept-id">{employeeId}</span>
+      </div>
+    );
+  }
+
+  if (department) {
+    return <span className="emp-dept-pill">{department}</span>;
+  }
+
+  if (employeeId) {
+    return <span className="emp-dept-id emp-dept-id--solo">{employeeId}</span>;
+  }
+
+  return <span className="emp-dept-empty">—</span>;
+}
+
 function HeaderStepIcon({
   step,
 }: {
@@ -163,8 +192,14 @@ function HeaderStepIcon({
 }
 
 export function EmployeesPage() {
-  const { departments } = useOrganization();
-  const { selectedYear, setSelectedYear, yearOptions } = useCamp();
+  const { departments, loading: orgLoading } = useOrganization();
+  const {
+    selectedYear,
+    campsLoading,
+    selectedCity,
+    setSelectedCity,
+    locationOptions,
+  } = useCamp();
   const [query, setQuery] = useState('');
   const [department, setDepartment] = useState<string>('all');
   const [page, setPage] = useState(1);
@@ -175,8 +210,15 @@ export function EmployeesPage() {
   const [shareBioAi, setShareBioAi] = useState(false);
   const [stepFilters, setStepFilters] = useState<Record<string, StepFilterValue>>({});
 
-  const { employees, total, loading, error, refresh } = useCampParticipants(department);
+  const { employees, total, loading, loadingMore, error, refresh } =
+    useCampParticipants(department);
   const { data: kpis, loading: kpisLoading, refresh: refreshKpis } = useCampKpis();
+  const initialLoading = loading && employees.length === 0;
+  const showLocation = locationOptions.length > 2;
+
+  useEffect(() => {
+    setPage(1);
+  }, [selectedCity]);
 
   const departmentOptions = useMemo(() => {
     const fromOrg = departments
@@ -203,6 +245,21 @@ export function EmployeesPage() {
       .map(([value, label]) => ({ value, label }))
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [departments, employees]);
+
+  const departmentFilterDisabled = !orgLoading && departments.length === 0;
+
+  useEffect(() => {
+    if (!departmentFilterDisabled || department === 'all') return;
+    setDepartment('all');
+    setPage(1);
+  }, [departmentFilterDisabled, department]);
+
+  const departmentColumnLabel = useMemo(() => {
+    const anyDepartment = employees.some((employee) => hasDisplayDepartment(employee.department));
+    const anyEmployeeId = employees.some((employee) => Boolean(employee.employeeId?.trim()));
+    if (!anyDepartment && anyEmployeeId) return 'Employee ID';
+    return 'Department';
+  }, [employees]);
 
   const filtered = useMemo(() => {
     return employees.filter((employee) => {
@@ -253,7 +310,7 @@ export function EmployeesPage() {
     };
   }, [employees, total, kpis]);
 
-  const summaryLoading = loading || kpisLoading;
+  const summaryLoading = loading || loadingMore || kpisLoading;
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -314,14 +371,28 @@ export function EmployeesPage() {
     return pages;
   }, [safePage, totalPages]);
 
+  if (!campsLoading && selectedYear !== EMPLOYEES_CAMP_YEAR) {
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <div className="employees-page">
       <header className="emp-header">
         <div className="emp-header__titles">
           <h1 className="emp-header__title">All Employees</h1>
-          <p className="emp-header__subtitle">
-            Track employee progress across the preventive healthcare journey.
-          </p>
+          <div className="emp-header__subtitle-row">
+            <p className="emp-header__subtitle">
+              Track employee progress across the preventive healthcare journey.
+            </p>
+            {showLocation && (
+              <LocationDropdown
+                options={locationOptions}
+                value={selectedCity}
+                onChange={setSelectedCity}
+                aria-label="City filter"
+              />
+            )}
+          </div>
         </div>
         <div className="emp-header__actions">
           <div className="emp-header__status-row">
@@ -329,7 +400,7 @@ export function EmployeesPage() {
               type="button"
               className="emp-header__refresh"
               onClick={handleRefresh}
-              disabled={refreshing || loading}
+              disabled={refreshing || initialLoading}
             >
               <RefreshCw
                 size={14}
@@ -338,30 +409,7 @@ export function EmployeesPage() {
               />
               <span>Refresh</span>
             </button>
-            <div className="emp-header__updated">
-              <span className="emp-header__updated-dot" aria-hidden />
-              <span>Updated 2 hrs ago</span>
-            </div>
           </div>
-          {yearOptions.length > 0 && (
-            <div className="emp-header__years" role="tablist" aria-label="Year filter">
-              {yearOptions.map((opt) => {
-                const isActive = opt.value === selectedYear;
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    role="tab"
-                    aria-selected={isActive}
-                    className={`emp-header__year${isActive ? ' emp-header__year--active' : ''}`}
-                    onClick={() => setSelectedYear(opt.value)}
-                  >
-                    {opt.label}
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
       </header>
 
@@ -385,12 +433,12 @@ export function EmployeesPage() {
             autoComplete="off"
             spellCheck={false}
             aria-label="Search employees by name"
-            disabled={loading}
+            disabled={initialLoading}
           />
         </label>
 
         <div className="emp-toolbar__filters">
-          <label className="emp-dept-select">
+          <label className={`emp-dept-select${departmentFilterDisabled ? ' emp-dept-select--disabled' : ''}`}>
             <span className="visually-hidden">Department</span>
             <select
               value={department}
@@ -399,6 +447,7 @@ export function EmployeesPage() {
                 setPage(1);
               }}
               aria-label="Filter by department"
+              disabled={departmentFilterDisabled}
             >
               <option value="all">Department</option>
               {departmentOptions.map((dept) => (
@@ -451,7 +500,7 @@ export function EmployeesPage() {
             <div className="emp-summary-card__top">
               <span className="emp-summary-card__label">Blood Tests</span>
               <span className="emp-summary-card__icon emp-summary-card__icon--blood">
-                <Droplets size={16} strokeWidth={2} aria-hidden />
+                <Droplets size={14} strokeWidth={2} aria-hidden />
               </span>
             </div>
             <div className="emp-summary-card__value">
@@ -476,7 +525,7 @@ export function EmployeesPage() {
             <div className="emp-summary-card__top">
               <span className="emp-summary-card__label">Questionnaires</span>
               <span className="emp-summary-card__icon emp-summary-card__icon--quest">
-                <ClipboardList size={16} strokeWidth={2} aria-hidden />
+                <ClipboardList size={14} strokeWidth={2} aria-hidden />
               </span>
             </div>
             <div className="emp-summary-card__value">
@@ -501,7 +550,7 @@ export function EmployeesPage() {
             <div className="emp-summary-card__top">
               <span className="emp-summary-card__label">Bio-AI Reports</span>
               <span className="emp-summary-card__icon emp-summary-card__icon--bio">
-                <FileText size={16} strokeWidth={2} aria-hidden />
+                <FileText size={14} strokeWidth={2} aria-hidden />
               </span>
             </div>
             <div className="emp-summary-card__value">
@@ -526,7 +575,7 @@ export function EmployeesPage() {
             <div className="emp-summary-card__top">
               <span className="emp-summary-card__label">Consultations</span>
               <span className="emp-summary-card__icon emp-summary-card__icon--consult">
-                <BriefcaseMedical size={16} strokeWidth={2} aria-hidden />
+                <BriefcaseMedical size={14} strokeWidth={2} aria-hidden />
               </span>
             </div>
             <div className="emp-summary-card__value emp-summary-card__value--consult">
@@ -560,7 +609,7 @@ export function EmployeesPage() {
             <thead>
               <tr>
                 <th className="emp-table__col-participant">Participant</th>
-                <th className="emp-table__col-dept">Department</th>
+                <th className="emp-table__col-dept">{departmentColumnLabel}</th>
                 <th className="emp-table__col-contact">Contact</th>
                 <th className="emp-table__col-steps">
                   <div className="emp-table__steps-head">
@@ -577,7 +626,7 @@ export function EmployeesPage() {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
+              {initialLoading ? (
                 <tr>
                   <td colSpan={5} className="emp-table__empty">
                     Loading employees…
@@ -602,7 +651,7 @@ export function EmployeesPage() {
                       </div>
                     </td>
                     <td className="emp-table__col-dept">
-                      <span className="emp-dept-pill">{emp.department}</span>
+                      <DepartmentCell employee={emp} />
                     </td>
                     <td className="emp-table__col-contact">
                       <div className="emp-contact">
@@ -650,6 +699,9 @@ export function EmployeesPage() {
         <footer className="emp-table-footer">
           <span className="emp-table-footer__count">
             Showing {showingFrom}-{showingTo} of {filtered.length} Employees
+            {loadingMore ? (
+              <span className="emp-table-footer__loading"> · Loading more…</span>
+            ) : null}
           </span>
           <div className="emp-pagination" role="navigation" aria-label="Pagination">
             <button

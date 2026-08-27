@@ -235,6 +235,16 @@ export const campParticipantsApi = {
       { headers: { Authorization: `Bearer ${token}` } },
     ),
 
+  /**
+   * GET /reports/camps/{camp_no}/{city}/participants
+   * Same pagination contract as the overall camp participants list.
+   */
+  listByCity: (campNo: number, city: string, token: string, page = 1, limit = 20) =>
+    requestPaginated<import('./apiTypes').ApiCampParticipant[]>(
+      `/reports/camps/${campNo}/${encodeURIComponent(city)}/participants?page=${page}&limit=${limit}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    ),
+
   async listAll(campNo: number, token: string) {
     const limit = 20;
     let page = 1;
