@@ -20,7 +20,8 @@ import { OxidativeStressChart } from '../components/charts/OxidativeStressChart'
 import { BloodParameterPanels } from '../components/charts/BloodParameterPanels';
 import { PositiveWinsPanel } from '../components/charts/PositiveWinsPanel';
 import { LeadershipTakeawaysSection } from '../components/charts/LeadershipTakeawaysSection';
-import { SHOW_EXECUTIVE_RANKING } from '../config/dashboard';
+import { SHOW_DASHBOARD_REFRESH, SHOW_EXECUTIVE_RANKING, SHOW_LEADERSHIP_TAKEAWAYS } from '../config/dashboard';
+import { EMPLOYEES_CAMP_YEAR } from '../config/camp';
 import type { GenderDistributionPair, PositiveWins } from '../types';
 import './CampReportPage.css';
 
@@ -137,9 +138,10 @@ export function CampReportPage() {
         locationOptions={locationOptions}
         selectedLocation={selectedCity}
         onLocationChange={setSelectedCity}
+        showRefresh={SHOW_DASHBOARD_REFRESH}
       />
 
-      {sectionError && (
+      {sectionError && selectedYear !== EMPLOYEES_CAMP_YEAR && (
         <p className="dashboard-api-error" role="alert">
           {sectionError}
         </p>
@@ -200,6 +202,7 @@ export function CampReportPage() {
         data={oxidativeData}
         totalHeadcount={oxidativeHeadcount}
         loading={oxidativeLoading}
+        selectedYear={selectedYear}
       />
 
       <CampSectionTitle>Blood & Lab Intelligence</CampSectionTitle>
@@ -212,10 +215,15 @@ export function CampReportPage() {
       <PositiveWinsPanel
         data={positiveWins ?? EMPTY_POSITIVE_WINS}
         loading={positiveWinsLoading}
+        selectedYear={selectedYear}
       />
 
-      <CampSectionTitle>Leadership Takeaways</CampSectionTitle>
-      <LeadershipTakeawaysSection />
+      {SHOW_LEADERSHIP_TAKEAWAYS && (
+        <>
+          <CampSectionTitle>Leadership Takeaways</CampSectionTitle>
+          <LeadershipTakeawaysSection />
+        </>
+      )}
     </div>
   );
 }

@@ -13,6 +13,15 @@ import {
   useCampRiskLifestyleByGender,
   useCampSleep,
 } from '../../hooks/useCampDashboard';
+import { useCamp } from '../../contexts/CampContext';
+import { ComingSoonPanel } from '../ui/ComingSoonPanel';
+import {
+  hasCompanyScoresData,
+  hasDiseaseDeepDiveData,
+  hasGenderDistributionData,
+  hasOverallRiskSectionData,
+  shouldShowComingSoon,
+} from '../../utils/comingSoon';
 import { buildLeadershipTakeaways } from '../../utils/leadershipTakeaways';
 import type { LeadershipTakeaway } from '../../utils/leadershipTakeaways';
 import './LeadershipTakeawaysSection.css';
@@ -52,6 +61,7 @@ function TakeawayCard({ takeaway }: { takeaway: LeadershipTakeaway }) {
 }
 
 export function LeadershipTakeawaysSection() {
+  const { selectedYear } = useCamp();
   const { data: overallRiskScore, loading: riskLoading } = useCampOverallRiskScore();
   const { data: companyScores, loading: scoresLoading } = useCampCompanyAverageScores();
   const { data: riskLifestyle, loading: diseaseLoading } = useCampRiskLifestyleByGender();
@@ -61,8 +71,17 @@ export function LeadershipTakeawaysSection() {
   const loading =
     riskLoading || scoresLoading || diseaseLoading || physicalLoading || sleepLoading;
 
+  const hasSourceData =
+    hasOverallRiskSectionData(overallRiskScore) ||
+    hasCompanyScoresData(companyScores) ||
+    hasDiseaseDeepDiveData(riskLifestyle?.diseases) ||
+    hasGenderDistributionData(physicalActivity) ||
+    hasGenderDistributionData(sleep);
+
+  const comingSoon = shouldShowComingSoon(selectedYear, loading, hasSourceData);
+
   const takeaways = useMemo(() => {
-    if (loading) return [];
+    if (loading || comingSoon) return [];
     return buildLeadershipTakeaways({
       overallRiskScore: overallRiskScore ?? [],
       companyScores: companyScores ?? null,
@@ -72,12 +91,17 @@ export function LeadershipTakeawaysSection() {
     });
   }, [
     loading,
+    comingSoon,
     overallRiskScore,
     companyScores,
     riskLifestyle,
     physicalActivity,
     sleep,
   ]);
+
+  if (comingSoon) {
+    return <ComingSoonPanel variant="card" />;
+  }
 
   return (
     <div className="leadership-takeaways">

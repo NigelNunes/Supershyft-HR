@@ -460,6 +460,12 @@ const BLOOD_LAB_PANEL_SPECS = [
 export function mapCampBloodAndLabIntelligence(
   api: ApiCampDashboardBloodAndLabIntelligence,
 ): BloodParameterPanel[] {
+  const hasAnyMetric = BLOOD_LAB_PANEL_SPECS.some(({ profile, apiKey }) => {
+    const percent = api[profile]?.[apiKey]?.in_range_percent;
+    return typeof percent === 'number' && Number.isFinite(percent);
+  });
+  if (!hasAnyMetric) return [];
+
   return BLOOD_LAB_PANEL_SPECS.map(({ id, name, profile, apiKey }) => {
     const inRangePercent = Math.round(api[profile]?.[apiKey]?.in_range_percent ?? 0);
     const abnormalPercent = Math.max(0, 100 - inRangePercent);

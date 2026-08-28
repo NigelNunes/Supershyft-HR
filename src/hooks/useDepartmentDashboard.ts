@@ -25,6 +25,7 @@ import type {
   OverallRiskScoreBucket,
   ParticipationByAge,
 } from '../types';
+import { unwrapDashboardPayload } from '../utils/unwrapDashboardPayload';
 
 interface FetchState<T> {
   data: T | null;
@@ -34,18 +35,6 @@ interface FetchState<T> {
 }
 
 type SectionState<T> = Omit<FetchState<T>, 'refresh'>;
-
-function unwrapSectionPayload<T>(payload: { data: T } | T): T {
-  if (
-    payload != null &&
-    typeof payload === 'object' &&
-    'data' in payload &&
-    (payload as { data: T }).data !== undefined
-  ) {
-    return (payload as { data: T }).data;
-  }
-  return payload as T;
-}
 
 /**
  * GET /reports/camps/{camp_no}/department/{slug}/dashboard?section=…
@@ -82,7 +71,7 @@ function useDepartmentSection<TApi, TView>(
       .departmentSection<TApi>(selectedCampNo, deptSlug, section, accessToken)
       .then((payload) => {
         if (cancelled) return;
-        const api = unwrapSectionPayload(payload);
+        const api = unwrapDashboardPayload<TApi>(payload);
         setState({ data: map(api), loading: false, error: null });
       })
       .catch((err) => {
@@ -107,7 +96,7 @@ function useDepartmentSection<TApi, TView>(
     return campDashboardApi
       .departmentSection<TApi>(selectedCampNo, deptSlug, section, accessToken)
       .then((payload) => {
-        const api = unwrapSectionPayload<TApi>(payload);
+        const api = unwrapDashboardPayload<TApi>(payload);
         setState({ data: map(api), loading: false, error: null });
       })
       .catch((err) => {

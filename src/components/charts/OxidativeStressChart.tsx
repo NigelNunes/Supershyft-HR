@@ -2,8 +2,11 @@ import { useMemo } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { CHART_INFO } from '../../content/chartInfo';
 import { getOxidativeStressConcernInsight } from '../../content/chartInsights';
+import { hasOxidativeSectionData, shouldShowComingSoon } from '../../utils/comingSoon';
 import type { DepartmentSummary, OxidativeStressByDept } from '../../types';
+import type { YearOption } from '../layout/DashboardHeader';
 import { ChartCard } from '../ui/ChartCard';
+import { ComingSoonPanel } from '../ui/ComingSoonPanel';
 import { OxidativeStressPanelBody } from './OxidativeStressPanelBody';
 import { oxidativeElevatedPercent } from './oxidativeStressBands';
 import './OxidativeStressChart.css';
@@ -13,6 +16,7 @@ interface OxidativeStressChartProps {
   departments?: DepartmentSummary[];
   totalHeadcount?: number;
   loading?: boolean;
+  selectedYear?: YearOption;
 }
 
 function weightedCompanyRollup(
@@ -50,7 +54,9 @@ export function OxidativeStressChart({
   departments = [],
   totalHeadcount,
   loading = false,
+  selectedYear = '2026',
 }: OxidativeStressChartProps) {
+  const comingSoon = shouldShowComingSoon(selectedYear, loading, hasOxidativeSectionData(data));
   const headcounts = useMemo(
     () => new Map(departments.map((d) => [d.name, d.headcount])),
     [departments],
@@ -72,7 +78,7 @@ export function OxidativeStressChart({
       subtitle="Company-wide severity distribution"
       info={CHART_INFO.oxidativeStress}
       insight={
-        !loading && data.length > 0 ? (
+        !comingSoon && !loading && data.length > 0 ? (
           <div className="oxidative-stress-insight">
             <div className="oxidative-stress-insight__title">
               <AlertTriangle size={20} strokeWidth={1.75} aria-hidden />
@@ -84,7 +90,11 @@ export function OxidativeStressChart({
       }
       className="oxidative-stress-card"
     >
-      <OxidativeStressPanelBody data={company} headcount={totalEmployees} loading={loading} />
+      {comingSoon ? (
+        <ComingSoonPanel />
+      ) : (
+        <OxidativeStressPanelBody data={company} headcount={totalEmployees} loading={loading} />
+      )}
     </ChartCard>
   );
 }

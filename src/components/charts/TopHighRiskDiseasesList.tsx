@@ -1,6 +1,8 @@
 import { Info, OctagonAlert } from 'lucide-react';
+import { ComingSoonPanel } from '../ui/ComingSoonPanel';
 import { CHART_INFO } from '../../content/chartInfo';
 import { getTopDiseaseRiskConcernInsight } from '../../content/chartInsights';
+import { hasTopDiseaseData, shouldShowComingSoon } from '../../utils/comingSoon';
 import type { TopHighRiskDisease } from '../../types';
 import type { YearOption } from '../layout/DashboardHeader';
 import './TopHighRiskDiseasesList.css';
@@ -37,12 +39,14 @@ export function TopHighRiskDiseasesList({
   info = CHART_INFO.topHighRiskDiseases,
   insightPrefix = 'employees',
   loading = false,
+  selectedYear = '2026',
 }: TopHighRiskDiseasesListProps) {
+  const comingSoon = shouldShowComingSoon(selectedYear, loading, hasTopDiseaseData(diseases));
   const top3 = allocateBubblesByPercent(diseases);
   const lead = top3[0];
 
   const concern =
-    !loading && lead
+    !loading && !comingSoon && lead
       ? getTopDiseaseRiskConcernInsight(lead, insightPrefix).text
       : undefined;
 
@@ -62,7 +66,9 @@ export function TopHighRiskDiseasesList({
       </header>
 
       <div className="top-disease-bubbles__stage" aria-label="Top disease risk bubbles">
-        {loading ? (
+        {comingSoon ? (
+          <ComingSoonPanel />
+        ) : loading ? (
           <p className="top-disease-bubbles__empty">Loading…</p>
         ) : top3.length === 0 ? (
           <p className="top-disease-bubbles__empty">No elevated-risk disease data available.</p>

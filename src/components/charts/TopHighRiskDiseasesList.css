@@ -125,6 +125,9 @@
   width: 100%;
   flex: 1;
   min-height: 22rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .top-disease-bubbles__stage--allyears {

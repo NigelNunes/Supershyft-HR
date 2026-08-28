@@ -1,6 +1,8 @@
 import { Cell, Pie, PieChart, Tooltip } from 'recharts';
 import { Info, Lightbulb } from 'lucide-react';
+import { ComingSoonPanel } from '../ui/ComingSoonPanel';
 import { CHART_INFO } from '../../content/chartInfo';
+import { hasParticipationSectionData, shouldShowComingSoon } from '../../utils/comingSoon';
 import type { YearOption } from '../layout/DashboardHeader';
 import type { ParticipationByAge } from '../../types';
 import { PieHoverTooltip } from './PieHoverTooltip';
@@ -184,6 +186,12 @@ export function ParticipationCharts({
   loading = false,
   selectedYear = '2026',
 }: ParticipationChartsProps) {
+  const comingSoon = shouldShowComingSoon(
+    selectedYear,
+    loading,
+    hasParticipationSectionData(byAge),
+  );
+
   return (
     <article className="participation-age-card">
       <header className="participation-age-card__header">
@@ -201,6 +209,8 @@ export function ParticipationCharts({
 
       {selectedYear === 'all' ? (
         <AllYearsParticipation />
+      ) : comingSoon ? (
+        <ComingSoonPanel />
       ) : (
         <SingleYearParticipation byAge={byAge} loading={loading} />
       )}

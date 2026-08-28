@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Info, OctagonAlert } from 'lucide-react';
 import { PHYSICAL_ACTIVITY_BUCKETS, SLEEP_BUCKETS } from '../../data/participantPool';
+import { ComingSoonPanel } from '../ui/ComingSoonPanel';
 import { CHART_INFO } from '../../content/chartInfo';
 import {
   computePoorActivityPercent,
@@ -9,6 +10,7 @@ import {
   getSleepConcernInsight,
   toChartInsight,
 } from '../../content/chartInsights';
+import { hasGenderDistributionData, shouldShowComingSoon } from '../../utils/comingSoon';
 import type { DistributionSlice, GenderDistributionPair, LifestyleGenderView } from '../../types';
 import type { YearOption } from '../layout/DashboardHeader';
 import './PhysicalSleepSegmentCharts.css';
@@ -177,6 +179,7 @@ function LifestyleCard({
   loading,
   maleTotal,
   femaleTotal,
+  comingSoon = false,
 }: {
   title: string;
   subtitle: string;
@@ -189,6 +192,7 @@ function LifestyleCard({
   loading: boolean;
   maleTotal: number | null;
   femaleTotal: number | null;
+  comingSoon?: boolean;
 }) {
   const showMale = view === 'both' || view === 'male';
   const showFemale = view === 'both' || view === 'female';
@@ -208,6 +212,10 @@ function LifestyleCard({
         <p className="ps-card__subtitle">{subtitle}</p>
       </header>
 
+      {comingSoon ? (
+        <ComingSoonPanel />
+      ) : (
+        <>
       <div className="ps-card__body">
         <div className="ps-card__rows">
           {showMale && (
@@ -243,6 +251,8 @@ function LifestyleCard({
           <p className="ps-card__concern-text">{concernText}</p>
         </footer>
       )}
+        </>
+      )}
     </article>
   );
 }
@@ -251,6 +261,7 @@ export function PhysicalSleepSegmentCharts({
   physical,
   sleep,
   loading = false,
+  selectedYear = '2026',
 }: PhysicalSleepSegmentChartsProps) {
   const [view, setView] = useState<LifestyleGenderView>('both');
 
@@ -275,14 +286,25 @@ export function PhysicalSleepSegmentCharts({
   const hasPhysical = physical.male.length > 0 || physical.female.length > 0;
   const hasSleep = sleep.male.length > 0 || sleep.female.length > 0;
 
-  const physicalInsight = hasPhysical
+  const comingSoonPhysical = shouldShowComingSoon(
+    selectedYear,
+    loading,
+    hasGenderDistributionData(physical),
+  );
+  const comingSoonSleep = shouldShowComingSoon(
+    selectedYear,
+    loading,
+    hasGenderDistributionData(sleep),
+  );
+
+  const physicalInsight = hasPhysical && !comingSoonPhysical
     ? toChartInsight(
         getPhysicalActivityConcernInsight(
           computePoorActivityPercent(physical, view, physicalWeights),
         ),
       )
     : undefined;
-  const sleepInsight = hasSleep
+  const sleepInsight = hasSleep && !comingSoonSleep
     ? toChartInsight(
         getSleepConcernInsight(computePoorSleepPercent(sleep, view, sleepWeights)),
       )
@@ -315,6 +337,7 @@ export function PhysicalSleepSegmentCharts({
           loading={loading}
           maleTotal={malePhysicalTotal}
           femaleTotal={femalePhysicalTotal}
+          comingSoon={comingSoonPhysical}
         />
         <LifestyleCard
           title="Sleep"
@@ -328,6 +351,7 @@ export function PhysicalSleepSegmentCharts({
           loading={loading}
           maleTotal={maleSleepTotal}
           femaleTotal={femaleSleepTotal}
+          comingSoon={comingSoonSleep}
         />
       </div>
     </section>

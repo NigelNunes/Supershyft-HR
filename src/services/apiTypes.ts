@@ -156,7 +156,7 @@ export interface ApiCampDashboardBloodAndLabIntelligence {
 /** GET …/dashboard?section=ranking — city key → ranks */
 export interface ApiCampDashboardRankingEntry {
   rank: number;
-  industry_rank: number;
+  industry_rank: number | null;
 }
 
 export type ApiCampDashboardRanking = Record<string, ApiCampDashboardRankingEntry>;

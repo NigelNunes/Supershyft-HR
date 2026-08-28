@@ -25,6 +25,7 @@ interface DashboardHeaderProps {
   selectedLocation?: string;
   onLocationChange?: (locationId: string) => void;
   showLocationFilter?: boolean;
+  showRefresh?: boolean;
 }
 
 export function DashboardHeader({
@@ -38,6 +39,7 @@ export function DashboardHeader({
   selectedLocation,
   onLocationChange,
   showLocationFilter = true,
+  showRefresh = true,
 }: DashboardHeaderProps) {
   const [refreshing, setRefreshing] = useState(false);
 
@@ -105,19 +107,21 @@ export function DashboardHeader({
             </div>
           )}
 
-          <button
-            type="button"
-            className="dashboard-header__refresh"
-            onClick={handleRefresh}
-            disabled={refreshing}
-          >
-            <RefreshCw
-              size={14}
-              className={`dashboard-header__refresh-icon${refreshing ? ' dashboard-header__refresh-icon--spin' : ''}`}
-              aria-hidden
-            />
-            <span>Refresh</span>
-          </button>
+          {showRefresh && (
+            <button
+              type="button"
+              className="dashboard-header__refresh"
+              onClick={handleRefresh}
+              disabled={refreshing}
+            >
+              <RefreshCw
+                size={14}
+                className={`dashboard-header__refresh-icon${refreshing ? ' dashboard-header__refresh-icon--spin' : ''}`}
+                aria-hidden
+              />
+              <span>Refresh</span>
+            </button>
+          )}
         </div>
       </div>
     </header>

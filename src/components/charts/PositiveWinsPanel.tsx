@@ -1,11 +1,15 @@
 import { Check, FlaskConical, Info, Moon, ShieldCheck } from 'lucide-react';
+import { ComingSoonPanel } from '../ui/ComingSoonPanel';
 import { CHART_INFO } from '../../content/chartInfo';
+import { hasPositiveWinsData, shouldShowComingSoon } from '../../utils/comingSoon';
+import type { YearOption } from '../layout/DashboardHeader';
 import type { PositiveWins } from '../../types';
 import './PositiveWinsPanel.css';
 
 interface PositiveWinsPanelProps {
   data: PositiveWins;
   loading?: boolean;
+  selectedYear?: YearOption;
 }
 
 const EMPTY_POSITIVE_WINS: PositiveWins = {
@@ -25,8 +29,9 @@ function WinChip({ label, tone }: { label: string; tone: ColumnTone }) {
   );
 }
 
-export function PositiveWinsPanel({ data, loading = false }: PositiveWinsPanelProps) {
-  const display = loading ? EMPTY_POSITIVE_WINS : data;
+export function PositiveWinsPanel({ data, loading = false, selectedYear = '2026' }: PositiveWinsPanelProps) {
+  const comingSoon = shouldShowComingSoon(selectedYear, loading, hasPositiveWinsData(data));
+  const display = loading || comingSoon ? EMPTY_POSITIVE_WINS : data;
 
   return (
     <article className="positive-wins">
@@ -45,7 +50,9 @@ export function PositiveWinsPanel({ data, loading = false }: PositiveWinsPanelPr
         </p>
       </header>
 
-      {loading ? (
+      {comingSoon ? (
+        <ComingSoonPanel />
+      ) : loading ? (
         <p className="positive-wins__loading">Loading positive wins…</p>
       ) : (
         <div className="positive-wins__columns">

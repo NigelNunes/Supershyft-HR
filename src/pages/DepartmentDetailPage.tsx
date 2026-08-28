@@ -123,6 +123,7 @@ export function DepartmentDetailPage() {
           <MetabolicAgeDistributionCard
             categories={metabolicCategories}
             selectedYear={selectedYear}
+            loading={kpisLoading}
           />
         </div>
         <div className="dashboard-metrics-col">

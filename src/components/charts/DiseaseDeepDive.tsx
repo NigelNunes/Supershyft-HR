@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Info, Lightbulb } from 'lucide-react';
+import { ComingSoonPanel } from '../ui/ComingSoonPanel';
 import { CHART_INFO } from '../../content/chartInfo';
+import { hasDiseaseDeepDiveData, shouldShowComingSoon } from '../../utils/comingSoon';
 import type { YearOption } from '../layout/DashboardHeader';
 import type { DiseaseRiskData, RiskLevel } from '../../types';
 import './DiseaseDeepDive.css';
@@ -170,6 +172,33 @@ function SingleYearDiseaseDeepDive({
 export function DiseaseDeepDive({
   diseases,
   loading = false,
+  selectedYear = '2026',
 }: DiseaseDeepDiveProps) {
+  const comingSoon = shouldShowComingSoon(
+    selectedYear,
+    loading,
+    hasDiseaseDeepDiveData(diseases),
+  );
+  if (comingSoon) {
+    return (
+      <article className="disease-deep-dive-card">
+        <header className="disease-deep-dive-card__header">
+          <div className="disease-deep-dive-card__header-top">
+            <div className="disease-deep-dive-card__title-row">
+              <h3 className="disease-deep-dive-card__title">Disease deep dive analysis</h3>
+              <span className="disease-deep-dive-card__info" tabIndex={0}>
+                <Info size={16} aria-hidden />
+                <span className="disease-deep-dive-card__info-popup" role="tooltip">
+                  {CHART_INFO.diseaseDeepDive}
+                </span>
+              </span>
+            </div>
+          </div>
+          <p className="disease-deep-dive-card__subtitle">Risk distribution by gender</p>
+        </header>
+        <ComingSoonPanel />
+      </article>
+    );
+  }
   return <SingleYearDiseaseDeepDive diseases={diseases} loading={loading} />;
 }

@@ -1,7 +1,9 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { AlertCircle, Info } from 'lucide-react';
+import { ComingSoonPanel } from '../ui/ComingSoonPanel';
 import { CHART_INFO } from '../../content/chartInfo';
 import { getOverallRiskConcernInsight } from '../../content/chartInsights';
+import { hasOverallRiskSectionData, shouldShowComingSoon } from '../../utils/comingSoon';
 import type { YearOption } from '../layout/DashboardHeader';
 import type { OverallRiskBand, OverallRiskScoreBucket } from '../../types';
 import { OVERALL_RISK_COLORS, useChartTheme } from './chartTheme';
@@ -244,6 +246,12 @@ export function OverallRiskScoreChart({
   loading = false,
   selectedYear = '2026',
 }: OverallRiskScoreChartProps) {
+  const comingSoon = shouldShowComingSoon(
+    selectedYear,
+    loading,
+    hasOverallRiskSectionData(buckets),
+  );
+
   return (
     <article className="overall-risk-card">
       <header className="overall-risk-card__header">
@@ -261,6 +269,8 @@ export function OverallRiskScoreChart({
 
       {selectedYear === 'all' ? (
         <AllYearsOverallRisk />
+      ) : comingSoon ? (
+        <ComingSoonPanel />
       ) : (
         <SingleYearOverallRisk buckets={buckets} loading={loading} />
       )}

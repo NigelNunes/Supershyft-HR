@@ -114,7 +114,8 @@
   color: #a3a3a3;
 }
 
-.emp-header__refresh {
+.emp-header__refresh,
+.emp-header__download {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -131,6 +132,14 @@
 
 .emp-header__refresh:disabled {
   opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.emp-header__download:disabled {
+  background: #6b7280;
+  border-color: #6b7280;
+  color: #d1d5db;
+  opacity: 1;
   cursor: not-allowed;
 }
 

@@ -12,11 +12,15 @@ const PAGE_LIMIT = 20;
 
 interface CampParticipantsState {
   employees: EmployeeRecord[];
+  /** Raw API participant rows for the current camp/city/department fetch. */
+  participants: ApiCampParticipant[];
   total: number;
   /** True until the first page of employees is available. */
   loading: boolean;
   /** True while later pages are still being fetched in the background. */
   loadingMore: boolean;
+  /** True only after every participant page has been fetched successfully. */
+  allLoaded: boolean;
   error: string | null;
   refresh: () => void;
 }
@@ -44,9 +48,11 @@ export function useCampParticipants(departmentSlug?: string | null): CampPartici
   const [refreshKey, setRefreshKey] = useState(0);
   const [state, setState] = useState<Omit<CampParticipantsState, 'refresh'>>({
     employees: [],
+    participants: [],
     total: 0,
     loading: true,
     loadingMore: false,
+    allLoaded: false,
     error: null,
   });
 
@@ -54,16 +60,26 @@ export function useCampParticipants(departmentSlug?: string | null): CampPartici
     if (!accessToken || !selectedCampNo) {
       setState({
         employees: [],
+        participants: [],
         total: 0,
         loading: false,
         loadingMore: false,
+        allLoaded: false,
         error: 'Not authenticated',
       });
       return;
     }
 
     let cancelled = false;
-    setState({ employees: [], total: 0, loading: true, loadingMore: false, error: null });
+    setState({
+      employees: [],
+      participants: [],
+      total: 0,
+      loading: true,
+      loadingMore: false,
+      allLoaded: false,
+      error: null,
+    });
 
     const slug = departmentSlug?.trim() && departmentSlug !== 'all' ? departmentSlug.trim() : null;
     const cityScoped = !isOverallLocation(selectedCity);
@@ -112,9 +128,11 @@ export function useCampParticipants(departmentSlug?: string | null): CampPartici
 
           setState({
             employees,
+            participants: items,
             total,
             loading: false,
             loadingMore: !done,
+            allLoaded: done,
             error: null,
           });
 
@@ -125,9 +143,11 @@ export function useCampParticipants(departmentSlug?: string | null): CampPartici
         if (cancelled) return;
         setState((prev) => ({
           employees: prev.employees,
+          participants: prev.participants,
           total: prev.total,
           loading: false,
           loadingMore: false,
+          allLoaded: false,
           error: err instanceof Error ? err.message : 'Failed to load employees',
         }));
       }

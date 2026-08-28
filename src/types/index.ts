@@ -39,7 +39,7 @@ export interface KpiSummary {
 export interface RankingSummary {
   city: string;
   cityRank: number;
-  industryRank: number;
+  industryRank: number | null;
 }
 
 export interface ParticipationByAge {

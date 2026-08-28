@@ -41,6 +41,7 @@ import type {
   RankingSummary,
 } from '../types';
 import { isOverallLocation } from '../utils/campCities';
+import { unwrapDashboardPayload } from '../utils/unwrapDashboardPayload';
 
 interface FetchState<T> {
   data: T | null;
@@ -50,34 +51,6 @@ interface FetchState<T> {
 }
 
 type SectionState<T> = Omit<FetchState<T>, 'refresh'>;
-
-function unwrapSectionPayload<T>(payload: { data: T } | T): T {
-  if (
-    payload != null &&
-    typeof payload === 'object' &&
-    'data' in payload &&
-    (payload as { data: T }).data !== undefined
-  ) {
-    return (payload as { data: T }).data;
-  }
-  return payload as T;
-}
-
-/**
- * PUT /refresh wraps the section inside { report_id, section: { data, name, … }, report_bts }.
- * Extract `section.data` so the mapper receives the same shape as from GET.
- */
-function unwrapRefreshPayload<T>(payload: unknown): T {
-  if (
-    payload != null &&
-    typeof payload === 'object' &&
-    'section' in payload
-  ) {
-    const section = (payload as { section: unknown }).section;
-    return unwrapSectionPayload<T>(section as { data: T } | T);
-  }
-  return unwrapSectionPayload<T>(payload as { data: T } | T);
-}
 
 function useCampSection<TApi, TView>(
   section: CampDashboardSection,
@@ -108,7 +81,7 @@ function useCampSection<TApi, TView>(
     void request
       .then((payload) => {
         if (cancelled) return;
-        const api = unwrapSectionPayload(payload);
+        const api = unwrapDashboardPayload<TApi>(payload);
         setState({ data: map(api), loading: false, error: null });
       })
       .catch((err) => {
@@ -133,10 +106,10 @@ function useCampSection<TApi, TView>(
     const request = cityScoped
       ? campDashboardApi
           .citySection<TApi>(selectedCampNo, selectedCity, section, accessToken)
-          .then((payload) => unwrapSectionPayload<TApi>(payload))
+          .then((payload) => unwrapDashboardPayload<TApi>(payload))
       : campDashboardApi
           .refresh(selectedCampNo, section, accessToken)
-          .then((payload) => unwrapRefreshPayload<TApi>(payload));
+          .then((payload) => unwrapDashboardPayload<TApi>(payload));
 
     return request
       .then((api) => {

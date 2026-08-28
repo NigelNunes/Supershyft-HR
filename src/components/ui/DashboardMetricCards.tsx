@@ -1,6 +1,12 @@
 import type { ReactNode } from 'react';
 import { Droplets, FileText, Stethoscope, Users } from 'lucide-react';
+import { ComingSoonPanel } from './ComingSoonPanel';
 import { highlightIndexForRank, uniformAscendingHeights } from '../../utils/rankSparkline';
+import {
+  hasKpiSectionData,
+  hasRankingSectionData,
+  shouldShowComingSoon,
+} from '../../utils/comingSoon';
 import type { YearOption } from '../layout/DashboardHeader';
 import type { KpiSummary, RankingSummary } from '../../types';
 import './DashboardMetricCards.css';
@@ -149,13 +155,21 @@ function SingleYearMetricCards({
   kpisLoading,
   rankingLoading,
   showRanking,
+  selectedYear,
 }: {
   kpis: KpiSummary | null;
   ranking: RankingSummary | null;
   kpisLoading: boolean;
   rankingLoading: boolean;
   showRanking: boolean;
+  selectedYear: YearOption;
 }) {
+  const comingSoonKpis = shouldShowComingSoon(selectedYear, kpisLoading, hasKpiSectionData(kpis));
+  const comingSoonRank = shouldShowComingSoon(
+    selectedYear,
+    rankingLoading,
+    hasRankingSectionData(ranking),
+  );
   const nationalRank = ranking?.cityRank;
   const industryRank = ranking?.industryRank;
 
@@ -185,28 +199,40 @@ function SingleYearMetricCards({
             <div className="metric-card__rank-row">
               <div className="metric-card__rank-text">
                 <h3 className="metric-card__rank-title">National Rank</h3>
-                <p className="metric-card__rank-value metric-card__rank-value--green">
-                  <span className="metric-card__hash">#</span>
-                  <span>{displayNumber(nationalRank, rankingLoading)}</span>
-                </p>
+                {comingSoonRank ? (
+                  <ComingSoonPanel variant="metric" />
+                ) : (
+                  <p className="metric-card__rank-value metric-card__rank-value--green">
+                    <span className="metric-card__hash">#</span>
+                    <span>{displayNumber(nationalRank, rankingLoading)}</span>
+                  </p>
+                )}
               </div>
-              <RankSparkline variant="green" highlightIndex={nationalHighlight} />
+              {!comingSoonRank && (
+                <RankSparkline variant="green" highlightIndex={nationalHighlight} />
+              )}
             </div>
-            <p className="metric-card__rank-footer">{nationalFooter}</p>
+            {!comingSoonRank && <p className="metric-card__rank-footer">{nationalFooter}</p>}
           </article>
 
           <article className="metric-card metric-card--rank metric-card--industry">
             <div className="metric-card__rank-row">
               <div className="metric-card__rank-text">
                 <h3 className="metric-card__rank-title">Industry Rank</h3>
-                <p className="metric-card__rank-value metric-card__rank-value--blue">
-                  <span className="metric-card__hash">#</span>
-                  <span>{displayNumber(industryRank, rankingLoading)}</span>
-                </p>
+                {comingSoonRank ? (
+                  <ComingSoonPanel variant="metric" />
+                ) : (
+                  <p className="metric-card__rank-value metric-card__rank-value--blue">
+                    <span className="metric-card__hash">#</span>
+                    <span>{displayNumber(industryRank, rankingLoading)}</span>
+                  </p>
+                )}
               </div>
-              <RankSparkline variant="blue" highlightIndex={industryHighlight} />
+              {!comingSoonRank && (
+                <RankSparkline variant="blue" highlightIndex={industryHighlight} />
+              )}
             </div>
-            <p className="metric-card__rank-footer">{industryFooter}</p>
+            {!comingSoonRank && <p className="metric-card__rank-footer">{industryFooter}</p>}
           </article>
         </>
       )}
@@ -214,23 +240,29 @@ function SingleYearMetricCards({
       <article className="metric-card metric-card--stat">
         <div className="metric-card__stat-body">
           <h3 className="metric-card__stat-label">Employees</h3>
-          <p className="metric-card__stat-value">
-            {displayNumber(kpis?.employeesEnrolled, kpisLoading)}
-          </p>
-          <div className="metric-card__gender">
-            <span className="metric-card__gender-item">
-              <span className="metric-card__gender-symbol metric-card__gender-symbol--male" aria-hidden>
-                ♂
-              </span>
-              <span>{displayNumber(kpis?.maleEnrolled, kpisLoading)}</span>
-            </span>
-            <span className="metric-card__gender-item">
-              <span className="metric-card__gender-symbol metric-card__gender-symbol--female" aria-hidden>
-                ♀
-              </span>
-              <span>{displayNumber(kpis?.femaleEnrolled, kpisLoading)}</span>
-            </span>
-          </div>
+          {comingSoonKpis ? (
+            <ComingSoonPanel variant="metric" />
+          ) : (
+            <>
+              <p className="metric-card__stat-value">
+                {displayNumber(kpis?.employeesEnrolled, kpisLoading)}
+              </p>
+              <div className="metric-card__gender">
+                <span className="metric-card__gender-item">
+                  <span className="metric-card__gender-symbol metric-card__gender-symbol--male" aria-hidden>
+                    ♂
+                  </span>
+                  <span>{displayNumber(kpis?.maleEnrolled, kpisLoading)}</span>
+                </span>
+                <span className="metric-card__gender-item">
+                  <span className="metric-card__gender-symbol metric-card__gender-symbol--female" aria-hidden>
+                    ♀
+                  </span>
+                  <span>{displayNumber(kpis?.femaleEnrolled, kpisLoading)}</span>
+                </span>
+              </div>
+            </>
+          )}
         </div>
         <div className="metric-card__icon metric-card__icon--employees" aria-hidden>
           <Users size={20} strokeWidth={1.75} />
@@ -240,17 +272,23 @@ function SingleYearMetricCards({
       <article className="metric-card metric-card--stat metric-card--glass">
         <div className="metric-card__stat-body">
           <h3 className="metric-card__stat-label">Blood Test</h3>
-          <p className="metric-card__stat-value">
-            {displayNumber(kpis?.totalBloodTest, kpisLoading)}
-          </p>
-          <p className="metric-card__stat-footer">
-            {displayPercentOfEnrolled(
-              kpis?.totalBloodTest,
-              kpis?.employeesEnrolled,
-              kpis?.bloodTestPercent,
-              kpisLoading,
-            )}
-          </p>
+          {comingSoonKpis ? (
+            <ComingSoonPanel variant="metric" />
+          ) : (
+            <>
+              <p className="metric-card__stat-value">
+                {displayNumber(kpis?.totalBloodTest, kpisLoading)}
+              </p>
+              <p className="metric-card__stat-footer">
+                {displayPercentOfEnrolled(
+                  kpis?.totalBloodTest,
+                  kpis?.employeesEnrolled,
+                  kpis?.bloodTestPercent,
+                  kpisLoading,
+                )}
+              </p>
+            </>
+          )}
         </div>
         <div className="metric-card__icon metric-card__icon--blood" aria-hidden>
           <Droplets size={20} strokeWidth={1.75} />
@@ -260,17 +298,23 @@ function SingleYearMetricCards({
       <article className="metric-card metric-card--stat metric-card--glass">
         <div className="metric-card__stat-body">
           <h3 className="metric-card__stat-label">Bio-AI Reports</h3>
-          <p className="metric-card__stat-value">
-            {displayNumber(kpis?.totalBioAiReports, kpisLoading)}
-          </p>
-          <p className="metric-card__stat-footer">
-            {displayPercentOfEnrolled(
-              kpis?.totalBioAiReports,
-              kpis?.employeesEnrolled,
-              kpis?.bioAiPercent,
-              kpisLoading,
-            )}
-          </p>
+          {comingSoonKpis ? (
+            <ComingSoonPanel variant="metric" />
+          ) : (
+            <>
+              <p className="metric-card__stat-value">
+                {displayNumber(kpis?.totalBioAiReports, kpisLoading)}
+              </p>
+              <p className="metric-card__stat-footer">
+                {displayPercentOfEnrolled(
+                  kpis?.totalBioAiReports,
+                  kpis?.employeesEnrolled,
+                  kpis?.bioAiPercent,
+                  kpisLoading,
+                )}
+              </p>
+            </>
+          )}
         </div>
         <div className="metric-card__icon metric-card__icon--bio" aria-hidden>
           <FileText size={20} strokeWidth={1.75} />
@@ -279,15 +323,21 @@ function SingleYearMetricCards({
 
       <article className="metric-card metric-card--stat metric-card--glass">
         <div className="metric-card__stat-body">
-          <h3 className="metric-card__stat-label">Consultations</h3>
-          <p className="metric-card__stat-value">
-            {kpisLoading
-              ? '…'
-              : kpis == null
-                ? EMPTY
-                : `${displayNumber(kpis.doctorConsultation, false)}/${displayNumber(kpis.nutritionistConsultation, false)}`}
-          </p>
-          <p className="metric-card__stat-footer">Doctor / Nutritionist</p>
+          <h3 className="metric-card__stat-label">Consultations Requested</h3>
+          {comingSoonKpis ? (
+            <ComingSoonPanel variant="metric" />
+          ) : (
+            <>
+              <p className="metric-card__stat-value">
+                {kpisLoading
+                  ? '…'
+                  : kpis == null
+                    ? EMPTY
+                    : `${displayNumber(kpis.doctorConsultation, false)}/${displayNumber(kpis.nutritionistConsultation, false)}`}
+              </p>
+              <p className="metric-card__stat-footer">Doctor / Nutritionist</p>
+            </>
+          )}
         </div>
         <div className="metric-card__icon metric-card__icon--consult" aria-hidden>
           <Stethoscope size={20} strokeWidth={1.75} />
@@ -316,6 +366,7 @@ export function DashboardMetricCards({
       kpisLoading={kpisLoading}
       rankingLoading={rankingLoading}
       showRanking={showRanking}
+      selectedYear={selectedYear}
     />
   );
 }

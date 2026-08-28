@@ -1,5 +1,7 @@
 import { Info, OctagonAlert } from 'lucide-react';
+import { ComingSoonPanel } from '../ui/ComingSoonPanel';
 import { bloodPanelInfo } from '../../content/chartInfo';
+import { hasBloodPanelData, shouldShowComingSoon } from '../../utils/comingSoon';
 import type { BloodParameterPanel } from '../../types';
 import type { YearOption } from '../layout/DashboardHeader';
 import './BloodParameterPanels.css';
@@ -27,7 +29,13 @@ function litDotCount(inRangePercent: number): number {
 export function BloodParameterPanels({
   panels,
   loading = false,
+  selectedYear = '2026',
 }: BloodParameterPanelsProps) {
+  const comingSoon = shouldShowComingSoon(selectedYear, loading, hasBloodPanelData(panels));
+  if (comingSoon) {
+    return <ComingSoonPanel variant="card" />;
+  }
+
   const displayPanels = panels.length > 0 ? panels : PANEL_PLACEHOLDERS;
   const hasData = panels.length > 0;
 

@@ -1,6 +1,8 @@
 import type { CSSProperties } from 'react';
 import { Info, Utensils, Dumbbell, TrendingDown, TrendingUp } from 'lucide-react';
+import { ComingSoonPanel } from '../ui/ComingSoonPanel';
 import { CHART_INFO } from '../../content/chartInfo';
+import { hasCompanyScoresData, shouldShowComingSoon } from '../../utils/comingSoon';
 import type { CompanyAverageScores as CompanyScores } from '../../types';
 import type { YearOption } from '../layout/DashboardHeader';
 import lifestyleIconUrl from '../../assets/icons/lifestyle-mirror-comb.png';
@@ -112,7 +114,10 @@ export function CompanyAverageScores({
   subtitle = 'Nutrition · fitness · lifestyle (scale 0–100)',
   info = CHART_INFO.companyScores,
   loading = false,
+  selectedYear = '2026',
 }: CompanyAverageScoresProps) {
+  const comingSoon = shouldShowComingSoon(selectedYear, loading, hasCompanyScoresData(scores));
+
   return (
     <article className="company-avg-scores">
       <header className="company-avg-scores__header">
@@ -128,7 +133,9 @@ export function CompanyAverageScores({
         <p className="company-avg-scores__subtitle">{subtitle}</p>
       </header>
 
-      {loading ? (
+      {comingSoon ? (
+        <ComingSoonPanel />
+      ) : loading ? (
         <p className="company-avg-scores__loading">Loading company average scores…</p>
       ) : (
         <div className="company-avg-scores__grid">

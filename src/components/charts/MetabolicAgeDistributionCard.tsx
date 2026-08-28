@@ -1,6 +1,8 @@
 import { useId, useMemo } from 'react';
 import { AlertCircle, Info } from 'lucide-react';
+import { ComingSoonPanel } from '../ui/ComingSoonPanel';
 import { CHART_INFO } from '../../content/chartInfo';
+import { hasMetabolicSectionData, shouldShowComingSoon } from '../../utils/comingSoon';
 import type { YearOption } from '../layout/DashboardHeader';
 import './MetabolicAgeDistributionCard.css';
 
@@ -23,6 +25,7 @@ const EMPTY = '-';
 interface MetabolicAgeDistributionCardProps {
   categories?: MetabolicAgeCategory[];
   selectedYear?: YearOption;
+  loading?: boolean;
 }
 
 const VIEW_W = 640;
@@ -182,6 +185,7 @@ function MetabolicAgeSnake({ categories }: { categories: MetabolicAgeCategory[] 
 export function MetabolicAgeDistributionCard({
   categories,
   selectedYear = '2026',
+  loading = false,
 }: MetabolicAgeDistributionCardProps) {
   const resolved =
     categories && categories.length > 0 ? categories : EMPTY_CATEGORIES;
@@ -189,6 +193,11 @@ export function MetabolicAgeDistributionCard({
   const highRisk = resolved.find((c) => c.key === 'highRisk');
   const insightPercent = highRisk?.percent ?? 0;
   const isAllYears = selectedYear === 'all';
+  const comingSoon = shouldShowComingSoon(
+    selectedYear,
+    loading,
+    hasMetabolicSectionData(categories),
+  );
 
   return (
     <article className={`metabolic-age-card${isAllYears ? ' metabolic-age-card--allyears' : ''}`}>
@@ -244,6 +253,8 @@ export function MetabolicAgeDistributionCard({
             <p>{EMPTY}</p>
           </div>
         </>
+      ) : comingSoon ? (
+        <ComingSoonPanel />
       ) : (
         <>
           <div className="metabolic-age-card__stats">

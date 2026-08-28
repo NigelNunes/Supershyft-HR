@@ -11,6 +11,8 @@ import { DashboardMetricCards } from '../components/ui/DashboardMetricCards';
 import { ParticipationCharts } from '../components/charts/ParticipationCharts';
 import { MetabolicAgeDistributionCard } from '../components/charts/MetabolicAgeDistributionCard';
 import { OverallRiskScoreChart } from '../components/charts/OverallRiskScoreChart';
+import { EMPLOYEES_CAMP_YEAR } from '../config/camp';
+import { SHOW_DASHBOARD_REFRESH } from '../config/dashboard';
 import { DashboardExtendedSections } from './DashboardExtendedSections';
 import { metabolicCategoriesFromKpis } from '../services/campDashboardMappers';
 
@@ -51,9 +53,10 @@ export function DashboardPage() {
         locationOptions={locationOptions}
         selectedLocation={selectedCity}
         onLocationChange={setSelectedCity}
+        showRefresh={SHOW_DASHBOARD_REFRESH}
       />
 
-      {sectionError && (
+      {sectionError && selectedYear !== EMPLOYEES_CAMP_YEAR && (
         <p className="dashboard-api-error" role="alert">
           {sectionError}
         </p>
@@ -71,6 +74,7 @@ export function DashboardPage() {
           <MetabolicAgeDistributionCard
             categories={metabolicCategories}
             selectedYear={selectedYear}
+            loading={kpisLoading}
           />
         </div>
         <div className="dashboard-metrics-col">

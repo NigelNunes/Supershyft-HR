@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  Download,
   Droplets,
   FileText,
   RefreshCw,
@@ -22,6 +23,10 @@ import { useOrganization } from '../contexts/OrganizationContext';
 import { LocationDropdown } from '../components/ui/LocationDropdown';
 import { EMPLOYEES_CAMP_YEAR } from '../config/camp';
 import { formatDepartmentLabel, formatEmployeeIdLabel, hasDisplayDepartment } from '../services/campParticipantsMappers';
+import {
+  downloadParticipantsExcel,
+  participantsExcelFileName,
+} from '../utils/downloadParticipantsExcel';
 import type { EmployeeRecord, JourneyStepId, JourneyStepStatus } from '../types';
 import anthropometryIconUrl from '../assets/icons/journey-anthropometry.png';
 import vitalsIconUrl from '../assets/icons/journey-vitals.png';
@@ -196,6 +201,7 @@ export function EmployeesPage() {
   const {
     selectedYear,
     campsLoading,
+    selectedCampName,
     selectedCity,
     setSelectedCity,
     locationOptions,
@@ -210,7 +216,7 @@ export function EmployeesPage() {
   const [shareBioAi, setShareBioAi] = useState(false);
   const [stepFilters, setStepFilters] = useState<Record<string, StepFilterValue>>({});
 
-  const { employees, total, loading, loadingMore, error, refresh } =
+  const { employees, participants, total, loading, loadingMore, allLoaded, error, refresh } =
     useCampParticipants(department);
   const { data: kpis, loading: kpisLoading, refresh: refreshKpis } = useCampKpis();
   const initialLoading = loading && employees.length === 0;
@@ -323,6 +329,13 @@ export function EmployeesPage() {
     setRefreshing(false);
   };
 
+  const downloadReady = allLoaded && !refreshing && participants.length > 0;
+
+  const handleDownload = () => {
+    if (!downloadReady) return;
+    downloadParticipantsExcel(participants, participantsExcelFileName(selectedCampName));
+  };
+
   const setStepFilter = (stepId: JourneyStepId, value: StepFilterValue) => {
     setStepFilters((prev) => {
       const next = { ...prev };
@@ -396,6 +409,27 @@ export function EmployeesPage() {
         </div>
         <div className="emp-header__actions">
           <div className="emp-header__status-row">
+            <button
+              type="button"
+              className="emp-header__download"
+              onClick={handleDownload}
+              disabled={!downloadReady}
+              aria-label={
+                downloadReady
+                  ? 'Download all employees as Excel'
+                  : 'Download available when all employees have loaded'
+              }
+              title={
+                downloadReady
+                  ? 'Download Excel'
+                  : loadingMore || loading
+                    ? 'Loading all employees…'
+                    : 'Download available when all employees have loaded'
+              }
+            >
+              <Download size={14} aria-hidden />
+              <span>Download</span>
+            </button>
             <button
               type="button"
               className="emp-header__refresh"
@@ -573,7 +607,7 @@ export function EmployeesPage() {
 
           <article className="emp-summary-card">
             <div className="emp-summary-card__top">
-              <span className="emp-summary-card__label">Consultations</span>
+              <span className="emp-summary-card__label">Consultations Requested</span>
               <span className="emp-summary-card__icon emp-summary-card__icon--consult">
                 <BriefcaseMedical size={14} strokeWidth={2} aria-hidden />
               </span>
