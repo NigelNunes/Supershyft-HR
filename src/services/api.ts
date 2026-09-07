@@ -221,40 +221,63 @@ export const campDashboardApi = {
     }),
 };
 
+type CampParticipantsListOptions = {
+  limit?: number;
+  signal?: AbortSignal;
+  onPage?: (accumulated: import('./apiTypes').ApiCampParticipant[], total: number) => void;
+};
+
 /** GET /reports/camps/{camp_no}/participants (+ department variant) */
 export const campParticipantsApi = {
-  list: (campNo: number, token: string, page = 1, limit = 20) =>
+  list: (campNo: number, token: string, page = 1, limit = 20, init?: RequestInit) =>
     requestPaginated<import('./apiTypes').ApiCampParticipant[]>(
       `/reports/camps/${campNo}/participants?page=${page}&limit=${limit}`,
-      { headers: { Authorization: `Bearer ${token}` } },
+      { ...init, headers: { Authorization: `Bearer ${token}`, ...init?.headers } },
     ),
 
-  listByDepartment: (campNo: number, slug: string, token: string, page = 1, limit = 20) =>
+  listByDepartment: (
+    campNo: number,
+    slug: string,
+    token: string,
+    page = 1,
+    limit = 20,
+    init?: RequestInit,
+  ) =>
     requestPaginated<import('./apiTypes').ApiCampParticipant[]>(
       `/reports/camps/${campNo}/department/${encodeURIComponent(slug)}/participants?page=${page}&limit=${limit}`,
-      { headers: { Authorization: `Bearer ${token}` } },
+      { ...init, headers: { Authorization: `Bearer ${token}`, ...init?.headers } },
     ),
 
   /**
    * GET /reports/camps/{camp_no}/{city}/participants
    * Same pagination contract as the overall camp participants list.
    */
-  listByCity: (campNo: number, city: string, token: string, page = 1, limit = 20) =>
+  listByCity: (
+    campNo: number,
+    city: string,
+    token: string,
+    page = 1,
+    limit = 20,
+    init?: RequestInit,
+  ) =>
     requestPaginated<import('./apiTypes').ApiCampParticipant[]>(
       `/reports/camps/${campNo}/${encodeURIComponent(city)}/participants?page=${page}&limit=${limit}`,
-      { headers: { Authorization: `Bearer ${token}` } },
+      { ...init, headers: { Authorization: `Bearer ${token}`, ...init?.headers } },
     ),
 
-  async listAll(campNo: number, token: string) {
-    const limit = 20;
+  async listAll(campNo: number, token: string, options?: CampParticipantsListOptions) {
+    const limit = options?.limit ?? 100;
     let page = 1;
     const items: import('./apiTypes').ApiCampParticipant[] = [];
     let total = 0;
+    const init = options?.signal ? { signal: options.signal } : undefined;
 
     while (true) {
-      const { data, meta } = await campParticipantsApi.list(campNo, token, page, limit);
+      if (options?.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+      const { data, meta } = await campParticipantsApi.list(campNo, token, page, limit, init);
       items.push(...data);
       total = meta.total;
+      options?.onPage?.(items, total || items.length);
       if (items.length >= total || data.length < limit) break;
       page += 1;
     }
@@ -262,22 +285,31 @@ export const campParticipantsApi = {
     return { items, total };
   },
 
-  async listAllByDepartment(campNo: number, slug: string, token: string) {
-    const limit = 20;
+  async listAllByDepartment(
+    campNo: number,
+    slug: string,
+    token: string,
+    options?: CampParticipantsListOptions,
+  ) {
+    const limit = options?.limit ?? 100;
     let page = 1;
     const items: import('./apiTypes').ApiCampParticipant[] = [];
     let total = 0;
+    const init = options?.signal ? { signal: options.signal } : undefined;
 
     while (true) {
+      if (options?.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
       const { data, meta } = await campParticipantsApi.listByDepartment(
         campNo,
         slug,
         token,
         page,
         limit,
+        init,
       );
       items.push(...data);
       total = meta.total;
+      options?.onPage?.(items, total || items.length);
       if (items.length >= total || data.length < limit) break;
       page += 1;
     }

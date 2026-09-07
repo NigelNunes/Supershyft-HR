@@ -260,11 +260,12 @@
 }
 
 .emp-summary-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 8.75rem;
-  padding: 1rem 1.125rem;
+  display: grid;
+  grid-template-rows: auto 1rem auto auto;
+  align-content: start;
+  row-gap: 0.25rem;
+  min-height: 0;
+  padding: 0.75rem 1rem;
   border-radius: 1.125rem;
   background: var(--emp-glass);
   border: 1px solid var(--emp-outline);
@@ -276,6 +277,8 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 0.5rem;
+  min-height: 1.5rem;
 }
 
 .emp-summary-card__label {
@@ -291,6 +294,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   width: 1.5rem;
   height: 1.5rem;
   border-radius: 0.375rem;
@@ -316,22 +320,21 @@
   color: #6ee7b7;
 }
 
-.emp-summary-card__value {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-}
-
-.emp-summary-card__value--consult {
-  gap: 0;
-}
-
-.emp-summary-card__consult-label {
-  color: #10b981;
+.emp-summary-card__sublabel {
+  display: block;
+  height: 1rem;
+  color: transparent;
   font-size: 0.6875rem;
   font-weight: 400;
   line-height: 1rem;
   text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.emp-summary-card__sublabel--accent {
+  color: #10b981;
 }
 
 .emp-summary-card__number {
@@ -339,6 +342,7 @@
   font-size: 1.5rem;
   font-weight: 600;
   line-height: 1.75rem;
+  min-height: 1.75rem;
 }
 
 .emp-summary-card__unit {
@@ -351,8 +355,9 @@
 .emp-summary-card__foot {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   gap: 0.5rem;
+  margin-top: 0.125rem;
 }
 
 .emp-summary-card__pending {
@@ -950,10 +955,6 @@
 @media (max-width: 700px) {
   .emp-summary {
     grid-template-columns: 1fr;
-  }
-
-  .emp-summary-card {
-    min-height: 7.5rem;
   }
 
   .emp-panel--filters {

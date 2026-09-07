@@ -16,7 +16,10 @@ import {
   X,
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
-import { useCampParticipants } from '../hooks/useCampParticipants';
+import {
+  PARTICIPANTS_PAGE_SIZE,
+  useCampParticipants,
+} from '../hooks/useCampParticipants';
 import { useCampKpis } from '../hooks/useCampDashboard';
 import { useCamp } from '../contexts/CampContext';
 import { useOrganization } from '../contexts/OrganizationContext';
@@ -33,7 +36,7 @@ import vitalsIconUrl from '../assets/icons/journey-vitals.png';
 import dietLifestyleIconUrl from '../assets/icons/journey-diet-lifestyle.png';
 import './EmployeesPage.css';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = PARTICIPANTS_PAGE_SIZE;
 
 const INTAKE_ICON_URLS: Partial<Record<JourneyStepId, string>> = {
   anthropometry: anthropometryIconUrl,
@@ -124,14 +127,6 @@ function matchesEmployeeName(name: string, query: string): boolean {
   return tokens.every((token) => normalizedName.includes(token));
 }
 
-function countByStatus(
-  employees: EmployeeRecord[],
-  step: JourneyStepId,
-  status: JourneyStepStatus,
-): number {
-  return employees.filter((e) => e.journey[step] === status).length;
-}
-
 function StatusIcon({ status }: { status: JourneyStepStatus }) {
   if (status === 'completed') {
     return <Check className="emp-status emp-status--done" size={18} strokeWidth={2.5} aria-label="Completed" />;
@@ -210,14 +205,22 @@ export function EmployeesPage() {
   const [department, setDepartment] = useState<string>('all');
   const [page, setPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [shareFor, setShareFor] = useState<EmployeeRecord | null>(null);
   const [shareBlood, setShareBlood] = useState(false);
   const [shareBioAi, setShareBioAi] = useState(false);
   const [stepFilters, setStepFilters] = useState<Record<string, StepFilterValue>>({});
 
-  const { employees, participants, total, loading, loadingMore, allLoaded, error, refresh } =
-    useCampParticipants(department);
+  const hasDepartments = departments.length > 0;
+  const {
+    employees,
+    total,
+    loading,
+    error,
+    refresh,
+    fetchAll,
+  } = useCampParticipants(hasDepartments ? department : 'all', page, PAGE_SIZE);
   const { data: kpis, loading: kpisLoading, refresh: refreshKpis } = useCampKpis();
   const initialLoading = loading && employees.length === 0;
   const showLocation = locationOptions.length > 2;
@@ -267,7 +270,7 @@ export function EmployeesPage() {
     return 'Department';
   }, [employees]);
 
-  const filtered = useMemo(() => {
+  const pageRows = useMemo(() => {
     return employees.filter((employee) => {
       if (!matchesEmployeeName(employee.name, query)) return false;
       for (const [stepId, value] of Object.entries(stepFilters)) {
@@ -280,43 +283,26 @@ export function EmployeesPage() {
     });
   }, [employees, query, stepFilters]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
+  // Same camp dashboard KPIs API (`section=kpis`) as the main dashboard.
+  // Independent of participant list load so cards paint as soon as KPIs return.
   const summary = useMemo(() => {
-    const bloodDone = countByStatus(employees, 'bloodReport', 'completed');
-    // Match dashboard Bio-AI Reports KPI (bio_ai_report_generated).
-    const bioDone = kpis?.totalBioAiReports ?? 0;
-    const consultDoctor = countByStatus(employees, 'consultations', 'completed');
-    const consultNutritionist = 0;
-
-    const qDone = countByStatus(employees, 'dietLifestyle', 'completed');
-    const qPending = countByStatus(employees, 'dietLifestyle', 'pending');
-
-    const enrolled = Math.max(
-      kpis?.employeesEnrolled ?? 0,
-      total,
-      employees.length,
-    );
-    const bloodPending = Math.max(0, enrolled - bloodDone);
-    const bioPending = Math.max(0, enrolled - bioDone);
-    const consultPending = Math.max(0, enrolled - consultDoctor);
-
     return {
-      bloodDone,
-      bloodPending,
-      qDone,
-      qPending,
-      bioDone,
-      bioPending,
-      consultDoctor,
-      consultNutritionist,
-      consultPending,
+      bloodDone: kpis?.totalBloodTest ?? 0,
+      qDone: kpis?.questionnaireCompleted ?? 0,
+      bioDone: kpis?.totalBioAiReports ?? 0,
+      consultDoctor: kpis?.doctorConsultation ?? 0,
+      consultNutritionist: kpis?.nutritionistConsultation ?? 0,
     };
-  }, [employees, total, kpis]);
+  }, [kpis]);
 
-  const summaryLoading = loading || loadingMore || kpisLoading;
+  const summaryLoading = kpisLoading;
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -329,11 +315,20 @@ export function EmployeesPage() {
     setRefreshing(false);
   };
 
-  const downloadReady = allLoaded && !refreshing && participants.length > 0;
+  const downloadReady = !refreshing && !downloading && !initialLoading && total > 0;
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!downloadReady) return;
-    downloadParticipantsExcel(participants, participantsExcelFileName(selectedCampName));
+    setDownloading(true);
+    try {
+      const allParticipants = await fetchAll();
+      if (allParticipants.length === 0) return;
+      downloadParticipantsExcel(allParticipants, participantsExcelFileName(selectedCampName));
+    } catch {
+      // leave table state intact; user can retry
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const setStepFilter = (stepId: JourneyStepId, value: StepFilterValue) => {
@@ -372,8 +367,8 @@ export function EmployeesPage() {
 
   const hasActiveStepFilters = activeFilterChips.length > 0;
 
-  const showingFrom = filtered.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
-  const showingTo = Math.min(safePage * PAGE_SIZE, filtered.length);
+  const showingFrom = total === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
+  const showingTo = Math.min(safePage * PAGE_SIZE, total);
 
   const pageButtons = useMemo(() => {
     const pages: number[] = [];
@@ -412,23 +407,25 @@ export function EmployeesPage() {
             <button
               type="button"
               className="emp-header__download"
-              onClick={handleDownload}
+              onClick={() => void handleDownload()}
               disabled={!downloadReady}
               aria-label={
                 downloadReady
                   ? 'Download all employees as Excel'
-                  : 'Download available when all employees have loaded'
+                  : downloading
+                    ? 'Preparing Excel download'
+                    : 'Download available when employees have loaded'
               }
               title={
                 downloadReady
                   ? 'Download Excel'
-                  : loadingMore || loading
-                    ? 'Loading all employees…'
-                    : 'Download available when all employees have loaded'
+                  : downloading
+                    ? 'Preparing download…'
+                    : 'Download available when employees have loaded'
               }
             >
               <Download size={14} aria-hidden />
-              <span>Download</span>
+              <span>{downloading ? 'Preparing…' : 'Download'}</span>
             </button>
             <button
               type="button"
@@ -537,14 +534,12 @@ export function EmployeesPage() {
                 <Droplets size={14} strokeWidth={2} aria-hidden />
               </span>
             </div>
-            <div className="emp-summary-card__value">
-              <span className="emp-summary-card__number">{summaryLoading ? '…' : summary.bloodDone}</span>
-              <span className="emp-summary-card__unit">Completed</span>
-            </div>
+            <span className="emp-summary-card__sublabel" aria-hidden>
+              &nbsp;
+            </span>
+            <span className="emp-summary-card__number">{summaryLoading ? '…' : summary.bloodDone}</span>
             <div className="emp-summary-card__foot">
-              <span className="emp-summary-card__pending">
-                {summaryLoading ? '…' : `${summary.bloodPending} Pending`}
-              </span>
+              <span className="emp-summary-card__unit">Completed</span>
               <button
                 type="button"
                 className="emp-summary-card__view"
@@ -562,14 +557,12 @@ export function EmployeesPage() {
                 <ClipboardList size={14} strokeWidth={2} aria-hidden />
               </span>
             </div>
-            <div className="emp-summary-card__value">
-              <span className="emp-summary-card__number">{summaryLoading ? '…' : summary.qDone}</span>
-              <span className="emp-summary-card__unit">Submitted</span>
-            </div>
+            <span className="emp-summary-card__sublabel" aria-hidden>
+              &nbsp;
+            </span>
+            <span className="emp-summary-card__number">{summaryLoading ? '…' : summary.qDone}</span>
             <div className="emp-summary-card__foot">
-              <span className="emp-summary-card__pending">
-                {summaryLoading ? '…' : `${summary.qPending} Pending`}
-              </span>
+              <span className="emp-summary-card__unit">Submitted</span>
               <button
                 type="button"
                 className="emp-summary-card__view"
@@ -587,14 +580,12 @@ export function EmployeesPage() {
                 <FileText size={14} strokeWidth={2} aria-hidden />
               </span>
             </div>
-            <div className="emp-summary-card__value">
-              <span className="emp-summary-card__number">{summaryLoading ? '…' : summary.bioDone}</span>
-              <span className="emp-summary-card__unit">Ready</span>
-            </div>
+            <span className="emp-summary-card__sublabel" aria-hidden>
+              &nbsp;
+            </span>
+            <span className="emp-summary-card__number">{summaryLoading ? '…' : summary.bioDone}</span>
             <div className="emp-summary-card__foot">
-              <span className="emp-summary-card__pending">
-                {summaryLoading ? '…' : `${summary.bioPending} Pending`}
-              </span>
+              <span className="emp-summary-card__unit">Ready</span>
               <button
                 type="button"
                 className="emp-summary-card__view"
@@ -607,24 +598,21 @@ export function EmployeesPage() {
 
           <article className="emp-summary-card">
             <div className="emp-summary-card__top">
-              <span className="emp-summary-card__label">Consultations Requested</span>
+              <span className="emp-summary-card__label">Consultations</span>
               <span className="emp-summary-card__icon emp-summary-card__icon--consult">
                 <BriefcaseMedical size={14} strokeWidth={2} aria-hidden />
               </span>
             </div>
-            <div className="emp-summary-card__value emp-summary-card__value--consult">
-              <span className="emp-summary-card__consult-label">Doctor / Nutritionist</span>
-              <span className="emp-summary-card__number">
-                {summaryLoading
-                  ? '…'
-                  : `${summary.consultDoctor} / ${summary.consultNutritionist}`}
-              </span>
-              <span className="emp-summary-card__unit">Completed</span>
-            </div>
+            <span className="emp-summary-card__sublabel emp-summary-card__sublabel--accent">
+              Doctor / Nutritionist
+            </span>
+            <span className="emp-summary-card__number">
+              {summaryLoading
+                ? '…'
+                : `${summary.consultDoctor} / ${summary.consultNutritionist}`}
+            </span>
             <div className="emp-summary-card__foot">
-              <span className="emp-summary-card__pending">
-                {summaryLoading ? '…' : `${summary.consultPending} Pending`}
-              </span>
+              <span className="emp-summary-card__unit">Requested</span>
               <button
                 type="button"
                 className="emp-summary-card__view"
@@ -732,16 +720,16 @@ export function EmployeesPage() {
 
         <footer className="emp-table-footer">
           <span className="emp-table-footer__count">
-            Showing {showingFrom}-{showingTo} of {filtered.length} Employees
-            {loadingMore ? (
-              <span className="emp-table-footer__loading"> · Loading more…</span>
+            Showing {showingFrom}-{showingTo} of {total} Employees
+            {loading ? (
+              <span className="emp-table-footer__loading"> · Loading…</span>
             ) : null}
           </span>
           <div className="emp-pagination" role="navigation" aria-label="Pagination">
             <button
               type="button"
               className="emp-pagination__btn"
-              disabled={safePage <= 1}
+              disabled={safePage <= 1 || loading}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               aria-label="Previous page"
             >
@@ -753,6 +741,7 @@ export function EmployeesPage() {
                 type="button"
                 className={`emp-pagination__btn${n === safePage ? ' emp-pagination__btn--active' : ''}`}
                 onClick={() => setPage(n)}
+                disabled={loading && n !== safePage}
                 aria-current={n === safePage ? 'page' : undefined}
               >
                 {n}
@@ -761,7 +750,7 @@ export function EmployeesPage() {
             <button
               type="button"
               className="emp-pagination__btn"
-              disabled={safePage >= totalPages}
+              disabled={safePage >= totalPages || loading}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               aria-label="Next page"
             >
