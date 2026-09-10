@@ -70,6 +70,7 @@ export function DashboardPage() {
             kpisLoading={kpisLoading}
             rankingLoading={rankingLoading}
             selectedYear={selectedYear}
+            showRanking={false}
           />
           <MetabolicAgeDistributionCard
             categories={metabolicCategories}
