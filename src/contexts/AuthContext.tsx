@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { authApi, usersApi } from '../services/api';
+import { authApi } from '../services/api';
 import type { ApiCurrentUser } from '../services/apiTypes';
 import {
   clearAuthTokens,
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void (async () => {
       try {
-        const me = await usersApi.me(token);
+        const me = await authApi.me(token);
         if (cancelled) return;
         setUser(me);
         const latest = getAccessToken();
@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (cancelled) return;
           if (next) {
             try {
-              const me = await usersApi.me(next);
+              const me = await authApi.me(next);
               if (cancelled) return;
               setAccessToken(next);
               setUser(me);

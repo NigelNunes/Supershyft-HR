@@ -11,7 +11,7 @@ import './CampSelectPage.css';
 /**
  * /login/select-camp
  *
- * Role branching (after GET /users/me):
+ * Role branching (after GET /partners/auth/me):
  * - admin     → GET /organizations/camps
  * - non-admin → GET /organizations/we → camps for each organization
  *
@@ -29,7 +29,7 @@ export function CampSelectPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    // Wait for /users/me so role is known before loading camps.
+    // Wait for /partners/auth/me so role is known before loading camps.
     if (!accessToken || !isAuthenticated || selectedCampNo || userLoading) return;
 
     const token = accessToken;

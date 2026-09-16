@@ -290,7 +290,7 @@ export interface ApiOrganizationCamp {
   city?: string | null;
 }
 
-/** GET /users/me */
+/** GET /partners/auth/me */
 export interface ApiCurrentUserEmployee {
   employee_id: number;
   role: string;

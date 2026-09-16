@@ -24,7 +24,7 @@ export interface AuthTokens {
 
 /** Raw refresh call — must not go through 401 retry to avoid loops. */
 async function postRefreshToken(refreshToken: string): Promise<{ tokens: AuthTokens }> {
-  const res = await fetch(`${BASE}/auth/refresh-token`, {
+  const res = await fetch(`${BASE}/partners/auth/refresh-token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refresh_token: refreshToken }),
@@ -86,27 +86,29 @@ async function requestPaginated<T>(
 
 export const authApi = {
   sendOtp: (phone: string) =>
-    request<{ session_id: number }>('/auth/send-otp', {
+    request<unknown>('/partners/auth/send-otp', {
       method: 'POST',
       body: JSON.stringify({ phone }),
     }),
 
-  resendOtp: (phone: string) =>
-    request<{ session_id?: number }>('/auth/resend-otp', {
-      method: 'POST',
-      body: JSON.stringify({ phone }),
-    }),
+  /** Partner auth has no separate resend route — reuse send-otp. */
+  resendOtp: (phone: string) => authApi.sendOtp(phone),
 
   verifyOtp: (phone: string, otp: string) =>
-    request<{ user_id: number; tokens: AuthTokens }>('/auth/verify-otp', {
+    request<{ user_id?: number; tokens: AuthTokens }>('/partners/auth/verify-otp', {
       method: 'POST',
       body: JSON.stringify({ phone, otp }),
+    }),
+
+  me: (token: string) =>
+    request<import('./apiTypes').ApiCurrentUser>('/partners/auth/me', {
+      headers: { Authorization: `Bearer ${token}` },
     }),
 
   refreshToken: (refreshToken: string) => postRefreshToken(refreshToken),
 
   logout: (refreshToken: string) =>
-    request<{ success: boolean }>('/auth/logout', {
+    request<unknown>('/partners/auth/logout', {
       method: 'POST',
       body: JSON.stringify({ refresh_token: refreshToken }),
     }),
@@ -461,9 +463,7 @@ export const organizationsApi = {
   async listCampsForUser(token: string, role?: string | null) {
     let resolvedRole = role ?? null;
     if (!resolvedRole) {
-      const user = await request<import('./apiTypes').ApiCurrentUser>('/users/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const user = await authApi.me(token);
       resolvedRole = user.employee?.role ?? null;
     }
 
@@ -475,10 +475,7 @@ export const organizationsApi = {
   },
 };
 
-/** GET /users/me */
+/** GET /partners/auth/me — partner session identity */
 export const usersApi = {
-  me: (token: string) =>
-    request<import('./apiTypes').ApiCurrentUser>('/users/me', {
-      headers: { Authorization: `Bearer ${token}` },
-    }),
+  me: (token: string) => authApi.me(token),
 };
