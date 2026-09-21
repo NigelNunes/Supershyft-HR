@@ -188,6 +188,8 @@ export interface EmployeeRecord {
   departmentSlug?: string;
   /** Organization employee ID from the participants API, when present. */
   employeeId?: string;
+  /** Platform user id — used for notification dispatch. */
+  userId?: number;
   gender: 'Male' | 'Female' | 'Other';
   age?: number;
   journey: Record<JourneyStepId, JourneyStepStatus>;

@@ -896,42 +896,44 @@
   box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.35);
 }
 
-.emp-share-option {
-  display: flex;
+.emp-share-status {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+
+.emp-share-status--error {
+  color: #fca5a5;
+}
+
+.emp-share-status--ok {
+  color: #6ee7b7;
+}
+
+.emp-share-submit {
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  color: var(--emp-stone);
-  font-size: 1.125rem;
-  line-height: 1.5rem;
+  justify-content: center;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 0.625rem;
+  background: #4c7dff;
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.25rem;
   cursor: pointer;
 }
 
-.emp-share-option input {
-  width: 1.25rem;
-  height: 1.25rem;
-  border-radius: 0.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  appearance: none;
-  background: transparent;
-  cursor: pointer;
-  position: relative;
+.emp-share-submit:hover:not(:disabled) {
+  background: #3b6aef;
 }
 
-.emp-share-option input:checked {
-  background: rgba(76, 125, 255, 0.35);
-  border-color: #4c7dff;
-}
-
-.emp-share-option input:checked::after {
-  content: '';
-  position: absolute;
-  left: 4px;
-  top: 1px;
-  width: 5px;
-  height: 9px;
-  border: solid #fff;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
+.emp-share-submit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .visually-hidden {

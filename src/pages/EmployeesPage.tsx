@@ -31,6 +31,7 @@ import {
   participantsExcelFileName,
 } from '../utils/downloadParticipantsExcel';
 import type { EmployeeRecord, JourneyStepId, JourneyStepStatus } from '../types';
+import { notificationsApi } from '../services/api';
 import anthropometryIconUrl from '../assets/icons/journey-anthropometry.png';
 import vitalsIconUrl from '../assets/icons/journey-vitals.png';
 import dietLifestyleIconUrl from '../assets/icons/journey-diet-lifestyle.png';
@@ -208,8 +209,9 @@ export function EmployeesPage() {
   const [downloading, setDownloading] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [shareFor, setShareFor] = useState<EmployeeRecord | null>(null);
-  const [shareBlood, setShareBlood] = useState(false);
-  const [shareBioAi, setShareBioAi] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const [shareError, setShareError] = useState('');
+  const [shareSuccess, setShareSuccess] = useState(false);
   const [stepFilters, setStepFilters] = useState<Record<string, StepFilterValue>>({});
 
   const hasDepartments = departments.length > 0;
@@ -328,6 +330,38 @@ export function EmployeesPage() {
       // leave table state intact; user can retry
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const closeShare = () => {
+    if (sharing) return;
+    setShareFor(null);
+    setShareError('');
+    setShareSuccess(false);
+  };
+
+  const handleShareReports = async () => {
+    if (!shareFor || sharing) return;
+    const userId = shareFor.userId;
+    if (userId == null) {
+      setShareError('This employee has no user id, so reports cannot be shared.');
+      return;
+    }
+
+    setSharing(true);
+    setShareError('');
+    setShareSuccess(false);
+    try {
+      await notificationsApi.shareReports([userId]);
+      setShareSuccess(true);
+      window.setTimeout(() => {
+        setShareFor(null);
+        setShareSuccess(false);
+        setSharing(false);
+      }, 900);
+    } catch (err) {
+      setShareError(err instanceof Error ? err.message : 'Failed to share reports.');
+      setSharing(false);
     }
   };
 
@@ -704,8 +738,8 @@ export function EmployeesPage() {
                         aria-label={`Share report for ${emp.name}`}
                         onClick={() => {
                           setShareFor(emp);
-                          setShareBlood(false);
-                          setShareBioAi(false);
+                          setShareError('');
+                          setShareSuccess(false);
                         }}
                       >
                         <Share2 size={16} strokeWidth={1.75} />
@@ -829,7 +863,7 @@ export function EmployeesPage() {
       )}
 
       {shareFor && (
-        <div className="emp-overlay" role="presentation" onClick={() => setShareFor(null)}>
+        <div className="emp-overlay" role="presentation" onClick={closeShare}>
           <div
             className="emp-panel emp-panel--share"
             role="dialog"
@@ -842,28 +876,31 @@ export function EmployeesPage() {
                 type="button"
                 className="emp-panel__close"
                 aria-label="Close share dialog"
-                onClick={() => setShareFor(null)}
+                onClick={closeShare}
+                disabled={sharing}
               >
                 <X size={16} strokeWidth={2} />
               </button>
             </header>
             <div className="emp-panel__body">
-              <label className="emp-share-option">
-                <input
-                  type="checkbox"
-                  checked={shareBlood}
-                  onChange={(e) => setShareBlood(e.target.checked)}
-                />
-                <span>Blood Report</span>
-              </label>
-              <label className="emp-share-option">
-                <input
-                  type="checkbox"
-                  checked={shareBioAi}
-                  onChange={(e) => setShareBioAi(e.target.checked)}
-                />
-                <span>Bio-AI Report</span>
-              </label>
+              {shareError ? (
+                <p className="emp-share-status emp-share-status--error" role="alert">
+                  {shareError}
+                </p>
+              ) : null}
+              {shareSuccess ? (
+                <p className="emp-share-status emp-share-status--ok" role="status">
+                  Reports shared successfully.
+                </p>
+              ) : null}
+              <button
+                type="button"
+                className="emp-share-submit"
+                onClick={() => void handleShareReports()}
+                disabled={sharing || shareSuccess || shareFor.userId == null}
+              >
+                {sharing ? 'Sharing…' : 'Share reports'}
+              </button>
             </div>
           </div>
         </div>

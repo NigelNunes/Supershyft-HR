@@ -109,6 +109,10 @@ export function mapCampParticipantToEmployee(
     department,
     departmentSlug: departmentSlug || undefined,
     employeeId,
+    userId:
+      typeof participant.user_id === 'number' && Number.isFinite(participant.user_id)
+        ? participant.user_id
+        : undefined,
     gender: normalizeGender(participant.gender),
     age: typeof participant.age === 'number' && Number.isFinite(participant.age)
       ? participant.age

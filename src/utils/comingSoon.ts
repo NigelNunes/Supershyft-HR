@@ -67,7 +67,9 @@ export function hasGenderDistributionData(
 }
 
 export function hasTopDiseaseData(diseases: TopHighRiskDisease[] | null | undefined): boolean {
-  return Boolean(diseases?.some((disease) => disease.highRiskPercent > 0));
+  // Same API section as disease deep dive — presence of ranked diseases means data arrived,
+  // even when every elevated-risk share is 0% (fully healthy workforce).
+  return Boolean(diseases && diseases.length > 0);
 }
 
 export function hasDiseaseDeepDiveData(diseases: DiseaseRiskData[] | null | undefined): boolean {

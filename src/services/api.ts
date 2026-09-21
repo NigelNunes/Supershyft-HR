@@ -479,3 +479,38 @@ export const organizationsApi = {
 export const usersApi = {
   me: (token: string) => authApi.me(token),
 };
+
+export type NotificationServiceKey =
+  | 'send-reports-email'
+  | 'send-bioai-whatsapp'
+  | 'send-blood-report-whatsapp';
+
+const NOTIFICATION_API_KEY =
+  (import.meta.env.VITE_NOTIFICATION_API_KEY as string | undefined)?.trim() || '';
+
+/** POST /notifications/dispatch — share blood / Bio-AI reports */
+export const notificationsApi = {
+  dispatch: (serviceKey: NotificationServiceKey, userIds: number[]) => {
+    if (!NOTIFICATION_API_KEY) {
+      return Promise.reject(new Error('Notification API key is not configured.'));
+    }
+    return request<unknown>('/notifications/dispatch', {
+      method: 'POST',
+      headers: { 'x-api-key': NOTIFICATION_API_KEY },
+      body: JSON.stringify({
+        service_key: serviceKey,
+        user_ids: userIds,
+      }),
+    });
+  },
+
+  /** Fire all share channels for the given users. */
+  shareReports: (userIds: number[]) => {
+    const keys: NotificationServiceKey[] = [
+      'send-reports-email',
+      'send-bioai-whatsapp',
+      'send-blood-report-whatsapp',
+    ];
+    return Promise.all(keys.map((serviceKey) => notificationsApi.dispatch(serviceKey, userIds)));
+  },
+};

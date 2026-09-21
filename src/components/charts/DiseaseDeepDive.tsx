@@ -15,11 +15,16 @@ interface DiseaseDeepDiveProps {
 }
 
 const RISK_ORDER: RiskLevel[] = ['Healthy', 'Increased', 'High', 'Very High'];
-const CHART_HEIGHT = 256;
 
 function segmentValue(disease: DiseaseRiskData, level: RiskLevel, key: string): number {
   const bucket = disease.buckets.find((b) => b.level === level);
   return bucket?.segments[key] ?? 0;
+}
+
+/** Clamp to the chart scale so bars never paint above the 100% line. */
+function chartPercent(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(100, value));
 }
 
 function SingleYearDiseaseDeepDive({
@@ -111,18 +116,15 @@ function SingleYearDiseaseDeepDive({
               <div className="disease-deep-dive-card__bars">
                 {RISK_ORDER.map((level) => (
                   <div key={level} className="disease-deep-dive-card__group">
-                    <div
-                      className="disease-deep-dive-card__pair"
-                      style={{ height: `${CHART_HEIGHT}px` }}
-                    >
+                    <div className="disease-deep-dive-card__pair">
                       {segmentKeys.map((key) => {
-                        const value = Math.max(0, Math.min(100, segmentValue(active, level, key)));
+                        const value = chartPercent(segmentValue(active, level, key));
                         const tone = key.toLowerCase().startsWith('f') ? 'female' : 'male';
                         return (
                           <div
                             key={key}
                             className={`disease-deep-dive-card__bar disease-deep-dive-card__bar--${tone}`}
-                            style={{ height: `${(value / 100) * CHART_HEIGHT}px` }}
+                            style={{ height: `${value}%` }}
                             title={`${key}: ${Math.round(value)}%`}
                           />
                         );
