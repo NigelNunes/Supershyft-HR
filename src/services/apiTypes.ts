@@ -66,6 +66,21 @@ export interface ApiCampDashboardSection<T> {
   data: T;
   name: string;
   description: string | null;
+  /** Section narrative insights — shape varies by section. */
+  intelligence?: unknown;
+}
+
+/** Flat `{ tone, statement }` intelligence (participation, overall risk, oxidative). */
+export interface ApiChartIntelligenceItem {
+  tone: string;
+  statement: string;
+}
+
+/** Gender-keyed intelligence (physical activity, sleep). */
+export interface ApiGenderChartIntelligence {
+  both?: ApiChartIntelligenceItem;
+  male?: ApiChartIntelligenceItem;
+  female?: ApiChartIntelligenceItem;
 }
 
 export interface ApiCampDashboardKpis {
@@ -172,7 +187,11 @@ export type CampDashboardSection =
   | 'positive_wins'
   | 'company_average_scores'
   | 'blood_and_lab_intelligence'
-  | 'ranking';
+  | 'ranking'
+  | 'leadership_takeaways';
+
+/** GET …/dashboard?section=leadership_takeaways — data is empty; insights live in intelligence. */
+export type ApiCampDashboardLeadershipTakeaways = Record<string, never> | Record<string, unknown>;
 
 /** GET /reports/camps/{camp_no}/participants */
 export interface ApiCampParticipantQuestionnaires {

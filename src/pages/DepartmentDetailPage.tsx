@@ -36,13 +36,13 @@ export function DepartmentDetailPage() {
   const { data: kpis, loading: kpisLoading, error: kpisError, refresh: refreshKpis } =
     useDepartmentKpis(id);
   const {
-    data: participationByAge,
+    data: participationSection,
     loading: ageLoading,
     error: ageError,
     refresh: refreshAge,
   } = useDepartmentParticipationByAge(id);
   const {
-    data: overallRiskScore,
+    data: overallRiskSection,
     loading: riskLoading,
     error: riskError,
     refresh: refreshRisk,
@@ -63,6 +63,8 @@ export function DepartmentDetailPage() {
   } = useDepartmentCompanyAverageScores(id);
 
   const metabolicCategories = useMemo(() => metabolicCategoriesFromKpis(kpis), [kpis]);
+  const participationByAge = participationSection?.byAge ?? [];
+  const overallRiskScore = overallRiskSection?.buckets ?? [];
 
   const sectionError =
     kpisError || ageError || riskError || physicalError || sleepError || companyScoresError;
@@ -128,12 +130,14 @@ export function DepartmentDetailPage() {
         </div>
         <div className="dashboard-metrics-col">
           <ParticipationCharts
-            byAge={participationByAge ?? []}
+            byAge={participationByAge}
+            intelligence={participationSection?.intelligence}
             loading={ageLoading}
             selectedYear={selectedYear}
           />
           <OverallRiskScoreChart
-            buckets={overallRiskScore ?? []}
+            buckets={overallRiskScore}
+            intelligence={overallRiskSection?.intelligence}
             loading={riskLoading}
             selectedYear={selectedYear}
           />

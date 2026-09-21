@@ -21,14 +21,24 @@ import type {
   OxidativeStressByDept,
   OverallRiskBand,
   OverallRiskScoreBucket,
+  OverallRiskScoreView,
   ParticipationByAge,
+  ParticipationByAgeView,
   PositiveWins,
   RankingSummary,
   RiskLevel,
   TopHighRiskDisease,
   CompanyAverageScores,
   BloodParameterPanel,
+  ChartInsight,
 } from '../types';
+import {
+  mapDiseaseDeepDiveIntelligence,
+  mapGenderIntelligence,
+  mapInsightItem,
+  mapSimpleIntelligence,
+} from '../utils/chartIntelligence';
+import { mapLeadershipTakeawaysIntelligence } from '../utils/leadershipTakeaways';
 
 const OVERALL_RISK_GROUP_LABELS: Record<string, OverallRiskBand> = {
   optimal: 'Optimal',
@@ -65,11 +75,14 @@ const OXIDATIVE_STRESS_GROUP_FIELDS: Record<string, OxidativeStressBandField> = 
 export interface CampOxidativeStressView {
   distribution: OxidativeStressByDept[];
   totalEmployees: number;
+  intelligence?: ChartInsight;
 }
 
 export interface CampRiskLifestyleView {
   topHighRiskDiseases: TopHighRiskDisease[];
   diseases: DiseaseRiskData[];
+  /** From `intelligence.disease_risks` — top disease risks footer. */
+  diseaseRisksIntelligence?: ChartInsight;
 }
 
 const DEEP_DIVE_EXCLUDED_CODES = new Set(['metabolic_syndrome']);
@@ -326,37 +339,58 @@ export function mapCampRanking(api: ApiCampDashboardRanking): RankingSummary | n
 
 export function mapCampParticipationByAge(
   api: ApiCampDashboardParticipationByAge,
-): ParticipationByAge[] {
-  return api.age_group.map((ageGroup, i) => ({
+  intelligence?: unknown,
+): ParticipationByAgeView {
+  const byAge: ParticipationByAge[] = (api.age_group ?? []).map((ageGroup, i) => ({
     ageGroup,
     enrolled: api.enrolled[i] ?? 0,
     percent: api.percent[i] ?? 0,
   }));
+  return {
+    byAge,
+    intelligence: mapSimpleIntelligence(intelligence),
+  };
 }
 
 export function mapCampOverallRiskScore(
   api: ApiCampDashboardOverallRiskScore,
-): OverallRiskScoreBucket[] {
-  return api.group.map((group, i) => ({
+  intelligence?: unknown,
+): OverallRiskScoreView {
+  const buckets: OverallRiskScoreBucket[] = (api.group ?? []).map((group, i) => ({
     band: OVERALL_RISK_GROUP_LABELS[group] ?? (group as OverallRiskBand),
     percent: api.percent[i] ?? 0,
     count: api.count[i] ?? 0,
   }));
+  return {
+    buckets,
+    intelligence: mapSimpleIntelligence(intelligence),
+  };
 }
 
 export function mapCampPhysicalActivity(
   api: ApiCampDashboardGenderDistributionPair | unknown,
+  intelligence?: unknown,
 ): GenderDistributionPair {
-  return mapGenderDistributionPair(api, PHYSICAL_ACTIVITY_GROUP_LABELS);
+  return {
+    ...mapGenderDistributionPair(api, PHYSICAL_ACTIVITY_GROUP_LABELS),
+    intelligence: mapGenderIntelligence(intelligence),
+  };
 }
 
 export function mapCampSleep(
   api: ApiCampDashboardGenderDistributionPair | unknown,
+  intelligence?: unknown,
 ): GenderDistributionPair {
-  return mapGenderDistributionPair(api, SLEEP_GROUP_LABELS);
+  return {
+    ...mapGenderDistributionPair(api, SLEEP_GROUP_LABELS),
+    intelligence: mapGenderIntelligence(intelligence),
+  };
 }
 
-export function mapCampOxidativeStress(api: ApiCampDashboardOxidativeStress): CampOxidativeStressView {
+export function mapCampOxidativeStress(
+  api: ApiCampDashboardOxidativeStress,
+  intelligence?: unknown,
+): CampOxidativeStressView {
   const distribution: OxidativeStressByDept = {
     department: 'Company-wide',
     low: 0,
@@ -375,11 +409,13 @@ export function mapCampOxidativeStress(api: ApiCampDashboardOxidativeStress): Ca
   return {
     distribution: [distribution],
     totalEmployees: api.total_employees,
+    intelligence: mapSimpleIntelligence(intelligence),
   };
 }
 
 export function mapCampRiskLifestyleByGender(
   api: ApiCampDashboardDiseaseGenderSection,
+  intelligence?: unknown,
 ): CampRiskLifestyleView {
   const items = api.diseases ?? [];
   const ranked = [...items]
@@ -395,9 +431,25 @@ export function mapCampRiskLifestyleByGender(
     highRiskPercent,
   }));
 
-  const diseases = ranked.map(({ item }) => mapDiseaseGenderItem(item));
+  const deepDiveByCode = mapDiseaseDeepDiveIntelligence(
+    intelligence != null && typeof intelligence === 'object' && !Array.isArray(intelligence)
+      ? (intelligence as Record<string, unknown>).disease_deep_dive
+      : undefined,
+  );
 
-  return { topHighRiskDiseases, diseases };
+  const diseases = ranked.map(({ item }) => {
+    const mapped = mapDiseaseGenderItem(item);
+    const insight = deepDiveByCode?.[item.code];
+    return insight ? { ...mapped, intelligence: insight } : mapped;
+  });
+
+  const diseaseRisksIntelligence = mapInsightItem(
+    intelligence != null && typeof intelligence === 'object' && !Array.isArray(intelligence)
+      ? (intelligence as Record<string, unknown>).disease_risks
+      : undefined,
+  );
+
+  return { topHighRiskDiseases, diseases, diseaseRisksIntelligence };
 }
 
 export function mapCampCompanyAverageScores(
@@ -410,7 +462,15 @@ export function mapCampCompanyAverageScores(
   };
 }
 
-export function mapCampPositiveWins(api: ApiPositiveWins): PositiveWins {
+export function mapCampPositiveWins(
+  api: ApiPositiveWins,
+  intelligence?: unknown,
+): PositiveWins {
+  const intelRecord =
+    intelligence != null && typeof intelligence === 'object' && !Array.isArray(intelligence)
+      ? (intelligence as Record<string, unknown>)
+      : null;
+
   return {
     lowRisk: (api.low_risk ?? []).map((disease) => ({
       code: disease.code,
@@ -421,6 +481,13 @@ export function mapCampPositiveWins(api: ApiPositiveWins): PositiveWins {
       habitLabel: habit.habit_label,
     })),
     healthyProfiles: api.healthy_profiles ?? [],
+    intelligence: intelRecord
+      ? {
+          lowRiskDiseases: mapInsightItem(intelRecord.low_risk_diseases),
+          healthyHabits: mapInsightItem(intelRecord.healthy_habits),
+          healthyBloodProfiles: mapInsightItem(intelRecord.healthy_blood_profiles),
+        }
+      : undefined,
   };
 }
 
@@ -471,4 +538,11 @@ export function mapCampBloodAndLabIntelligence(
     const abnormalPercent = Math.max(0, 100 - inRangePercent);
     return { id, name, inRangePercent, abnormalPercent };
   });
+}
+
+export function mapCampLeadershipTakeaways(
+  _api: unknown,
+  intelligence?: unknown,
+): import('../utils/leadershipTakeaways').LeadershipTakeaway[] {
+  return mapLeadershipTakeawaysIntelligence(intelligence);
 }

@@ -1,18 +1,18 @@
 import { useMemo } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { CHART_INFO } from '../../content/chartInfo';
-import { getOxidativeStressConcernInsight } from '../../content/chartInsights';
 import { hasOxidativeSectionData, shouldShowComingSoon } from '../../utils/comingSoon';
+import { insightToneLabel, type ChartInsight } from '../../utils/chartIntelligence';
 import type { DepartmentSummary, OxidativeStressByDept } from '../../types';
 import type { YearOption } from '../layout/DashboardHeader';
 import { ChartCard } from '../ui/ChartCard';
 import { ComingSoonPanel } from '../ui/ComingSoonPanel';
 import { OxidativeStressPanelBody } from './OxidativeStressPanelBody';
-import { oxidativeElevatedPercent } from './oxidativeStressBands';
 import './OxidativeStressChart.css';
 
 interface OxidativeStressChartProps {
   data: OxidativeStressByDept[];
+  intelligence?: ChartInsight;
   departments?: DepartmentSummary[];
   totalHeadcount?: number;
   loading?: boolean;
@@ -51,6 +51,7 @@ function weightedCompanyRollup(
 
 export function OxidativeStressChart({
   data,
+  intelligence,
   departments = [],
   totalHeadcount,
   loading = false,
@@ -63,8 +64,7 @@ export function OxidativeStressChart({
   );
 
   const company = useMemo(() => weightedCompanyRollup(data, headcounts), [data, headcounts]);
-  const companyElevated = oxidativeElevatedPercent(company);
-  const insight = getOxidativeStressConcernInsight(companyElevated);
+  const insight = intelligence;
 
   const totalEmployees = useMemo(() => {
     if (totalHeadcount != null && totalHeadcount > 0) return totalHeadcount;
@@ -78,11 +78,11 @@ export function OxidativeStressChart({
       subtitle="Company-wide severity distribution"
       info={CHART_INFO.oxidativeStress}
       insight={
-        !comingSoon && !loading && data.length > 0 ? (
+        !comingSoon && !loading && data.length > 0 && insight ? (
           <div className="oxidative-stress-insight">
             <div className="oxidative-stress-insight__title">
               <AlertTriangle size={20} strokeWidth={1.75} aria-hidden />
-              <span>{insight.tone === 'positive' ? 'Positive' : 'Concern'}</span>
+              <span>{insightToneLabel(insight.tone)}</span>
             </div>
             <p className="oxidative-stress-insight__text">{insight.text}</p>
           </div>

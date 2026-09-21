@@ -3,6 +3,7 @@ import { Info, Lightbulb } from 'lucide-react';
 import { ComingSoonPanel } from '../ui/ComingSoonPanel';
 import { CHART_INFO } from '../../content/chartInfo';
 import { hasDiseaseDeepDiveData, shouldShowComingSoon } from '../../utils/comingSoon';
+import { insightToneLabel } from '../../utils/chartIntelligence';
 import type { YearOption } from '../layout/DashboardHeader';
 import type { DiseaseRiskData, RiskLevel } from '../../types';
 import './DiseaseDeepDive.css';
@@ -42,18 +43,9 @@ function SingleYearDiseaseDeepDive({
   }, [active]);
 
   const insight = useMemo(() => {
-    if (!active || loading) return '';
-    const healthy = active.buckets.find((bucket) => bucket.level === 'Healthy');
-    const total = healthy
-      ? Object.values(healthy.segments).reduce((sum, value) => sum + value, 0) /
-        Math.max(segmentKeys.length, 1)
-      : 0;
-    const high = active.buckets
-      .filter((bucket) => bucket.level === 'High' || bucket.level === 'Very High')
-      .flatMap((bucket) => Object.values(bucket.segments));
-    const highAvg = high.length ? high.reduce((sum, value) => sum + value, 0) / high.length : 0;
-    return `For ${active.disease.name}, ~${Math.round(total)}% of the workforce (gender) is in the Healthy band, while elevated risk (High + Very High) averages ${Math.round(highAvg)}% across segments.`;
-  }, [active, loading, segmentKeys.length]);
+    if (!active || loading) return undefined;
+    return active.intelligence;
+  }, [active, loading]);
 
   const statusLabel = active?.overallStatus ?? '';
 
@@ -160,9 +152,9 @@ function SingleYearDiseaseDeepDive({
         <footer className="disease-deep-dive-card__insight">
           <div className="disease-deep-dive-card__insight-title">
             <Lightbulb size={22} strokeWidth={1.75} aria-hidden />
-            <span>Insight</span>
+            <span>{insightToneLabel(insight.tone)}</span>
           </div>
-          <p className="disease-deep-dive-card__insight-text">{insight}</p>
+          <p className="disease-deep-dive-card__insight-text">{insight.text}</p>
         </footer>
       )}
     </article>

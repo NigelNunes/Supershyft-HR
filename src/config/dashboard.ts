@@ -12,7 +12,7 @@ export const SHOW_DEPARTMENTS = true;
 export const SHOW_EXECUTIVE_RANKING = false;
 
 /** Set to `true` to show Leadership Takeaways on Camp Report. */
-export const SHOW_LEADERSHIP_TAKEAWAYS = false;
+export const SHOW_LEADERSHIP_TAKEAWAYS = true;
 
 /** Set to `true` to show Refresh on Dashboard and Camp Report. */
 export const SHOW_DASHBOARD_REFRESH = false;

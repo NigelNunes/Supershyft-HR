@@ -3,6 +3,7 @@ import { Info, Lightbulb } from 'lucide-react';
 import { ComingSoonPanel } from '../ui/ComingSoonPanel';
 import { CHART_INFO } from '../../content/chartInfo';
 import { hasParticipationSectionData, shouldShowComingSoon } from '../../utils/comingSoon';
+import { insightToneLabel, type ChartInsight } from '../../utils/chartIntelligence';
 import type { YearOption } from '../layout/DashboardHeader';
 import type { ParticipationByAge } from '../../types';
 import { PieHoverTooltip } from './PieHoverTooltip';
@@ -14,6 +15,7 @@ const EMPTY = '-';
 
 interface ParticipationChartsProps {
   byAge: ParticipationByAge[];
+  intelligence?: ChartInsight;
   loading?: boolean;
   selectedYear?: YearOption;
 }
@@ -115,9 +117,11 @@ function AllYearsParticipation() {
 
 function SingleYearParticipation({
   byAge,
+  intelligence,
   loading,
 }: {
   byAge: ParticipationByAge[];
+  intelligence?: ChartInsight;
   loading: boolean;
 }) {
   const chartData = byAge.map((row, i) => ({
@@ -127,10 +131,6 @@ function SingleYearParticipation({
     color: AGE_COLORS[i % AGE_COLORS.length],
   }));
   const totalEnrolled = byAge.reduce((sum, row) => sum + row.enrolled, 0);
-  const topCohort =
-    byAge.length > 0
-      ? byAge.reduce((best, row) => (row.percent > best.percent ? row : best))
-      : null;
 
   return (
     <>
@@ -166,15 +166,13 @@ function SingleYearParticipation({
         </ul>
       </div>
 
-      {topCohort && (
+      {intelligence && (
         <footer className="participation-age-card__insight">
           <div className="participation-age-card__insight-label">
             <Lightbulb size={20} aria-hidden />
-            <span>Insight</span>
+            <span>{insightToneLabel(intelligence.tone)}</span>
           </div>
-          <p className="participation-age-card__insight-text">
-            {`${topCohort.ageGroup} is the largest cohort at ${topCohort.percent}% (${topCohort.enrolled.toLocaleString()} employees) — tailor camp messaging and scheduling for under-represented age bands.`}
-          </p>
+          <p className="participation-age-card__insight-text">{intelligence.text}</p>
         </footer>
       )}
     </>
@@ -183,6 +181,7 @@ function SingleYearParticipation({
 
 export function ParticipationCharts({
   byAge,
+  intelligence,
   loading = false,
   selectedYear = '2026',
 }: ParticipationChartsProps) {
@@ -212,7 +211,11 @@ export function ParticipationCharts({
       ) : comingSoon ? (
         <ComingSoonPanel />
       ) : (
-        <SingleYearParticipation byAge={byAge} loading={loading} />
+        <SingleYearParticipation
+          byAge={byAge}
+          intelligence={intelligence}
+          loading={loading}
+        />
       )}
     </article>
   );

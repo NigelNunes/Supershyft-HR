@@ -173,6 +173,7 @@ export function CampReportPage() {
         <>
           <TopHighRiskDiseasesList
             diseases={topDiseases}
+            intelligence={riskLifestyle?.diseaseRisksIntelligence}
             loading={riskLifestyleLoading}
             selectedYear={selectedYear}
           />
@@ -186,6 +187,7 @@ export function CampReportPage() {
         <div className="camp-risk-lifestyle-grid">
           <TopHighRiskDiseasesList
             diseases={topDiseases}
+            intelligence={riskLifestyle?.diseaseRisksIntelligence}
             loading={riskLifestyleLoading}
             selectedYear={selectedYear}
           />
@@ -200,6 +202,7 @@ export function CampReportPage() {
       <CampSectionTitle>Oxidative Stress</CampSectionTitle>
       <OxidativeStressChart
         data={oxidativeData}
+        intelligence={oxidativeStress?.intelligence}
         totalHeadcount={oxidativeHeadcount}
         loading={oxidativeLoading}
         selectedYear={selectedYear}

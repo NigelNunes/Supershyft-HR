@@ -1,3 +1,10 @@
+import type {
+  ChartInsight,
+  GenderChartIntelligence,
+} from '../utils/chartIntelligence';
+
+export type { ChartInsight, GenderChartIntelligence, InsightTone } from '../utils/chartIntelligence';
+
 export type RiskLevel = 'Healthy' | 'Increased' | 'High' | 'Very High';
 
 export type ToggleDimension = 'gender' | 'department';
@@ -48,6 +55,12 @@ export interface ParticipationByAge {
   percent: number;
 }
 
+/** participation_by_age section with API intelligence. */
+export interface ParticipationByAgeView {
+  byAge: ParticipationByAge[];
+  intelligence?: ChartInsight;
+}
+
 export interface ParticipationByGender {
   gender: string;
   enrolled: number;
@@ -73,6 +86,12 @@ export interface OverallRiskScoreBucket {
   count: number;
 }
 
+/** overall_risk_score section with API intelligence. */
+export interface OverallRiskScoreView {
+  buckets: OverallRiskScoreBucket[];
+  intelligence?: ChartInsight;
+}
+
 export interface DistributionSlice {
   label: string;
   percent: number;
@@ -85,6 +104,8 @@ export interface GenderDistributionPair {
   /** From API `total_responded` (or sum of counts) — prefer over KPI enrolled. */
   maleTotalResponded?: number;
   femaleTotalResponded?: number;
+  /** From section `intelligence` ({ both, male, female }). */
+  intelligence?: GenderChartIntelligence;
 }
 
 export type LifestyleGenderView = 'both' | 'male' | 'female';
@@ -98,6 +119,8 @@ export interface DiseaseRiskData {
   disease: DiseaseDefinition;
   buckets: RiskDistributionBucket[];
   overallStatus: RiskLevel;
+  /** Per-disease insight from `intelligence.disease_deep_dive[code]`. */
+  intelligence?: ChartInsight;
 }
 
 export interface LifestyleBucket {
@@ -255,6 +278,11 @@ export interface PositiveWins {
   lowRisk: PositiveWinDisease[];
   healthyHabits: { habitLabel: string }[];
   healthyProfiles: string[];
+  intelligence?: {
+    lowRiskDiseases?: ChartInsight;
+    healthyHabits?: ChartInsight;
+    healthyBloodProfiles?: ChartInsight;
+  };
 }
 
 export interface NutritionMacroStat {

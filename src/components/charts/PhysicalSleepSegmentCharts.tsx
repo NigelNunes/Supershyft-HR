@@ -3,14 +3,11 @@ import { Info, OctagonAlert } from 'lucide-react';
 import { PHYSICAL_ACTIVITY_BUCKETS, SLEEP_BUCKETS } from '../../data/participantPool';
 import { ComingSoonPanel } from '../ui/ComingSoonPanel';
 import { CHART_INFO } from '../../content/chartInfo';
-import {
-  computePoorActivityPercent,
-  computePoorSleepPercent,
-  getPhysicalActivityConcernInsight,
-  getSleepConcernInsight,
-  toChartInsight,
-} from '../../content/chartInsights';
 import { hasGenderDistributionData, shouldShowComingSoon } from '../../utils/comingSoon';
+import {
+  insightToneLabel,
+  pickGenderInsight,
+} from '../../utils/chartIntelligence';
 import type { DistributionSlice, GenderDistributionPair, LifestyleGenderView } from '../../types';
 import type { YearOption } from '../layout/DashboardHeader';
 import './PhysicalSleepSegmentCharts.css';
@@ -175,6 +172,7 @@ function LifestyleCard({
   labels,
   colors,
   view,
+  concernLabel,
   concernText,
   loading,
   maleTotal,
@@ -188,6 +186,7 @@ function LifestyleCard({
   labels: readonly string[];
   colors: Record<string, string>;
   view: LifestyleGenderView;
+  concernLabel?: string;
   concernText?: string;
   loading: boolean;
   maleTotal: number | null;
@@ -216,41 +215,41 @@ function LifestyleCard({
         <ComingSoonPanel />
       ) : (
         <>
-      <div className="ps-card__body">
-        <div className="ps-card__rows">
-          {showMale && (
-            <GenderRow
-              gender="male"
-              total={maleTotal}
-              slices={data.male}
-              labels={labels}
-              colors={colors}
-              loading={loading}
-            />
-          )}
-          {showFemale && (
-            <GenderRow
-              gender="female"
-              total={femaleTotal}
-              slices={data.female}
-              labels={labels}
-              colors={colors}
-              loading={loading}
-            />
-          )}
-        </div>
-        <Legend labels={labels} colors={colors} />
-      </div>
-
-      {concernText && (
-        <footer className="ps-card__concern">
-          <div className="ps-card__concern-title">
-            <OctagonAlert size={22} strokeWidth={1.75} aria-hidden />
-            <span>Concern</span>
+          <div className="ps-card__body">
+            <div className="ps-card__rows">
+              {showMale && (
+                <GenderRow
+                  gender="male"
+                  total={maleTotal}
+                  slices={data.male}
+                  labels={labels}
+                  colors={colors}
+                  loading={loading}
+                />
+              )}
+              {showFemale && (
+                <GenderRow
+                  gender="female"
+                  total={femaleTotal}
+                  slices={data.female}
+                  labels={labels}
+                  colors={colors}
+                  loading={loading}
+                />
+              )}
+            </div>
+            <Legend labels={labels} colors={colors} />
           </div>
-          <p className="ps-card__concern-text">{concernText}</p>
-        </footer>
-      )}
+
+          {concernText && (
+            <footer className="ps-card__concern">
+              <div className="ps-card__concern-title">
+                <OctagonAlert size={22} strokeWidth={1.75} aria-hidden />
+                <span>{concernLabel ?? 'Concern'}</span>
+              </div>
+              <p className="ps-card__concern-text">{concernText}</p>
+            </footer>
+          )}
         </>
       )}
     </article>
@@ -274,18 +273,6 @@ export function PhysicalSleepSegmentCharts({
   const femaleSleepTotal =
     sleep.femaleTotalResponded ?? (sleep.female.length ? sliceTotal(sleep.female) : null);
 
-  const physicalWeights =
-    malePhysicalTotal != null && femalePhysicalTotal != null
-      ? { male: malePhysicalTotal, female: femalePhysicalTotal }
-      : undefined;
-  const sleepWeights =
-    maleSleepTotal != null && femaleSleepTotal != null
-      ? { male: maleSleepTotal, female: femaleSleepTotal }
-      : undefined;
-
-  const hasPhysical = physical.male.length > 0 || physical.female.length > 0;
-  const hasSleep = sleep.male.length > 0 || sleep.female.length > 0;
-
   const comingSoonPhysical = shouldShowComingSoon(
     selectedYear,
     loading,
@@ -297,17 +284,11 @@ export function PhysicalSleepSegmentCharts({
     hasGenderDistributionData(sleep),
   );
 
-  const physicalInsight = hasPhysical && !comingSoonPhysical
-    ? toChartInsight(
-        getPhysicalActivityConcernInsight(
-          computePoorActivityPercent(physical, view, physicalWeights),
-        ),
-      )
+  const physicalInsight = !comingSoonPhysical
+    ? pickGenderInsight(physical.intelligence, view)
     : undefined;
-  const sleepInsight = hasSleep && !comingSoonSleep
-    ? toChartInsight(
-        getSleepConcernInsight(computePoorSleepPercent(sleep, view, sleepWeights)),
-      )
+  const sleepInsight = !comingSoonSleep
+    ? pickGenderInsight(sleep.intelligence, view)
     : undefined;
 
   const physicalSubtitle =
@@ -333,6 +314,7 @@ export function PhysicalSleepSegmentCharts({
           labels={PHYSICAL_ACTIVITY_BUCKETS}
           colors={PHYSICAL_COLORS}
           view={view}
+          concernLabel={physicalInsight ? insightToneLabel(physicalInsight.tone) : undefined}
           concernText={physicalInsight?.text}
           loading={loading}
           maleTotal={malePhysicalTotal}
@@ -347,6 +329,7 @@ export function PhysicalSleepSegmentCharts({
           labels={SLEEP_BUCKETS}
           colors={SLEEP_COLORS}
           view={view}
+          concernLabel={sleepInsight ? insightToneLabel(sleepInsight.tone) : undefined}
           concernText={sleepInsight?.text}
           loading={loading}
           maleTotal={maleSleepTotal}

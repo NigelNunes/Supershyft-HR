@@ -12,6 +12,7 @@ import type {
   ApiCampDashboardParticipationByAge,
   ApiCampDashboardDiseaseGenderSection,
   ApiCampDashboardRanking,
+  ApiCampDashboardLeadershipTakeaways,
   ApiPositiveWins,
   CampDashboardSection,
 } from '../services/apiTypes';
@@ -19,6 +20,7 @@ import {
   mapCampBloodAndLabIntelligence,
   mapCampCompanyAverageScores,
   mapCampKpis,
+  mapCampLeadershipTakeaways,
   mapCampOverallRiskScore,
   mapCampOxidativeStress,
   mapCampParticipationByAge,
@@ -35,13 +37,14 @@ import type {
   CompanyAverageScores,
   GenderDistributionPair,
   KpiSummary,
-  OverallRiskScoreBucket,
-  ParticipationByAge,
+  OverallRiskScoreView,
+  ParticipationByAgeView,
   PositiveWins,
   RankingSummary,
 } from '../types';
+import type { LeadershipTakeaway } from '../utils/leadershipTakeaways';
 import { isOverallLocation } from '../utils/campCities';
-import { unwrapDashboardPayload } from '../utils/unwrapDashboardPayload';
+import { parseDashboardSection } from '../utils/unwrapDashboardPayload';
 
 interface FetchState<T> {
   data: T | null;
@@ -54,7 +57,7 @@ type SectionState<T> = Omit<FetchState<T>, 'refresh'>;
 
 function useCampSection<TApi, TView>(
   section: CampDashboardSection,
-  map: (api: TApi) => TView,
+  map: (api: TApi, intelligence: unknown) => TView,
 ): FetchState<TView> {
   const { accessToken } = useAuth();
   const { selectedCampNo, selectedCity } = useCamp();
@@ -81,8 +84,8 @@ function useCampSection<TApi, TView>(
     void request
       .then((payload) => {
         if (cancelled) return;
-        const api = unwrapDashboardPayload<TApi>(payload);
-        setState({ data: map(api), loading: false, error: null });
+        const { data, intelligence } = parseDashboardSection<TApi>(payload);
+        setState({ data: map(data, intelligence), loading: false, error: null });
       })
       .catch((err) => {
         if (cancelled) return;
@@ -106,14 +109,14 @@ function useCampSection<TApi, TView>(
     const request = cityScoped
       ? campDashboardApi
           .citySection<TApi>(selectedCampNo, selectedCity, section, accessToken)
-          .then((payload) => unwrapDashboardPayload<TApi>(payload))
+          .then((payload) => parseDashboardSection<TApi>(payload))
       : campDashboardApi
           .refresh(selectedCampNo, section, accessToken)
-          .then((payload) => unwrapDashboardPayload<TApi>(payload));
+          .then((payload) => parseDashboardSection<TApi>(payload));
 
     return request
-      .then((api) => {
-        setState({ data: map(api), loading: false, error: null });
+      .then(({ data, intelligence }) => {
+        setState({ data: map(data, intelligence), loading: false, error: null });
       })
       .catch((err) => {
         setState((prev) => ({
@@ -128,31 +131,38 @@ function useCampSection<TApi, TView>(
 }
 
 const mapKpis = (api: ApiCampDashboardKpis) => mapCampKpis(api);
-const mapParticipation = (api: ApiCampDashboardParticipationByAge) =>
-  mapCampParticipationByAge(api);
-const mapOverallRisk = (api: ApiCampDashboardOverallRiskScore) => mapCampOverallRiskScore(api);
-const mapPhysical = (api: ApiCampDashboardGenderDistributionPair) => mapCampPhysicalActivity(api);
-const mapSleepFn = (api: ApiCampDashboardGenderDistributionPair) => mapCampSleep(api);
-const mapOxidative = (api: ApiCampDashboardOxidativeStress) => mapCampOxidativeStress(api);
-const mapRiskLifestyle = (api: ApiCampDashboardDiseaseGenderSection) =>
-  mapCampRiskLifestyleByGender(api);
-const mapPositiveWinsFn = (api: ApiPositiveWins) => mapCampPositiveWins(api);
+const mapParticipation = (api: ApiCampDashboardParticipationByAge, intelligence: unknown) =>
+  mapCampParticipationByAge(api, intelligence);
+const mapOverallRisk = (api: ApiCampDashboardOverallRiskScore, intelligence: unknown) =>
+  mapCampOverallRiskScore(api, intelligence);
+const mapPhysical = (api: ApiCampDashboardGenderDistributionPair, intelligence: unknown) =>
+  mapCampPhysicalActivity(api, intelligence);
+const mapSleepFn = (api: ApiCampDashboardGenderDistributionPair, intelligence: unknown) =>
+  mapCampSleep(api, intelligence);
+const mapOxidative = (api: ApiCampDashboardOxidativeStress, intelligence: unknown) =>
+  mapCampOxidativeStress(api, intelligence);
+const mapRiskLifestyle = (api: ApiCampDashboardDiseaseGenderSection, intelligence: unknown) =>
+  mapCampRiskLifestyleByGender(api, intelligence);
+const mapPositiveWinsFn = (api: ApiPositiveWins, intelligence: unknown) =>
+  mapCampPositiveWins(api, intelligence);
 const mapCompanyScores = (api: ApiCampDashboardCompanyAverageScores) =>
   mapCampCompanyAverageScores(api);
 const mapBlood = (api: ApiCampDashboardBloodAndLabIntelligence) =>
   mapCampBloodAndLabIntelligence(api);
 const mapRankingFn = (api: ApiCampDashboardRanking): RankingSummary | null =>
   mapCampRanking(api);
+const mapLeadership = (_api: ApiCampDashboardLeadershipTakeaways, intelligence: unknown) =>
+  mapCampLeadershipTakeaways(_api, intelligence);
 
 export function useCampKpis(): FetchState<KpiSummary> {
   return useCampSection('kpis', mapKpis);
 }
 
-export function useCampParticipationByAge(): FetchState<ParticipationByAge[]> {
+export function useCampParticipationByAge(): FetchState<ParticipationByAgeView> {
   return useCampSection('participation_by_age', mapParticipation);
 }
 
-export function useCampOverallRiskScore(): FetchState<OverallRiskScoreBucket[]> {
+export function useCampOverallRiskScore(): FetchState<OverallRiskScoreView> {
   return useCampSection('overall_risk_score', mapOverallRisk);
 }
 
@@ -182,6 +192,10 @@ export function useCampCompanyAverageScores(): FetchState<CompanyAverageScores> 
 
 export function useCampBloodAndLabIntelligence(): FetchState<BloodParameterPanel[]> {
   return useCampSection('blood_and_lab_intelligence', mapBlood);
+}
+
+export function useCampLeadershipTakeaways(): FetchState<LeadershipTakeaway[]> {
+  return useCampSection('leadership_takeaways', mapLeadership);
 }
 
 export function useCampRanking(): FetchState<RankingSummary> {

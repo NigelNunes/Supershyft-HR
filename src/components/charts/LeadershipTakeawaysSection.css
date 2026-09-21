@@ -44,7 +44,6 @@
   flex: 1 1 0;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   gap: 1.25rem;
   min-width: 0;
 }
@@ -66,7 +65,7 @@
 .leadership-takeaway-card__copy {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
   min-width: 0;
 }
 
@@ -81,47 +80,13 @@
   text-transform: uppercase;
 }
 
-.leadership-takeaway-card__headline {
+.leadership-takeaway-card__statement {
   margin: 0;
-  padding-bottom: 0.5rem;
-  color: #fff;
+  color: #d4d4d8;
   font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: 1.25rem;
-  font-weight: 400;
-  line-height: 1.75rem;
-}
-
-.leadership-takeaway-card__bullets {
-  position: relative;
-  z-index: 1;
-  list-style: none;
-  margin: 0;
-  padding: 1.5rem 0 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.75rem;
-  flex: 0 1 auto;
-  min-width: 11rem;
-}
-
-.leadership-takeaway-card__bullets li {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  color: #9ca3af;
-  font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 400;
   line-height: 1.5rem;
-}
-
-.leadership-takeaway-card__dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 999px;
-  background: #d4d4d8;
-  flex-shrink: 0;
 }
 
 .leadership-takeaway-card--workforce-health {
@@ -163,17 +128,5 @@
 @media (max-width: 900px) {
   .leadership-takeaways {
     grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 640px) {
-  .leadership-takeaway-card {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .leadership-takeaway-card__bullets {
-    padding: 0;
-    min-width: 0;
   }
 }

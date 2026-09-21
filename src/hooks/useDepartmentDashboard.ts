@@ -22,10 +22,10 @@ import type {
   CompanyAverageScores,
   GenderDistributionPair,
   KpiSummary,
-  OverallRiskScoreBucket,
-  ParticipationByAge,
+  OverallRiskScoreView,
+  ParticipationByAgeView,
 } from '../types';
-import { unwrapDashboardPayload } from '../utils/unwrapDashboardPayload';
+import { parseDashboardSection } from '../utils/unwrapDashboardPayload';
 
 interface FetchState<T> {
   data: T | null;
@@ -43,7 +43,7 @@ type SectionState<T> = Omit<FetchState<T>, 'refresh'>;
 function useDepartmentSection<TApi, TView>(
   slug: string | undefined,
   section: CampDashboardSection,
-  map: (api: TApi) => TView,
+  map: (api: TApi, intelligence: unknown) => TView,
 ): FetchState<TView> {
   const { accessToken } = useAuth();
   const { selectedCampNo } = useCamp();
@@ -71,8 +71,8 @@ function useDepartmentSection<TApi, TView>(
       .departmentSection<TApi>(selectedCampNo, deptSlug, section, accessToken)
       .then((payload) => {
         if (cancelled) return;
-        const api = unwrapDashboardPayload<TApi>(payload);
-        setState({ data: map(api), loading: false, error: null });
+        const { data, intelligence } = parseDashboardSection<TApi>(payload);
+        setState({ data: map(data, intelligence), loading: false, error: null });
       })
       .catch((err) => {
         if (cancelled) return;
@@ -96,8 +96,8 @@ function useDepartmentSection<TApi, TView>(
     return campDashboardApi
       .departmentSection<TApi>(selectedCampNo, deptSlug, section, accessToken)
       .then((payload) => {
-        const api = unwrapDashboardPayload<TApi>(payload);
-        setState({ data: map(api), loading: false, error: null });
+        const { data, intelligence } = parseDashboardSection<TApi>(payload);
+        setState({ data: map(data, intelligence), loading: false, error: null });
       })
       .catch((err) => {
         setState((prev) => ({
@@ -112,11 +112,14 @@ function useDepartmentSection<TApi, TView>(
 }
 
 const mapKpis = (api: ApiCampDashboardKpis) => mapCampKpis(api);
-const mapParticipation = (api: ApiCampDashboardParticipationByAge) =>
-  mapCampParticipationByAge(api);
-const mapOverallRisk = (api: ApiCampDashboardOverallRiskScore) => mapCampOverallRiskScore(api);
-const mapPhysical = (api: ApiCampDashboardGenderDistributionPair) => mapCampPhysicalActivity(api);
-const mapSleepFn = (api: ApiCampDashboardGenderDistributionPair) => mapCampSleep(api);
+const mapParticipation = (api: ApiCampDashboardParticipationByAge, intelligence: unknown) =>
+  mapCampParticipationByAge(api, intelligence);
+const mapOverallRisk = (api: ApiCampDashboardOverallRiskScore, intelligence: unknown) =>
+  mapCampOverallRiskScore(api, intelligence);
+const mapPhysical = (api: ApiCampDashboardGenderDistributionPair, intelligence: unknown) =>
+  mapCampPhysicalActivity(api, intelligence);
+const mapSleepFn = (api: ApiCampDashboardGenderDistributionPair, intelligence: unknown) =>
+  mapCampSleep(api, intelligence);
 const mapCompanyScores = (api: ApiCampDashboardCompanyAverageScores) =>
   mapCampCompanyAverageScores(api);
 
@@ -126,13 +129,13 @@ export function useDepartmentKpis(slug: string | undefined): FetchState<KpiSumma
 
 export function useDepartmentParticipationByAge(
   slug: string | undefined,
-): FetchState<ParticipationByAge[]> {
+): FetchState<ParticipationByAgeView> {
   return useDepartmentSection(slug, 'participation_by_age', mapParticipation);
 }
 
 export function useDepartmentOverallRiskScore(
   slug: string | undefined,
-): FetchState<OverallRiskScoreBucket[]> {
+): FetchState<OverallRiskScoreView> {
   return useDepartmentSection(slug, 'overall_risk_score', mapOverallRisk);
 }
 

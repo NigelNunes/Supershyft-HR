@@ -2,6 +2,7 @@ import { Check, FlaskConical, Info, Moon, ShieldCheck } from 'lucide-react';
 import { ComingSoonPanel } from '../ui/ComingSoonPanel';
 import { CHART_INFO } from '../../content/chartInfo';
 import { hasPositiveWinsData, shouldShowComingSoon } from '../../utils/comingSoon';
+import { insightToneLabel, type ChartInsight } from '../../utils/chartIntelligence';
 import type { YearOption } from '../layout/DashboardHeader';
 import type { PositiveWins } from '../../types';
 import './PositiveWinsPanel.css';
@@ -29,9 +30,20 @@ function WinChip({ label, tone }: { label: string; tone: ColumnTone }) {
   );
 }
 
+function ColumnInsight({ insight }: { insight?: ChartInsight }) {
+  if (!insight) return null;
+  return (
+    <p className="positive-wins__col-insight">
+      <span className="positive-wins__col-insight-label">{insightToneLabel(insight.tone)}</span>
+      {insight.text}
+    </p>
+  );
+}
+
 export function PositiveWinsPanel({ data, loading = false, selectedYear = '2026' }: PositiveWinsPanelProps) {
   const comingSoon = shouldShowComingSoon(selectedYear, loading, hasPositiveWinsData(data));
   const display = loading || comingSoon ? EMPTY_POSITIVE_WINS : data;
+  const intel = display.intelligence;
 
   return (
     <article className="positive-wins">
@@ -74,6 +86,7 @@ export function PositiveWinsPanel({ data, loading = false, selectedYear = '2026'
                 <p className="positive-wins__empty">No low-risk diseases reported</p>
               )}
             </div>
+            <ColumnInsight insight={intel?.lowRiskDiseases} />
           </section>
 
           <section className="positive-wins__col">
@@ -94,6 +107,7 @@ export function PositiveWinsPanel({ data, loading = false, selectedYear = '2026'
                 <p className="positive-wins__empty">No healthy habits reported</p>
               )}
             </div>
+            <ColumnInsight insight={intel?.healthyHabits} />
           </section>
 
           <section className="positive-wins__col">
@@ -114,6 +128,7 @@ export function PositiveWinsPanel({ data, loading = false, selectedYear = '2026'
                 <p className="positive-wins__empty">No healthy profiles reported</p>
               )}
             </div>
+            <ColumnInsight insight={intel?.healthyBloodProfiles} />
           </section>
         </div>
       )}

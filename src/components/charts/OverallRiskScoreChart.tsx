@@ -2,8 +2,8 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { AlertCircle, Info } from 'lucide-react';
 import { ComingSoonPanel } from '../ui/ComingSoonPanel';
 import { CHART_INFO } from '../../content/chartInfo';
-import { getOverallRiskConcernInsight } from '../../content/chartInsights';
 import { hasOverallRiskSectionData, shouldShowComingSoon } from '../../utils/comingSoon';
+import { insightToneLabel, type ChartInsight } from '../../utils/chartIntelligence';
 import type { YearOption } from '../layout/DashboardHeader';
 import type { OverallRiskBand, OverallRiskScoreBucket } from '../../types';
 import { OVERALL_RISK_COLORS, useChartTheme } from './chartTheme';
@@ -12,6 +12,7 @@ import './OverallRiskScoreChart.css';
 
 interface OverallRiskScoreChartProps {
   buckets: OverallRiskScoreBucket[];
+  intelligence?: ChartInsight;
   loading?: boolean;
   selectedYear?: YearOption;
 }
@@ -174,9 +175,11 @@ function AllYearsOverallRisk() {
 
 function SingleYearOverallRisk({
   buckets,
+  intelligence,
   loading,
 }: {
   buckets: OverallRiskScoreBucket[];
+  intelligence?: ChartInsight;
   loading: boolean;
 }) {
   const normalized = normalizeBuckets(buckets);
@@ -187,12 +190,8 @@ function SingleYearOverallRisk({
       value: b.percent,
       count: b.count,
     }));
-  const elevated = normalized
-    .filter((b) => b.band === 'Increased Risk' || b.band === 'High risk')
-    .reduce((sum, b) => sum + b.percent, 0);
   const totalCount = normalized.reduce((sum, b) => sum + b.count, 0);
-  const concernInsight =
-    buckets.length > 0 ? getOverallRiskConcernInsight(elevated) : undefined;
+  const concernInsight = buckets.length > 0 ? intelligence : undefined;
 
   return (
     <>
@@ -232,7 +231,7 @@ function SingleYearOverallRisk({
         <div className="overall-risk-card__concern">
           <div className="overall-risk-card__concern-title">
             <AlertCircle size={20} aria-hidden />
-            <span>Concern</span>
+            <span>{insightToneLabel(concernInsight.tone)}</span>
           </div>
           <p className="overall-risk-card__concern-text">{concernInsight.text}</p>
         </div>
@@ -243,6 +242,7 @@ function SingleYearOverallRisk({
 
 export function OverallRiskScoreChart({
   buckets,
+  intelligence,
   loading = false,
   selectedYear = '2026',
 }: OverallRiskScoreChartProps) {
@@ -272,7 +272,11 @@ export function OverallRiskScoreChart({
       ) : comingSoon ? (
         <ComingSoonPanel />
       ) : (
-        <SingleYearOverallRisk buckets={buckets} loading={loading} />
+        <SingleYearOverallRisk
+          buckets={buckets}
+          intelligence={intelligence}
+          loading={loading}
+        />
       )}
     </article>
   );

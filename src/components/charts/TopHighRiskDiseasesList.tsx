@@ -1,18 +1,18 @@
 import { Info, OctagonAlert } from 'lucide-react';
 import { ComingSoonPanel } from '../ui/ComingSoonPanel';
 import { CHART_INFO } from '../../content/chartInfo';
-import { getTopDiseaseRiskConcernInsight } from '../../content/chartInsights';
 import { hasTopDiseaseData, shouldShowComingSoon } from '../../utils/comingSoon';
+import { insightToneLabel, type ChartInsight } from '../../utils/chartIntelligence';
 import type { TopHighRiskDisease } from '../../types';
 import type { YearOption } from '../layout/DashboardHeader';
 import './TopHighRiskDiseasesList.css';
 
 interface TopHighRiskDiseasesListProps {
   diseases: TopHighRiskDisease[];
+  intelligence?: ChartInsight;
   title?: string;
   subtitle?: string;
   info?: string;
-  insightPrefix?: string;
   loading?: boolean;
   selectedYear?: YearOption;
 }
@@ -34,21 +34,17 @@ function allocateBubblesByPercent(diseases: TopHighRiskDisease[]): TopHighRiskDi
 
 export function TopHighRiskDiseasesList({
   diseases,
+  intelligence,
   title = 'Top disease risks',
   subtitle = 'Highest elevated-risk share across the workforce',
   info = CHART_INFO.topHighRiskDiseases,
-  insightPrefix = 'employees',
   loading = false,
   selectedYear = '2026',
 }: TopHighRiskDiseasesListProps) {
   const comingSoon = shouldShowComingSoon(selectedYear, loading, hasTopDiseaseData(diseases));
   const top3 = allocateBubblesByPercent(diseases);
-  const lead = top3[0];
 
-  const concern =
-    !loading && !comingSoon && lead
-      ? getTopDiseaseRiskConcernInsight(lead, insightPrefix).text
-      : undefined;
+  const concern = !loading && !comingSoon && intelligence ? intelligence : undefined;
 
   return (
     <article className="top-disease-bubbles">
@@ -92,9 +88,9 @@ export function TopHighRiskDiseasesList({
         <footer className="top-disease-bubbles__concern">
           <div className="top-disease-bubbles__concern-title">
             <OctagonAlert size={22} strokeWidth={1.75} aria-hidden />
-            <span>Concern</span>
+            <span>{insightToneLabel(concern.tone)}</span>
           </div>
-          <p className="top-disease-bubbles__concern-text">{concern}</p>
+          <p className="top-disease-bubbles__concern-text">{concern.text}</p>
         </footer>
       )}
     </article>

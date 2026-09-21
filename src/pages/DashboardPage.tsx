@@ -27,10 +27,10 @@ export function DashboardPage() {
   } = useCamp();
   const { data: kpis, loading: kpisLoading, error: kpisError, refresh: refreshKpis } = useCampKpis();
   const { data: ranking, loading: rankingLoading, error: rankingError, refresh: refreshRanking } = useCampRanking();
-  const { data: participationByAge, loading: ageLoading, error: ageError, refresh: refreshAge } =
+  const { data: participationSection, loading: ageLoading, error: ageError, refresh: refreshAge } =
     useCampParticipationByAge();
   const {
-    data: overallRiskScore,
+    data: overallRiskSection,
     loading: riskLoading,
     error: riskError,
     refresh: refreshRisk,
@@ -38,6 +38,8 @@ export function DashboardPage() {
 
   const metabolicCategories = useMemo(() => metabolicCategoriesFromKpis(kpis), [kpis]);
   const sectionError = kpisError || rankingError || ageError || riskError;
+  const participationByAge = participationSection?.byAge ?? [];
+  const overallRiskScore = overallRiskSection?.buckets ?? [];
 
   const handleRefresh = async () => {
     await Promise.all([refreshKpis(), refreshRanking(), refreshAge(), refreshRisk()]);
@@ -80,12 +82,14 @@ export function DashboardPage() {
         </div>
         <div className="dashboard-metrics-col">
           <ParticipationCharts
-            byAge={participationByAge ?? []}
+            byAge={participationByAge}
+            intelligence={participationSection?.intelligence}
             loading={ageLoading}
             selectedYear={selectedYear}
           />
           <OverallRiskScoreChart
-            buckets={overallRiskScore ?? []}
+            buckets={overallRiskScore}
+            intelligence={overallRiskSection?.intelligence}
             loading={riskLoading}
             selectedYear={selectedYear}
           />

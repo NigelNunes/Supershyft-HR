@@ -1,4 +1,4 @@
-import { useMemo, type ComponentType } from 'react';
+import type { ComponentType } from 'react';
 import {
   Crosshair,
   Footprints,
@@ -6,27 +6,18 @@ import {
   ShieldAlert,
   type LucideProps,
 } from 'lucide-react';
-import {
-  useCampCompanyAverageScores,
-  useCampOverallRiskScore,
-  useCampPhysicalActivity,
-  useCampRiskLifestyleByGender,
-  useCampSleep,
-} from '../../hooks/useCampDashboard';
+import { useCampLeadershipTakeaways } from '../../hooks/useCampDashboard';
 import { useCamp } from '../../contexts/CampContext';
 import { ComingSoonPanel } from '../ui/ComingSoonPanel';
+import { shouldShowComingSoon } from '../../utils/comingSoon';
 import {
-  hasCompanyScoresData,
-  hasDiseaseDeepDiveData,
-  hasGenderDistributionData,
-  hasOverallRiskSectionData,
-  shouldShowComingSoon,
-} from '../../utils/comingSoon';
-import { buildLeadershipTakeaways } from '../../utils/leadershipTakeaways';
-import type { LeadershipTakeaway } from '../../utils/leadershipTakeaways';
+  hasLeadershipTakeawaysData,
+  type LeadershipTakeaway,
+  type LeadershipTakeawayId,
+} from '../../utils/leadershipTakeaways';
 import './LeadershipTakeawaysSection.css';
 
-const CARD_ICONS: Record<string, ComponentType<LucideProps>> = {
+const CARD_ICONS: Record<LeadershipTakeawayId, ComponentType<LucideProps>> = {
   'workforce-health': ShieldAlert,
   'lifestyle-priority': Footprints,
   'disease-focus': HeartPlus,
@@ -45,59 +36,22 @@ function TakeawayCard({ takeaway }: { takeaway: LeadershipTakeaway }) {
         </div>
         <div className="leadership-takeaway-card__copy">
           <p className="leadership-takeaway-card__category">{takeaway.title}</p>
-          <h3 className="leadership-takeaway-card__headline">{takeaway.headline}</h3>
+          <p className="leadership-takeaway-card__statement">{takeaway.text}</p>
         </div>
       </div>
-      <ul className="leadership-takeaway-card__bullets">
-        {takeaway.bullets.map((bullet) => (
-          <li key={bullet}>
-            <span className="leadership-takeaway-card__dot" aria-hidden />
-            <span>{bullet}</span>
-          </li>
-        ))}
-      </ul>
     </article>
   );
 }
 
 export function LeadershipTakeawaysSection() {
   const { selectedYear } = useCamp();
-  const { data: overallRiskScore, loading: riskLoading } = useCampOverallRiskScore();
-  const { data: companyScores, loading: scoresLoading } = useCampCompanyAverageScores();
-  const { data: riskLifestyle, loading: diseaseLoading } = useCampRiskLifestyleByGender();
-  const { data: physicalActivity, loading: physicalLoading } = useCampPhysicalActivity();
-  const { data: sleep, loading: sleepLoading } = useCampSleep();
+  const { data: takeaways, loading } = useCampLeadershipTakeaways();
 
-  const loading =
-    riskLoading || scoresLoading || diseaseLoading || physicalLoading || sleepLoading;
-
-  const hasSourceData =
-    hasOverallRiskSectionData(overallRiskScore) ||
-    hasCompanyScoresData(companyScores) ||
-    hasDiseaseDeepDiveData(riskLifestyle?.diseases) ||
-    hasGenderDistributionData(physicalActivity) ||
-    hasGenderDistributionData(sleep);
-
-  const comingSoon = shouldShowComingSoon(selectedYear, loading, hasSourceData);
-
-  const takeaways = useMemo(() => {
-    if (loading || comingSoon) return [];
-    return buildLeadershipTakeaways({
-      overallRiskScore: overallRiskScore ?? [],
-      companyScores: companyScores ?? null,
-      diseases: riskLifestyle?.diseases ?? [],
-      physicalActivity: physicalActivity ?? { male: [], female: [] },
-      sleep: sleep ?? { male: [], female: [] },
-    });
-  }, [
+  const comingSoon = shouldShowComingSoon(
+    selectedYear,
     loading,
-    comingSoon,
-    overallRiskScore,
-    companyScores,
-    riskLifestyle,
-    physicalActivity,
-    sleep,
-  ]);
+    hasLeadershipTakeawaysData(takeaways),
+  );
 
   if (comingSoon) {
     return <ComingSoonPanel variant="card" />;
@@ -108,7 +62,9 @@ export function LeadershipTakeawaysSection() {
       {loading ? (
         <p className="leadership-takeaways__loading">Loading leadership takeaways…</p>
       ) : (
-        takeaways.map((takeaway) => <TakeawayCard key={takeaway.id} takeaway={takeaway} />)
+        (takeaways ?? []).map((takeaway) => (
+          <TakeawayCard key={takeaway.id} takeaway={takeaway} />
+        ))
       )}
     </div>
   );
