@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   BriefcaseMedical,
   Check,
@@ -54,10 +54,10 @@ const JOURNEY_COLUMNS: {
   { id: 'anthropometry', label: 'Anthropometry', group: 'intake' },
   { id: 'vitals', label: 'Vital', group: 'intake' },
   { id: 'dietLifestyle', label: 'Lifestyle', group: 'intake' },
-  { id: 'bloodReport', label: 'Blood Report', group: 'blood', badge: 'blood' },
-  { id: 'bloodReportAi', label: 'Blood Report Sent', group: 'blood', badge: 'blood-ai' },
-  { id: 'bioAiReport', label: 'Bio-Ai Report', group: 'bioai', badge: 'bioai' },
-  { id: 'bioAiShared', label: 'Bio-Ai Report Sent', group: 'bioai', badge: 'bioai-ai' },
+  { id: 'bloodReport', label: 'Blood report generated', group: 'blood', badge: 'blood' },
+  { id: 'bloodReportAi', label: 'Blood report sent', group: 'blood', badge: 'blood-ai' },
+  { id: 'bioAiReport', label: 'Bio-AI report generated', group: 'bioai', badge: 'bioai' },
+  { id: 'bioAiShared', label: 'Bio-AI report sent', group: 'bioai', badge: 'bioai-ai' },
   { id: 'consultations', label: 'Consultations', group: 'consult' },
 ];
 
@@ -128,11 +128,36 @@ function matchesEmployeeName(name: string, query: string): boolean {
   return tokens.every((token) => normalizedName.includes(token));
 }
 
-function StatusIcon({ status }: { status: JourneyStepStatus }) {
-  if (status === 'completed') {
-    return <Check className="emp-status emp-status--done" size={18} strokeWidth={2.5} aria-label="Completed" />;
-  }
-  return <X className="emp-status emp-status--pending" size={18} strokeWidth={2.5} aria-label="Pending" />;
+function StepHover({
+  label,
+  placement,
+  children,
+}: {
+  label: string;
+  placement: 'above' | 'below';
+  children: ReactNode;
+}) {
+  return (
+    <span className="emp-step-hover" tabIndex={0}>
+      {children}
+      <span className={`emp-step-hover__tip emp-step-hover__tip--${placement}`} role="tooltip">
+        {label}
+      </span>
+    </span>
+  );
+}
+
+function StatusIcon({ status, label }: { status: JourneyStepStatus; label: string }) {
+  const done = status === 'completed';
+  return (
+    <StepHover label={label} placement="above">
+      {done ? (
+        <Check className="emp-status emp-status--done" size={18} strokeWidth={2.5} aria-label={`${label}, completed`} />
+      ) : (
+        <X className="emp-status emp-status--pending" size={18} strokeWidth={2.5} aria-label={`${label}, pending`} />
+      )}
+    </StepHover>
+  );
 }
 
 function DepartmentCell({ employee }: { employee: EmployeeRecord }) {
@@ -176,7 +201,8 @@ function HeaderStepIcon({
   );
 
   return (
-    <span className="emp-table__step-icon" title={step.label}>
+    <StepHover label={step.label} placement="below">
+    <span className="emp-table__step-icon">
       {icon}
       {step.badge === 'blood' || step.badge === 'blood-ai' ? (
         <span className="emp-table__step-badge emp-table__step-badge--blood" aria-hidden>
@@ -189,6 +215,7 @@ function HeaderStepIcon({
         </span>
       ) : null}
     </span>
+    </StepHover>
   );
 }
 
@@ -725,7 +752,7 @@ export function EmployeesPage() {
                             className={`emp-table__steps-group emp-table__steps-group--${group}`}
                           >
                             {JOURNEY_COLUMNS.filter((s) => s.group === group).map((step) => (
-                              <StatusIcon key={step.id} status={emp.journey[step.id]} />
+                              <StatusIcon key={step.id} status={emp.journey[step.id]} label={step.label} />
                             ))}
                           </div>
                         ))}

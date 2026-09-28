@@ -91,6 +91,9 @@ export const CHART_INFO = {
 
   executiveRanking:
     'National and industry standing for this organization versus peer companies, plus city-level ranks on the map. Lower rank numbers indicate stronger relative performance.',
+
+  stateDiseaseBenchmark:
+    'Compare this company’s Bio-AI disease and oxidative risk averages with other Bio-AI-tested companies in the same state. Higher percentages mean a larger share of elevated risk.',
 } as const;
 
 const LIFESTYLE_INFO: Record<string, string> = {

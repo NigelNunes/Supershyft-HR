@@ -16,6 +16,9 @@ interface DiseaseDeepDiveProps {
 
 const RISK_ORDER: RiskLevel[] = ['Healthy', 'Increased', 'High', 'Very High'];
 
+/** Conditions that only apply to female employees. */
+const FEMALE_ONLY_DISEASES = new Set(['pcos_pcod']);
+
 function segmentValue(disease: DiseaseRiskData, level: RiskLevel, key: string): number {
   const bucket = disease.buckets.find((b) => b.level === level);
   return bucket?.segments[key] ?? 0;
@@ -40,10 +43,11 @@ function SingleYearDiseaseDeepDive({
   const segmentKeys = useMemo(() => {
     if (!active) return [] as string[];
     const keys = Object.keys(active.buckets[0]?.segments ?? {});
-    const preferred = ['Male', 'Female'];
+    const femaleOnly = FEMALE_ONLY_DISEASES.has(active.disease.code);
+    const preferred = femaleOnly ? ['Female'] : ['Male', 'Female'];
     return [
       ...preferred.filter((k) => keys.includes(k)),
-      ...keys.filter((k) => !preferred.includes(k)),
+      ...keys.filter((k) => !preferred.includes(k) && !(femaleOnly && /^male$/i.test(k))),
     ];
   }, [active]);
 
@@ -107,9 +111,13 @@ function SingleYearDiseaseDeepDive({
             <div className="disease-deep-dive-card__plot">
               <div className="disease-deep-dive-card__grid" aria-hidden>
                 {[100, 75, 50, 25, 0].map((tick) => (
-                  <div key={tick} className="disease-deep-dive-card__grid-row">
+                  <div
+                    key={tick}
+                    className="disease-deep-dive-card__grid-row"
+                    style={{ top: `${100 - tick}%` }}
+                  >
                     <span>{tick}</span>
-                    {tick > 0 && <span className="disease-deep-dive-card__grid-line" />}
+                    <span className="disease-deep-dive-card__grid-line" />
                   </div>
                 ))}
               </div>
@@ -138,14 +146,17 @@ function SingleYearDiseaseDeepDive({
           </div>
 
           <div className="disease-deep-dive-card__legend">
-            <span className="disease-deep-dive-card__legend-item">
-              <span className="disease-deep-dive-card__swatch disease-deep-dive-card__swatch--female" />
-              Female
-            </span>
-            <span className="disease-deep-dive-card__legend-item">
-              <span className="disease-deep-dive-card__swatch disease-deep-dive-card__swatch--male" />
-              Male
-            </span>
+            {[...segmentKeys]
+              .sort((a, b) => Number(!a.toLowerCase().startsWith('f')) - Number(!b.toLowerCase().startsWith('f')))
+              .map((key) => {
+                const tone = key.toLowerCase().startsWith('f') ? 'female' : 'male';
+                return (
+                  <span key={key} className="disease-deep-dive-card__legend-item">
+                    <span className={`disease-deep-dive-card__swatch disease-deep-dive-card__swatch--${tone}`} />
+                    {key}
+                  </span>
+                );
+              })}
           </div>
         </>
       )}

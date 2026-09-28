@@ -19,6 +19,11 @@ interface DashboardMetricCardsProps {
   selectedYear?: YearOption;
   /** When false, hides National / Industry rank cards (department view). */
   showRanking?: boolean;
+  /**
+   * When set, the consultations card shows this single count under "Consultations Completed"
+   * instead of "Consultations Requested" (doctor / nutritionist).
+   */
+  consultationsCount?: number | null;
 }
 
 const EMPTY = '-';
@@ -156,6 +161,7 @@ function SingleYearMetricCards({
   rankingLoading,
   showRanking,
   selectedYear,
+  consultationsCount = null,
 }: {
   kpis: KpiSummary | null;
   ranking: RankingSummary | null;
@@ -163,6 +169,7 @@ function SingleYearMetricCards({
   rankingLoading: boolean;
   showRanking: boolean;
   selectedYear: YearOption;
+  consultationsCount?: number | null;
 }) {
   const comingSoonKpis = shouldShowComingSoon(selectedYear, kpisLoading, hasKpiSectionData(kpis));
   const comingSoonRank = shouldShowComingSoon(
@@ -323,8 +330,17 @@ function SingleYearMetricCards({
 
       <article className="metric-card metric-card--stat metric-card--glass">
         <div className="metric-card__stat-body">
-          <h3 className="metric-card__stat-label">Consultations Requested</h3>
-          {comingSoonKpis ? (
+          <h3 className="metric-card__stat-label">
+            {consultationsCount != null ? 'Consultations Completed' : 'Consultations Requested'}
+          </h3>
+          {consultationsCount != null ? (
+            <>
+              <p className="metric-card__stat-value">{consultationsCount.toLocaleString()}</p>
+              <p className="metric-card__stat-footer" aria-hidden>
+                &nbsp;
+              </p>
+            </>
+          ) : comingSoonKpis ? (
             <ComingSoonPanel variant="metric" />
           ) : (
             <>
@@ -354,6 +370,7 @@ export function DashboardMetricCards({
   rankingLoading = false,
   selectedYear = '2026',
   showRanking = true,
+  consultationsCount = null,
 }: DashboardMetricCardsProps) {
   if (selectedYear === 'all') {
     return <AllYearsMetricCards showRanking={showRanking} />;
@@ -367,6 +384,7 @@ export function DashboardMetricCards({
       rankingLoading={rankingLoading}
       showRanking={showRanking}
       selectedYear={selectedYear}
+      consultationsCount={consultationsCount}
     />
   );
 }

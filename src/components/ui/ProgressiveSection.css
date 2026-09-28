@@ -1,0 +1,47 @@
+.progressive-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  width: 100%;
+}
+
+.dashboard-metrics-col > .progressive-section {
+  flex: 1 1 auto;
+  height: 100%;
+}
+
+.dashboard-metrics-col > .progressive-section > .progressive-section__skeleton {
+  flex: 1 1 auto;
+}
+
+.progressive-section__skeleton {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 1.5rem;
+  background: linear-gradient(
+    90deg,
+    rgba(25, 28, 38, 0.55) 0%,
+    rgba(255, 255, 255, 0.07) 50%,
+    rgba(25, 28, 38, 0.55) 100%
+  );
+  background-size: 200% 100%;
+  animation: progressive-section-shimmer 1.4s ease-in-out infinite;
+  outline: 1px solid rgba(255, 255, 255, 0.05);
+  outline-offset: -1px;
+}
+
+@keyframes progressive-section-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progressive-section__skeleton {
+    animation: none;
+  }
+}

@@ -13,6 +13,7 @@ import type {
   ApiCampDashboardDiseaseGenderSection,
   ApiCampDashboardRanking,
   ApiCampDashboardLeadershipTakeaways,
+  ApiStateDiseaseBenchmark,
   ApiPositiveWins,
   CampDashboardSection,
 } from '../services/apiTypes';
@@ -29,8 +30,10 @@ import {
   mapCampRanking,
   mapCampRiskLifestyleByGender,
   mapCampSleep,
+  mapCampStateDiseaseBenchmark,
   type CampOxidativeStressView,
   type CampRiskLifestyleView,
+  type StateDiseaseBenchmark,
 } from '../services/campDashboardMappers';
 import type {
   BloodParameterPanel,
@@ -44,6 +47,7 @@ import type {
 } from '../types';
 import type { LeadershipTakeaway } from '../utils/leadershipTakeaways';
 import { isOverallLocation } from '../utils/campCities';
+import { enqueueSectionFetch } from '../utils/sectionFetchQueue';
 import { parseDashboardSection } from '../utils/unwrapDashboardPayload';
 
 interface FetchState<T> {
@@ -77,27 +81,36 @@ function useCampSection<TApi, TView>(
     let cancelled = false;
     setState({ data: null, loading: true, error: null });
 
-    const request = cityScoped
-      ? campDashboardApi.citySection<TApi>(selectedCampNo, selectedCity, section, accessToken)
-      : campDashboardApi.section<TApi>(selectedCampNo, section, accessToken);
+    const cancelQueued = enqueueSectionFetch((release) => {
+      if (cancelled) {
+        release();
+        return;
+      }
 
-    void request
-      .then((payload) => {
-        if (cancelled) return;
-        const { data, intelligence } = parseDashboardSection<TApi>(payload);
-        setState({ data: map(data, intelligence), loading: false, error: null });
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setState({
-          data: null,
-          loading: false,
-          error: err instanceof Error ? err.message : 'Failed to load',
-        });
-      });
+      const request = cityScoped
+        ? campDashboardApi.citySection<TApi>(selectedCampNo, selectedCity, section, accessToken)
+        : campDashboardApi.section<TApi>(selectedCampNo, section, accessToken);
+
+      void request
+        .then((payload) => {
+          if (cancelled) return;
+          const { data, intelligence } = parseDashboardSection<TApi>(payload);
+          setState({ data: map(data, intelligence), loading: false, error: null });
+        })
+        .catch((err) => {
+          if (cancelled) return;
+          setState({
+            data: null,
+            loading: false,
+            error: err instanceof Error ? err.message : 'Failed to load',
+          });
+        })
+        .finally(release);
+    });
 
     return () => {
       cancelled = true;
+      cancelQueued();
     };
   }, [accessToken, selectedCampNo, selectedCity, cityScoped, section, map]);
 
@@ -153,6 +166,7 @@ const mapRankingFn = (api: ApiCampDashboardRanking): RankingSummary | null =>
   mapCampRanking(api);
 const mapLeadership = (_api: ApiCampDashboardLeadershipTakeaways, intelligence: unknown) =>
   mapCampLeadershipTakeaways(_api, intelligence);
+const mapStateBenchmark = (api: ApiStateDiseaseBenchmark) => mapCampStateDiseaseBenchmark(api);
 
 export function useCampKpis(): FetchState<KpiSummary> {
   return useCampSection('kpis', mapKpis);
@@ -196,6 +210,10 @@ export function useCampBloodAndLabIntelligence(): FetchState<BloodParameterPanel
 
 export function useCampLeadershipTakeaways(): FetchState<LeadershipTakeaway[]> {
   return useCampSection('leadership_takeaways', mapLeadership);
+}
+
+export function useCampStateDiseaseBenchmark(): FetchState<StateDiseaseBenchmark> {
+  return useCampSection('state_disease_benchmark', mapStateBenchmark);
 }
 
 export function useCampRanking(): FetchState<RankingSummary> {

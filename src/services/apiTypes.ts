@@ -188,7 +188,32 @@ export type CampDashboardSection =
   | 'company_average_scores'
   | 'blood_and_lab_intelligence'
   | 'ranking'
-  | 'leadership_takeaways';
+  | 'leadership_takeaways'
+  | 'state_disease_benchmark';
+
+/** GET …/dashboard?section=state_disease_benchmark */
+export interface ApiStateDiseaseBenchmarkRow {
+  category_key: string;
+  category: string;
+  company_average: number;
+  state_average: number;
+}
+
+export interface ApiStateDiseaseBenchmark {
+  company?: {
+    organization_id?: number;
+    name?: string;
+    state?: string;
+  };
+  benchmark?: {
+    companies_count?: number;
+  };
+  risk_comparison?: ApiStateDiseaseBenchmarkRow[];
+  overall?: {
+    company_average?: number;
+    state_average?: number;
+  };
+}
 
 /** GET …/dashboard?section=leadership_takeaways — data is empty; insights live in intelligence. */
 export type ApiCampDashboardLeadershipTakeaways = Record<string, never> | Record<string, unknown>;

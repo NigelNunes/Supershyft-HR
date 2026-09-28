@@ -25,6 +25,7 @@ import type {
   OverallRiskScoreView,
   ParticipationByAgeView,
 } from '../types';
+import { enqueueSectionFetch } from '../utils/sectionFetchQueue';
 import { parseDashboardSection } from '../utils/unwrapDashboardPayload';
 
 interface FetchState<T> {
@@ -67,24 +68,33 @@ function useDepartmentSection<TApi, TView>(
     let cancelled = false;
     setState({ data: null, loading: true, error: null });
 
-    void campDashboardApi
-      .departmentSection<TApi>(selectedCampNo, deptSlug, section, accessToken)
-      .then((payload) => {
-        if (cancelled) return;
-        const { data, intelligence } = parseDashboardSection<TApi>(payload);
-        setState({ data: map(data, intelligence), loading: false, error: null });
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setState({
-          data: null,
-          loading: false,
-          error: err instanceof Error ? err.message : 'Failed to load',
-        });
-      });
+    const cancelQueued = enqueueSectionFetch((release) => {
+      if (cancelled) {
+        release();
+        return;
+      }
+
+      void campDashboardApi
+        .departmentSection<TApi>(selectedCampNo, deptSlug, section, accessToken)
+        .then((payload) => {
+          if (cancelled) return;
+          const { data, intelligence } = parseDashboardSection<TApi>(payload);
+          setState({ data: map(data, intelligence), loading: false, error: null });
+        })
+        .catch((err) => {
+          if (cancelled) return;
+          setState({
+            data: null,
+            loading: false,
+            error: err instanceof Error ? err.message : 'Failed to load',
+          });
+        })
+        .finally(release);
+    });
 
     return () => {
       cancelled = true;
+      cancelQueued();
     };
   }, [accessToken, selectedCampNo, slug, section, map]);
 

@@ -162,26 +162,30 @@
   flex: 1;
   min-width: 0;
   height: 18rem;
-  /* Room for x-axis labels below the 0% baseline */
-  padding-bottom: 1.75rem;
+  /* Room for the 0% label and x-axis labels below the baseline */
+  padding-bottom: 2.25rem;
   box-sizing: border-box;
   overflow: hidden;
 }
 
 .disease-deep-dive-card__grid {
   position: absolute;
-  inset: 0 0 1.75rem 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  left: 0;
+  right: 0;
+  top: 0.5rem;
+  bottom: 2.25rem;
   pointer-events: none;
   z-index: 0;
 }
 
 .disease-deep-dive-card__grid-row {
-  position: relative;
+  position: absolute;
+  left: 0;
+  right: 0;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  height: 1rem;
+  margin-top: -0.5rem;
   color: #6b7280;
   font-family: 'DM Sans', var(--font);
   font-size: 0.75rem;
@@ -192,17 +196,19 @@
   position: absolute;
   left: 1.75rem;
   right: 0;
-  top: 0.5rem;
-  border-bottom: 1px solid #374151;
+  top: 50%;
+  border-top: 1px solid #374151;
+  /* Keep the 0% stroke inside the plot so overflow doesn't clip it */
+  transform: translateY(-100%);
 }
 
 .disease-deep-dive-card__bars {
   position: absolute;
   left: 1.75rem;
   right: 0;
-  /* Match the 100% / 0% grid lines (grid-line sits at top: 0.5rem of each row) */
+  /* Match the 100% and 0% grid lines */
   top: 0.5rem;
-  bottom: 1.75rem;
+  bottom: 2.25rem;
   display: flex;
   align-items: stretch;
   justify-content: space-between;

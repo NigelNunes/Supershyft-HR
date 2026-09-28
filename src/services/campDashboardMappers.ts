@@ -11,6 +11,7 @@ import type {
   ApiCampDashboardBloodAndLabIntelligence,
   ApiCampDashboardRanking,
   ApiPositiveWins,
+  ApiStateDiseaseBenchmark,
 } from './apiTypes';
 import { DISEASES } from '../data/diseases';
 import type {
@@ -545,4 +546,50 @@ export function mapCampLeadershipTakeaways(
   intelligence?: unknown,
 ): import('../utils/leadershipTakeaways').LeadershipTakeaway[] {
   return mapLeadershipTakeawaysIntelligence(intelligence);
+}
+
+export interface StateDiseaseBenchmarkRow {
+  key: string;
+  category: string;
+  companyAverage: number;
+  stateAverage: number;
+}
+
+export interface StateDiseaseBenchmark {
+  companyName: string;
+  state: string;
+  companiesCount: number;
+  rows: StateDiseaseBenchmarkRow[];
+  overallCompany: number | null;
+  overallState: number | null;
+}
+
+function finiteNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+export function mapCampStateDiseaseBenchmark(api: ApiStateDiseaseBenchmark): StateDiseaseBenchmark {
+  const rows = (api.risk_comparison ?? [])
+    .map((row) => {
+      const companyAverage = finiteNumber(row.company_average);
+      const stateAverage = finiteNumber(row.state_average);
+      const category = row.category?.trim();
+      if (!category || companyAverage == null || stateAverage == null) return null;
+      return {
+        key: row.category_key || category,
+        category,
+        companyAverage,
+        stateAverage,
+      };
+    })
+    .filter((row): row is StateDiseaseBenchmarkRow => row != null);
+
+  return {
+    companyName: api.company?.name?.trim() || 'Company',
+    state: api.company?.state?.trim() || 'state',
+    companiesCount: finiteNumber(api.benchmark?.companies_count) ?? 0,
+    rows,
+    overallCompany: finiteNumber(api.overall?.company_average),
+    overallState: finiteNumber(api.overall?.state_average),
+  };
 }

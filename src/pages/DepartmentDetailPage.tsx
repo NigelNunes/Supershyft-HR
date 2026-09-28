@@ -19,11 +19,95 @@ import { ParticipationCharts } from '../components/charts/ParticipationCharts';
 import { OverallRiskScoreChart } from '../components/charts/OverallRiskScoreChart';
 import { CompanyAverageScores } from '../components/charts/CompanyAverageScores';
 import { PhysicalSleepSegmentCharts } from '../components/charts/PhysicalSleepSegmentCharts';
+import { ProgressiveSection, SectionError } from '../components/ui/ProgressiveSection';
 import { metabolicCategoriesFromKpis } from '../services/campDashboardMappers';
+import { refreshMountedSections, useRegisterSectionRefresh } from '../utils/mountedSectionRefresh';
 import type { GenderDistributionPair } from '../types';
 import './DepartmentDetailPage.css';
 
 const EMPTY_GENDER_DISTRIBUTION: GenderDistributionPair = { male: [], female: [] };
+
+function DepartmentChartsColumn({ slug }: { slug: string }) {
+  const { selectedYear } = useCamp();
+  const {
+    data: participationSection,
+    loading: ageLoading,
+    error: ageError,
+    refresh: refreshAge,
+  } = useDepartmentParticipationByAge(slug);
+  const {
+    data: overallRiskSection,
+    loading: riskLoading,
+    error: riskError,
+    refresh: refreshRisk,
+  } = useDepartmentOverallRiskScore(slug);
+  useRegisterSectionRefresh(refreshAge);
+  useRegisterSectionRefresh(refreshRisk);
+
+  return (
+    <>
+      <SectionError error={ageError || riskError} always />
+      <ParticipationCharts
+        byAge={participationSection?.byAge ?? []}
+        intelligence={participationSection?.intelligence}
+        loading={ageLoading}
+        selectedYear={selectedYear}
+      />
+      <OverallRiskScoreChart
+        buckets={overallRiskSection?.buckets ?? []}
+        intelligence={overallRiskSection?.intelligence}
+        loading={riskLoading}
+        selectedYear={selectedYear}
+      />
+    </>
+  );
+}
+
+function DepartmentActivitySection({ slug }: { slug: string }) {
+  const { selectedYear } = useCamp();
+  const {
+    data: physicalActivity,
+    loading: physicalLoading,
+    error: physicalError,
+    refresh: refreshPhysical,
+  } = useDepartmentPhysicalActivity(slug);
+  const { data: sleepQuality, loading: sleepLoading, error: sleepError, refresh: refreshSleep } =
+    useDepartmentSleep(slug);
+  useRegisterSectionRefresh(refreshPhysical);
+  useRegisterSectionRefresh(refreshSleep);
+
+  return (
+    <>
+      <SectionError error={physicalError || sleepError} always />
+      <PhysicalSleepSegmentCharts
+        physical={physicalActivity ?? EMPTY_GENDER_DISTRIBUTION}
+        sleep={sleepQuality ?? EMPTY_GENDER_DISTRIBUTION}
+        loading={physicalLoading || sleepLoading}
+        selectedYear={selectedYear}
+      />
+    </>
+  );
+}
+
+function DepartmentScoresSection({ slug }: { slug: string }) {
+  const { selectedYear } = useCamp();
+  const { data, loading, error, refresh } = useDepartmentCompanyAverageScores(slug);
+  useRegisterSectionRefresh(refresh);
+
+  return (
+    <>
+      <SectionError error={error} always />
+      <CompanyAverageScores
+        scores={data ?? { nutrition: 0, fitness: 0, lifestyle: 0 }}
+        loading={loading}
+        title="Company average scores"
+        subtitle="Nutrition · fitness · lifestyle (scale 0–100)"
+        info={CHART_INFO.deptCompanyScores}
+        selectedYear={selectedYear}
+      />
+    </>
+  );
+}
 
 export function DepartmentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -32,53 +116,11 @@ export function DepartmentDetailPage() {
 
   const campDepartment = departments.find((dept) => dept.slug === id);
   const departmentName = campDepartment?.department ?? 'Department';
-
   const { data: kpis, loading: kpisLoading, error: kpisError, refresh: refreshKpis } =
     useDepartmentKpis(id);
-  const {
-    data: participationSection,
-    loading: ageLoading,
-    error: ageError,
-    refresh: refreshAge,
-  } = useDepartmentParticipationByAge(id);
-  const {
-    data: overallRiskSection,
-    loading: riskLoading,
-    error: riskError,
-    refresh: refreshRisk,
-  } = useDepartmentOverallRiskScore(id);
-  const {
-    data: physicalActivity,
-    loading: physicalLoading,
-    error: physicalError,
-    refresh: refreshPhysical,
-  } = useDepartmentPhysicalActivity(id);
-  const { data: sleepQuality, loading: sleepLoading, error: sleepError, refresh: refreshSleep } =
-    useDepartmentSleep(id);
-  const {
-    data: companyScores,
-    loading: companyScoresLoading,
-    error: companyScoresError,
-    refresh: refreshCompanyScores,
-  } = useDepartmentCompanyAverageScores(id);
+  useRegisterSectionRefresh(refreshKpis);
 
   const metabolicCategories = useMemo(() => metabolicCategoriesFromKpis(kpis), [kpis]);
-  const participationByAge = participationSection?.byAge ?? [];
-  const overallRiskScore = overallRiskSection?.buckets ?? [];
-
-  const sectionError =
-    kpisError || ageError || riskError || physicalError || sleepError || companyScoresError;
-
-  const handleRefresh = async () => {
-    await Promise.all([
-      refreshKpis(),
-      refreshAge(),
-      refreshRisk(),
-      refreshPhysical(),
-      refreshSleep(),
-      refreshCompanyScores(),
-    ]);
-  };
 
   if (!id || (!orgLoading && departments.length > 0 && !campDepartment)) {
     return (
@@ -100,18 +142,14 @@ export function DepartmentDetailPage() {
       <DashboardHeader
         title={`${departmentName} Health Report`}
         subtitle="Workforce wellness analysis"
-        onRefresh={handleRefresh}
+        onRefresh={refreshMountedSections}
         selectedYear={selectedYear}
         onYearChange={setSelectedYear}
         yearOptions={yearOptions}
         showLocationFilter={false}
       />
 
-      {sectionError && (
-        <p className="dashboard-api-error" role="alert">
-          {sectionError}
-        </p>
-      )}
+      <SectionError error={kpisError} always />
 
       <div className="dashboard-metrics-row">
         <div className="dashboard-metrics-col">
@@ -129,36 +167,24 @@ export function DepartmentDetailPage() {
           />
         </div>
         <div className="dashboard-metrics-col">
-          <ParticipationCharts
-            byAge={participationByAge}
-            intelligence={participationSection?.intelligence}
-            loading={ageLoading}
-            selectedYear={selectedYear}
-          />
-          <OverallRiskScoreChart
-            buckets={overallRiskScore}
-            intelligence={overallRiskSection?.intelligence}
-            loading={riskLoading}
-            selectedYear={selectedYear}
-          />
+          <ProgressiveSection
+            hold={kpisLoading}
+            eager
+            minHeight="32rem"
+            label="Loading participation and risk charts"
+          >
+            <DepartmentChartsColumn slug={id} />
+          </ProgressiveSection>
         </div>
       </div>
 
-      <PhysicalSleepSegmentCharts
-        physical={physicalActivity ?? EMPTY_GENDER_DISTRIBUTION}
-        sleep={sleepQuality ?? EMPTY_GENDER_DISTRIBUTION}
-        loading={physicalLoading || sleepLoading}
-        selectedYear={selectedYear}
-      />
+      <ProgressiveSection minHeight="22rem" label="Loading activity and sleep">
+        <DepartmentActivitySection slug={id} />
+      </ProgressiveSection>
 
-      <CompanyAverageScores
-        scores={companyScores ?? { nutrition: 0, fitness: 0, lifestyle: 0 }}
-        loading={companyScoresLoading}
-        title="Company average scores"
-        subtitle="Nutrition · fitness · lifestyle (scale 0–100)"
-        info={CHART_INFO.deptCompanyScores}
-        selectedYear={selectedYear}
-      />
+      <ProgressiveSection minHeight="16rem" label="Loading company scores">
+        <DepartmentScoresSection slug={id} />
+      </ProgressiveSection>
     </div>
   );
 }

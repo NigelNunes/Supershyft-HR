@@ -102,3 +102,9 @@ export function hasPositiveWinsData(data: PositiveWins | null | undefined): bool
     data.healthyProfiles.length > 0
   );
 }
+
+export function hasStateBenchmarkData(
+  data: { rows: unknown[] } | null | undefined,
+): boolean {
+  return Boolean(data && data.rows.length > 0);
+}

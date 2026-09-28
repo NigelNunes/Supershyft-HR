@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useCampLeadershipTakeaways } from '../../hooks/useCampDashboard';
 import { useCamp } from '../../contexts/CampContext';
+import { useRegisterSectionRefresh } from '../../utils/mountedSectionRefresh';
 import { ComingSoonPanel } from '../ui/ComingSoonPanel';
 import { shouldShowComingSoon } from '../../utils/comingSoon';
 import {
@@ -45,7 +46,8 @@ function TakeawayCard({ takeaway }: { takeaway: LeadershipTakeaway }) {
 
 export function LeadershipTakeawaysSection() {
   const { selectedYear } = useCamp();
-  const { data: takeaways, loading } = useCampLeadershipTakeaways();
+  const { data: takeaways, loading, refresh } = useCampLeadershipTakeaways();
+  useRegisterSectionRefresh(refresh);
 
   const comingSoon = shouldShowComingSoon(
     selectedYear,
