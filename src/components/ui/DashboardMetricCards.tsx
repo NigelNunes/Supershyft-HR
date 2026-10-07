@@ -20,8 +20,8 @@ interface DashboardMetricCardsProps {
   /** When false, hides National / Industry rank cards (department view). */
   showRanking?: boolean;
   /**
-   * When set, the consultations card shows this single count under "Consultations Completed"
-   * instead of "Consultations Requested" (doctor / nutritionist).
+   * Nvidia dashboard override: title is "Consultations Completed" and the
+   * value is shown as Doctor / Nutritionist `{count}/0`.
    */
   consultationsCount?: number | null;
 }
@@ -333,23 +333,18 @@ function SingleYearMetricCards({
           <h3 className="metric-card__stat-label">
             {consultationsCount != null ? 'Consultations Completed' : 'Consultations Requested'}
           </h3>
-          {consultationsCount != null ? (
-            <>
-              <p className="metric-card__stat-value">{consultationsCount.toLocaleString()}</p>
-              <p className="metric-card__stat-footer" aria-hidden>
-                &nbsp;
-              </p>
-            </>
-          ) : comingSoonKpis ? (
+          {comingSoonKpis && consultationsCount == null ? (
             <ComingSoonPanel variant="metric" />
           ) : (
             <>
               <p className="metric-card__stat-value">
-                {kpisLoading
+                {kpisLoading && consultationsCount == null
                   ? '…'
-                  : kpis == null
-                    ? EMPTY
-                    : `${displayNumber(kpis.doctorConsultation, false)}/${displayNumber(kpis.nutritionistConsultation, false)}`}
+                  : consultationsCount != null
+                    ? `${consultationsCount.toLocaleString()}/0`
+                    : kpis == null
+                      ? EMPTY
+                      : `${displayNumber(kpis.doctorConsultation, false)}/${displayNumber(kpis.nutritionistConsultation, false)}`}
               </p>
               <p className="metric-card__stat-footer">Doctor / Nutritionist</p>
             </>

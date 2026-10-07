@@ -39,6 +39,25 @@ import './EmployeesPage.css';
 
 const PAGE_SIZE = PARTICIPANTS_PAGE_SIZE;
 
+function shareReportsErrorMessage(err: unknown): string {
+  const raw = err instanceof Error ? err.message.trim() : '';
+  const lower = raw.toLowerCase();
+
+  if (lower.includes('blood report')) {
+    return "This employee's blood report isn't ready to share yet.";
+  }
+  if (/bio[-\s]?ai/.test(lower)) {
+    return "This employee's Bio-AI report isn't ready to share yet.";
+  }
+  if (lower.includes('url not available') || lower.includes('not available')) {
+    return "This employee's reports aren't ready to share yet.";
+  }
+  if (raw && !/user_id\s*=/i.test(raw)) {
+    return raw;
+  }
+  return "Couldn't share reports for this employee. Their reports may not be ready yet.";
+}
+
 const INTAKE_ICON_URLS: Partial<Record<JourneyStepId, string>> = {
   anthropometry: anthropometryIconUrl,
   vitals: vitalsIconUrl,
@@ -387,7 +406,7 @@ export function EmployeesPage() {
         setSharing(false);
       }, 900);
     } catch (err) {
-      setShareError(err instanceof Error ? err.message : 'Failed to share reports.');
+      setShareError(shareReportsErrorMessage(err));
       setSharing(false);
     }
   };

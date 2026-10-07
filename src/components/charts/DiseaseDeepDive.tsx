@@ -106,7 +106,7 @@ function SingleYearDiseaseDeepDive({
         <>
           <div className="disease-deep-dive-card__chart">
             <div className="disease-deep-dive-card__y-label" aria-hidden>
-              Percentage (%)
+              (%)
             </div>
             <div className="disease-deep-dive-card__plot">
               <div className="disease-deep-dive-card__grid" aria-hidden>
