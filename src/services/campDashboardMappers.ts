@@ -279,6 +279,9 @@ export function mapCampKpis(api: ApiCampDashboardKpis): KpiSummary {
     api.doctor_and_nutritionist_consultation ??
     api.consultations?.doctor_nutritionist ??
     0;
+  const doctorDone = api.consultation_done?.doctor ?? 0;
+  const nutritionistDone = api.consultation_done?.nutritionist ?? 0;
+  const eyeDone = api.consultation_done?.eye ?? 0;
   const bioAi = api.bio_ai_report_generated ?? 0;
   const bioAiPercent =
     enrolled > 0 ? Math.round((bioAi / enrolled) * 100) : undefined;
@@ -295,6 +298,9 @@ export function mapCampKpis(api: ApiCampDashboardKpis): KpiSummary {
     doctorConsultation: doctor,
     nutritionistConsultation: nutritionist,
     doctorAndNutritionistConsultation: doctorAndNutritionist,
+    doctorConsultationDone: doctorDone,
+    nutritionistConsultationDone: nutritionistDone,
+    eyeConsultationDone: eyeDone,
     highRiskGroup: api.high_risk_group ?? 0,
     cautionRiskGroup: api.caution_risk_group ?? 0,
     goodRiskGroup: api.good_risk_group ?? 0,

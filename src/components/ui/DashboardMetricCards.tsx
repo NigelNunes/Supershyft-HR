@@ -20,8 +20,9 @@ interface DashboardMetricCardsProps {
   /** When false, hides National / Industry rank cards (department view). */
   showRanking?: boolean;
   /**
-   * Nvidia dashboard override: title is "Consultations Completed" and the
-   * value is shown as Doctor / Nutritionist `{count}/0`.
+   * Nvidia dashboard override only: keeps hardcoded title/value formatting
+   * (`Consultations Completed` as `{count}/0`). Non-Nvidia camps use API
+   * `consultation_done` instead.
    */
   consultationsCount?: number | null;
 }
@@ -330,9 +331,7 @@ function SingleYearMetricCards({
 
       <article className="metric-card metric-card--stat metric-card--glass">
         <div className="metric-card__stat-body">
-          <h3 className="metric-card__stat-label">
-            {consultationsCount != null ? 'Consultations Completed' : 'Consultations Requested'}
-          </h3>
+          <h3 className="metric-card__stat-label">Consultations Completed</h3>
           {comingSoonKpis && consultationsCount == null ? (
             <ComingSoonPanel variant="metric" />
           ) : (
@@ -344,7 +343,7 @@ function SingleYearMetricCards({
                     ? `${consultationsCount.toLocaleString()}/0`
                     : kpis == null
                       ? EMPTY
-                      : `${displayNumber(kpis.doctorConsultation, false)}/${displayNumber(kpis.nutritionistConsultation, false)}`}
+                      : `${displayNumber(kpis.doctorConsultationDone, false)}/${displayNumber(kpis.nutritionistConsultationDone, false)}`}
               </p>
               <p className="metric-card__stat-footer">Doctor / Nutritionist</p>
             </>

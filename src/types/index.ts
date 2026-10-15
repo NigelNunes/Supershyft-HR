@@ -38,6 +38,10 @@ export interface KpiSummary {
   doctorConsultation: number;
   nutritionistConsultation: number;
   doctorAndNutritionistConsultation?: number;
+  /** From API `consultation_done` — Dashboard “Consultations Completed”. */
+  doctorConsultationDone?: number;
+  nutritionistConsultationDone?: number;
+  eyeConsultationDone?: number;
   highRiskGroup: number;
   cautionRiskGroup?: number;
   goodRiskGroup?: number;

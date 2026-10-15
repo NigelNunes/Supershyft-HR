@@ -83,17 +83,22 @@ export interface ApiGenderChartIntelligence {
   female?: ApiChartIntelligenceItem;
 }
 
+export interface ApiCampDashboardConsultationCounts {
+  doctor?: number;
+  eye?: number;
+  nutritionist?: number;
+  doctor_nutritionist?: number;
+}
+
 export interface ApiCampDashboardKpis {
   employees_enrolled: number;
   male_enrolled: number;
   female_enrolled: number;
   total_blood_test: number;
   blood_test_percent: number;
-  consultations?: {
-    doctor?: number;
-    nutritionist?: number;
-    doctor_nutritionist?: number;
-  } | null;
+  consultations?: ApiCampDashboardConsultationCounts | null;
+  /** Completed consultations (Dashboard KPI: Consultations Completed). */
+  consultation_done?: ApiCampDashboardConsultationCounts | null;
   doctor_consultation: number;
   nutritionist_consultation: number;
   doctor_and_nutritionist_consultation?: number;
